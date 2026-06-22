@@ -8,8 +8,14 @@
  * Inside Livewire components, wrap the field in `wire:ignore` and call
  * `window.ErpForms.init(el)` again after the DOM updates.
  */
-import 'select2';
+import jQuery from 'jquery';
+import select2 from 'select2';
 import 'jquery-mask-plugin';
+
+// Select2 4.1 exports a CommonJS factory `(root, jQuery) => {…}` that installs
+// `$.fn.select2`. When bundled, a bare `import 'select2'` imports the factory but
+// never calls it, so `$(...).select2` is undefined. Invoke it with our jQuery.
+select2(window, jQuery);
 
 /**
  * Named mask aliases (CONVENTIONS.md §1.2). Any other `data-mask` value is

@@ -1,3 +1,12 @@
+/*
+ * Material Symbols icon font, imported into the `base` cascade layer so that
+ * Tailwind's text-* size utilities (in the higher-priority `utilities` layer)
+ * can override the font's built-in `font-size: 24px`. Loading it unlayered
+ * (e.g. via a <link>) forces every icon to 24px regardless of class.
+ * MUST be the first @import or the bundler drops it.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap')
+    layer(base);
 @import 'tailwindcss';
 @import 'select2/dist/css/select2.css';
 
@@ -7,17 +16,114 @@
 @source "../**/*.js";
 @source "../**/*.vue";
 
+/*
+|------------------------------------------------------------------------------
+| Design tokens (CONVENTIONS.md §7)
+|------------------------------------------------------------------------------
+| Material-style token palette for the storefront ("website single theme"),
+| translated from the electro mockup. Admin light + dark themes layer on top of
+| the same token names later (the storefront is theme #1 of three).
+| Use token classes everywhere: bg-primary-container, text-on-surface-variant, …
+*/
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Work Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Primary (brand yellow) */
+    --color-primary: #6f5d00;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #fed700;
+    --color-on-primary-container: #705e00;
+    --color-primary-fixed: #ffe169;
+    --color-primary-fixed-dim: #e8c400;
+    --color-on-primary-fixed: #221b00;
+    --color-on-primary-fixed-variant: #544600;
+    --color-inverse-primary: #e8c400;
+
+    /* Secondary */
+    --color-secondary: #54606a;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #d8e4f1;
+    --color-on-secondary-container: #5a6671;
+
+    /* Tertiary */
+    --color-tertiary: #4c6700;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #baea4b;
+    --color-on-tertiary-container: #4c6800;
+
+    /* Error */
+    --color-error: #ba1a1a;
+    --color-on-error: #ffffff;
+    --color-error-container: #ffdad6;
+    --color-on-error-container: #93000a;
+
+    /* Surfaces & background */
+    --color-background: #f9f9f9;
+    --color-on-background: #1a1c1c;
+    --color-surface: #f9f9f9;
+    --color-on-surface: #1a1c1c;
+    --color-surface-variant: #e2e2e2;
+    --color-on-surface-variant: #4d4732;
+    --color-surface-dim: #dadada;
+    --color-surface-bright: #f9f9f9;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #f3f3f3;
+    --color-surface-container: #eeeeee;
+    --color-surface-container-high: #e8e8e8;
+    --color-surface-container-highest: #e2e2e2;
+    --color-inverse-surface: #2f3131;
+    --color-inverse-on-surface: #f1f1f1;
+
+    /* Lines */
+    --color-outline: #7e775f;
+    --color-outline-variant: #d0c6ab;
+
+    /* Typography scale */
+    --text-display-hero: 48px;
+    --text-display-hero--line-height: 56px;
+    --text-display-hero--font-weight: 300;
+    --text-display-hero--letter-spacing: -0.02em;
+
+    --text-headline-lg: 32px;
+    --text-headline-lg--line-height: 40px;
+    --text-headline-lg--font-weight: 700;
+
+    --text-headline-md: 24px;
+    --text-headline-md--line-height: 32px;
+    --text-headline-md--font-weight: 500;
+
+    --text-product-title: 14px;
+    --text-product-title--line-height: 18px;
+    --text-product-title--font-weight: 600;
+
+    --text-price-lg: 22px;
+    --text-price-lg--line-height: 28px;
+    --text-price-lg--font-weight: 500;
+
+    --text-body-base: 14px;
+    --text-body-base--line-height: 20px;
+    --text-body-base--font-weight: 400;
+
+    --text-label-sm: 12px;
+    --text-label-sm--line-height: 16px;
+    --text-label-sm--font-weight: 400;
 }
 
-/*
- * CONVENTIONS.md §1.5 — every clickable affordance shows a pointer cursor.
- * Tailwind v4 resets buttons to `cursor: default`, so re-assert it here for
- * native clickable elements. Custom clickable <div>/<span> add `cursor-pointer`.
- */
 @layer base {
+    body {
+        @apply bg-background text-on-surface font-sans;
+    }
+
+    /* Hide Alpine-cloaked elements (e.g. the mobile drawer) until Alpine boots. */
+    [x-cloak] {
+        display: none !important;
+    }
+
+    /*
+     * CONVENTIONS.md §1.5 — every clickable affordance shows a pointer cursor.
+     * Tailwind v4 resets buttons to `cursor: default`, so re-assert it here.
+     */
     button:not(:disabled),
     [role='button']:not([aria-disabled='true']),
     [type='button']:not(:disabled),
@@ -29,4 +135,43 @@
     summary {
         cursor: pointer;
     }
+}
+
+@layer components {
+    /* Centered page wrapper — 1430px max width + 1rem gutter. */
+    .app-container {
+        @apply mx-auto w-full max-w-[1430px] px-4;
+    }
+
+    /* Hide horizontal scrollbar while keeping content scrollable (category nav). */
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Material Symbols icon weight/fill tuning (font loaded via <link> in head). */
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        user-select: none;
+    }
+
+    /* Subtle Ken Burns zoom for hero slide images. */
+    @keyframes hero-zoom {
+        from {
+            transform: scale(1);
+        }
+
+        to {
+            transform: scale(1.08);
+        }
+    }
+
+    .hero-zoom {
+        animation: hero-zoom 8s ease-in-out infinite alternate;
+    }
+
 }
