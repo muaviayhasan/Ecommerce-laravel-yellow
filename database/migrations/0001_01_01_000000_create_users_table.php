@@ -15,10 +15,29 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('phone')->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable(); // nullable: social-login-only accounts
+            $table->string('avatar')->nullable();
+
+            // Social login (Socialite / Microsoft — see PROJECT_DOCUMENTATION §13 social_login)
+            $table->string('provider')->nullable();
+            $table->string('provider_id')->nullable();
+
+            // Two-factor (conventions §4.3 — encrypted at rest via cast on the model)
+            $table->text('two_factor_secret')->nullable();
+            $table->text('two_factor_recovery_codes')->nullable();
+
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('last_login_at')->nullable();
+
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->index('phone');
+            $table->index('is_active');
+            $table->index(['provider', 'provider_id']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
