@@ -40,10 +40,24 @@
                     <span class="material-symbols-outlined text-[16px]">shopping_bag</span>
                     <span class="hidden md:inline">Shop</span>
                 </a>
-                <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('account') }}">
-                    <span class="material-symbols-outlined text-[16px]">person</span>
-                    <span class="hidden md:inline">My Account</span>
-                </a>
+                @auth
+                    <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('account') }}">
+                        <span class="material-symbols-outlined text-[16px]">person</span>
+                        <span class="hidden md:inline">My Account</span>
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="contents">
+                        @csrf
+                        <button type="submit" class="flex items-center gap-1 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-[16px]">logout</span>
+                            <span class="hidden md:inline">Logout</span>
+                        </button>
+                    </form>
+                @else
+                    <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('login') }}">
+                        <span class="material-symbols-outlined text-[16px]">person</span>
+                        <span class="hidden md:inline">Login</span>
+                    </a>
+                @endauth
             </nav>
         </div>
     </div>
@@ -183,8 +197,18 @@
                 @endforeach
             </ul>
             <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
-                <a href="{{ route('account') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">person</span> My Account</a>
+                @auth
+                    <a href="{{ route('account') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">person</span> My Account</a>
+                @else
+                    <a href="{{ route('login') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">person</span> Login</a>
+                @endauth
                 <a href="{{ route('wishlist') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">favorite</span> Wishlist ({{ $wishlistCount }})</a>
+                @auth
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="flex items-center gap-2 px-4 py-2 hover:text-primary w-full text-left"><span class="material-symbols-outlined">logout</span> Logout</button>
+                    </form>
+                @endauth
             </div>
         </div>
     </div>

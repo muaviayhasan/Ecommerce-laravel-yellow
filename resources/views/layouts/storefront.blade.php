@@ -33,7 +33,10 @@
         @yield('content')
     </main>
 
-    <x-storefront.newsletter />
+    {{-- Pages can hide the newsletter with @section('hideNewsletter', '1') (e.g. auth pages). --}}
+    @sectionMissing('hideNewsletter')
+        <x-storefront.newsletter />
+    @endif
     <x-storefront.footer />
 
     @livewireScripts
