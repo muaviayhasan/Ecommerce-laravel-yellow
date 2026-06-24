@@ -6,17 +6,9 @@
 @section('content')
     {{-- Hero slider --}}
     @php
+        // Hero uses transparent PNG product cut-outs (object-contain), so the product
+        // shows in full on both desktop and mobile.
         $heroSlides = [
-            [
-                'kicker' => 'Shop to get what you love',
-                'line1' => 'TIMEPIECES THAT',
-                'line2' => 'MAKE A STATEMENT',
-                'tail' => 'UP TO',
-                'highlight' => '40% OFF',
-                'cta' => 'Start Buying',
-                'image' => 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1000&q=80',
-                'alt' => 'Premium laptop',
-            ],
             [
                 'kicker' => 'Power meets portability',
                 'line1' => 'NEXT-GEN LAPTOPS',
@@ -24,8 +16,18 @@
                 'tail' => 'SAVE UP TO',
                 'highlight' => '30% OFF',
                 'cta' => 'Shop Laptops',
-                'image' => 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1000&q=80',
-                'alt' => 'Modern laptop on a desk',
+                'image' => '/assets/images/banner-laptops.png',
+                'alt' => 'Next-gen laptop',
+            ],
+            [
+                'kicker' => 'Capture every moment',
+                'line1' => 'PRO-GRADE',
+                'line2' => 'CAMERAS',
+                'tail' => 'UP TO',
+                'highlight' => '40% OFF',
+                'cta' => 'Shop Cameras',
+                'image' => '/images/promos/promo-1.png',
+                'alt' => '4K camera',
             ],
             [
                 'kicker' => 'Hear every detail',
@@ -34,8 +36,8 @@
                 'tail' => 'STARTING AT',
                 'highlight' => 'Rs 4,999',
                 'cta' => 'Shop Audio',
-                'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80',
-                'alt' => 'Wireless headphones',
+                'image' => '/assets/images/banner-smartg3.png',
+                'alt' => 'Wireless audio device',
             ],
         ];
     @endphp
@@ -60,10 +62,12 @@
                 @foreach ($heroSlides as $i => $slide)
                     <div class="w-full shrink-0" role="group" aria-roledescription="slide"
                         aria-label="{{ $i + 1 }} of {{ count($heroSlides) }}">
-                        <div class="app-container relative flex items-center min-h-[460px]">
-                            <div class="w-full md:w-1/2 z-10 py-12">
-                                <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-4">{{ $slide['kicker'] }}</p>
-                                <h1 class="text-display-hero leading-tight mb-8">
+                        {{-- Fixed height (not min-h) so every slide is the same height
+                             regardless of text length; content is vertically centered. --}}
+                        <div class="app-container relative flex items-center h-[480px] lg:h-[500px] overflow-hidden">
+                            <div class="w-3/5 md:w-1/2 z-10 py-4">
+                                <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-3 md:mb-4">{{ $slide['kicker'] }}</p>
+                                <h1 class="text-3xl sm:text-4xl lg:text-display-hero font-light leading-tight tracking-tight mb-6 md:mb-8">
                                     {{ $slide['line1'] }}<br>
                                     <span class="font-bold">{{ $slide['line2'] }}</span><br>
                                     {{ $slide['tail'] }} <span class="font-bold text-primary">{{ $slide['highlight'] }}</span>
@@ -72,9 +76,19 @@
                                     class="inline-block bg-primary-container px-10 py-4 rounded-full font-bold text-on-surface hover:opacity-90 transition-all shadow-lg">
                                     {{ $slide['cta'] }}
                                 </a>
+                                {{-- Dots --}}
+                                <div class="flex gap-2 mt-8 md:mt-12">
+                                    @foreach ($heroSlides as $di => $dslide)
+                                        <button type="button" @click="go({{ $di }})" aria-label="Go to slide {{ $di + 1 }}"
+                                            class="h-1.5 rounded-full transition-all"
+                                            :class="current === {{ $di }} ? 'w-12 bg-primary-container' : 'w-4 bg-outline-variant hover:bg-primary'"></button>
+                                    @endforeach
+                                </div>
                             </div>
-                            <div class="hidden md:block absolute right-0 top-0 bottom-0 w-3/5 overflow-hidden">
-                                <img class="w-full h-full object-cover object-center hero-zoom"
+                            {{-- PNG product cut-out, contained. Floated on the right on all
+                                 screens (the text may overlap it on small screens — that's fine). --}}
+                            <div class="absolute right-0 top-0 bottom-0 w-2/5 md:w-1/2 flex items-center justify-center p-3 md:p-8">
+                                <img class="max-w-full max-h-full w-auto object-contain"
                                     src="{{ $slide['image'] }}" alt="{{ $slide['alt'] }}"
                                     @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
                             </div>
@@ -94,16 +108,6 @@
             <span class="material-symbols-outlined">chevron_right</span>
         </button>
 
-        {{-- Dots --}}
-        <div class="absolute bottom-8 left-0 right-0 z-20">
-            <div class="app-container flex gap-2">
-                @foreach ($heroSlides as $i => $slide)
-                    <button type="button" @click="go({{ $i }})" aria-label="Go to slide {{ $i + 1 }}"
-                        class="h-1.5 rounded-full transition-all"
-                        :class="current === {{ $i }} ? 'w-12 bg-primary-container' : 'w-4 bg-outline-variant hover:bg-primary'"></button>
-                @endforeach
-            </div>
-        </div>
     </section>
 
     {{-- Promo grid --}}
@@ -179,10 +183,10 @@
     <section class="py-12 bg-white" x-data="{ tab: 'featured' }">
         <div class="app-container">
             <div class="flex justify-center border-b border-outline-variant mb-8">
-                <div class="flex gap-12 text-headline-md font-bold text-on-surface-variant">
+                <div class="flex gap-6 sm:gap-12 text-base sm:text-headline-md font-bold text-on-surface-variant">
                     @foreach (['featured' => 'Featured', 'sale' => 'On Sale', 'top' => 'Top Rated'] as $key => $label)
                         <button type="button" @click="tab = '{{ $key }}'"
-                            class="pb-4 border-b-2 transition-all"
+                            class="pb-4 border-b-2 transition-all whitespace-nowrap"
                             :class="tab === '{{ $key }}' ? 'border-primary-container text-on-surface' : 'border-transparent hover:text-on-surface'">
                             {{ $label }}
                         </button>
@@ -220,159 +224,124 @@
             </div>
 
             {{-- Right: slider --}}
-            <div x-data="{
-                current: 0,
-                count: {{ $tvSlides->count() }},
-                next() { this.current = (this.current + 1) % this.count; },
-                prev() { this.current = (this.current - 1 + this.count) % this.count; },
-                go(i) { this.current = i; },
-            }">
-                {{-- Heading + arrows --}}
-                <div class="flex items-end justify-between border-b border-gray-300 mb-6">
-                    <h2 class="text-headline-md font-bold pb-3 -mb-px border-b-2 border-primary-container">Television Entertainment</h2>
-                    <div class="flex gap-2 pb-2 text-on-surface-variant">
-                        <button type="button" @click="prev()" aria-label="Previous" class="hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined">chevron_left</span>
-                        </button>
-                        <button type="button" @click="next()" aria-label="Next" class="hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined">chevron_right</span>
-                        </button>
-                    </div>
-                </div>
-
-                {{-- Slider track. overflow-x-clip (not hidden) so the bottom-row hover
-                     panels can still drop below the grid without being clipped. --}}
-                <div class="overflow-x-clip">
-                    <div class="flex transition-transform duration-500 ease-in-out"
-                        :style="`transform: translateX(-${current * 100}%)`">
-                        @foreach ($tvSlides as $slide)
-                            <div class="w-full shrink-0">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    @foreach ($slide as $product)
-                                        <x-storefront.product-card-wide :product="$product" />
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                {{-- Dots --}}
-                <div class="flex justify-center gap-2 mt-6">
-                    @foreach ($tvSlides as $i => $slide)
-                        <button type="button" @click="go({{ $i }})" aria-label="Go to slide {{ $i + 1 }}"
-                            class="h-2.5 rounded-full transition-all"
-                            :class="current === {{ $i }} ? 'w-8 bg-primary-container' : 'w-2.5 bg-gray-300 hover:bg-gray-400'"></button>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- Laptops & Computers — product slider --}}
-    @php $laptopSlides = $laptops->chunk(6)->values(); @endphp
-    <section class="py-12 bg-white"
-        x-data="{
-            current: 0,
-            count: {{ $laptopSlides->count() }},
-            next() { this.current = (this.current + 1) % this.count; },
-            prev() { this.current = (this.current - 1 + this.count) % this.count; },
-            go(i) { this.current = i; },
-        }">
-        <div class="app-container">
-            {{-- Heading + arrows --}}
-            <div class="flex items-end justify-between border-b border-gray-300 mb-8">
-                <h2 class="text-headline-md font-bold pb-3 -mb-px border-b-2 border-primary-container">Laptops &amp; Computers</h2>
-                <div class="flex gap-2 pb-2 text-on-surface-variant">
-                    <button type="button" @click="prev()" aria-label="Previous" class="hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <button type="button" @click="next()" aria-label="Next" class="hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
-                </div>
-            </div>
-
-            {{-- Slider track. overflow-x-clip so bottom-row hover panels aren't clipped. --}}
-            <div class="overflow-x-clip">
-                <div class="flex transition-transform duration-500 ease-in-out"
-                    :style="`transform: translateX(-${current * 100}%)`">
-                    @foreach ($laptopSlides as $slide)
-                        <div class="w-full shrink-0">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                                @foreach ($slide as $product)
-                                    <x-storefront.product-card-wide :product="$product"
-                                        class="border-l border-gray-200 hover:border-transparent" />
-                                @endforeach
-                            </div>
+            <x-storefront.carousel title="Television Entertainment" :count="$tvSlides->count()">
+                @foreach ($tvSlides as $slide)
+                    <div class="w-full shrink-0">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            @foreach ($slide as $product)
+                                <x-storefront.product-card-wide :product="$product" />
+                            @endforeach
                         </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Dots --}}
-            <div class="flex justify-center gap-2 mt-8">
-                @foreach ($laptopSlides as $i => $slide)
-                    <button type="button" @click="go({{ $i }})" aria-label="Go to slide {{ $i + 1 }}"
-                        class="h-2.5 rounded-full transition-all"
-                        :class="current === {{ $i }} ? 'w-8 bg-primary-container' : 'w-2.5 bg-gray-300 hover:bg-gray-400'"></button>
+                    </div>
                 @endforeach
-            </div>
+            </x-storefront.carousel>
         </div>
     </section>
 
-    {{-- Trending --}}
+    {{-- Laptops & Computers --}}
+    @php $laptopSlides = $laptops->chunk(6)->values(); @endphp
     <section class="py-12 bg-white">
         <div class="app-container">
-            <x-storefront.section-heading title="Trending Products" :arrows="true" />
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                @foreach ($trending as $product)
-                    <x-storefront.product-card :product="$product" />
+            <x-storefront.carousel title="Laptops & Computers" :count="$laptopSlides->count()">
+                @foreach ($laptopSlides as $slide)
+                    <div class="w-full shrink-0">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                            @foreach ($slide as $product)
+                                <x-storefront.product-card-wide :product="$product"
+                                    class="border-l border-gray-200 hover:border-transparent" />
+                            @endforeach
+                        </div>
+                    </div>
                 @endforeach
-            </div>
+            </x-storefront.carousel>
         </div>
     </section>
 
-    {{-- Bestsellers --}}
+    {{-- Trending Products (single row of 4) --}}
+    @php $trendingSlides = $trending->chunk(4)->values(); @endphp
+    <section class="py-12 bg-white">
+        <div class="app-container">
+            <x-storefront.carousel title="Trending Products" :count="$trendingSlides->count()">
+                @foreach ($trendingSlides as $slide)
+                    <div class="w-full shrink-0">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                            @foreach ($slide as $product)
+                                <x-storefront.product-card-wide :product="$product"
+                                    class="border-r border-gray-200 last:border-r-0 hover:border-transparent" />
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </x-storefront.carousel>
+        </div>
+    </section>
+
+    {{-- Bestsellers — 4x2 grid of small cards + one large featured card --}}
+    @php
+        $bsThumbs = [
+            'https://picsum.photos/seed/bs-thumb-1/80/80',
+            'https://picsum.photos/seed/bs-thumb-2/80/80',
+            'https://picsum.photos/seed/bs-thumb-3/80/80',
+        ];
+    @endphp
     <section class="py-12 bg-surface-container-low">
         <div class="app-container">
-            <h2 class="text-headline-md font-bold mb-8">Bestsellers</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    @foreach ($bestsellers as $product)
-                        <x-storefront.product-line :product="$product" :boxed="true" />
-                    @endforeach
-                </div>
-                <div class="bg-white p-6 rounded-lg border border-outline-variant flex flex-col justify-center items-center text-center">
-                    <h3 class="font-bold mb-4 uppercase tracking-wider text-label-sm">Featured Product</h3>
-                    <img class="w-full aspect-square object-contain mb-4" src="{{ $spotlight['image'] }}"
-                        alt="{{ $spotlight['name'] }}">
-                    <h4 class="text-product-title text-primary mb-2">{{ $spotlight['name'] }}</h4>
-                    <p class="text-price-lg font-bold text-error">Rs {{ number_format($spotlight['price']) }}</p>
-                </div>
+            <x-storefront.section-title title="Bestsellers" />
+
+            <div class="grid grid-cols-2 lg:grid-cols-6 border-t border-l border-gray-200">
+                @foreach ($bestsellers as $product)
+                    <x-storefront.product-card :product="$product"
+                        class="border-b border-gray-200 hover:border-transparent" />
+                @endforeach
+
+                <x-storefront.product-card-feature :product="$bestsellerFeature" :thumbnails="$bsThumbs"
+                    class="col-span-2 lg:col-start-5 lg:row-start-1 lg:row-span-2 border-r border-b border-gray-200 hover:border-transparent" />
             </div>
         </div>
     </section>
 
-    {{-- Top categories --}}
+    {{-- Top categories — 4x2 grid of horizontal category cards --}}
+    @php
+        $topCategories = [
+            ['name' => 'Accessories', 'image' => 'https://picsum.photos/seed/cat-acc/200/200', 'subs' => ['Cases', 'Chargers', 'Headphone Accessories', 'Headphone Cases', 'Headphones', 'Pendrives']],
+            ['name' => 'Laptops & Computers', 'image' => 'https://picsum.photos/seed/cat-lap/200/200', 'subs' => ['Laptops', 'Desktops', 'Monitors', 'Keyboards']],
+            ['name' => 'TV & Audio', 'image' => 'https://picsum.photos/seed/cat-tv/200/200', 'subs' => []],
+            ['name' => 'All in One', 'image' => 'https://picsum.photos/seed/cat-aio/200/200', 'subs' => []],
+            ['name' => 'Audio Speakers', 'image' => 'https://picsum.photos/seed/cat-spk/200/200', 'subs' => []],
+            ['name' => 'Bluetooth Speakers', 'image' => 'https://picsum.photos/seed/cat-bt/200/200', 'subs' => []],
+            ['name' => 'Cameras', 'image' => 'https://picsum.photos/seed/cat-cam/200/200', 'subs' => []],
+            ['name' => 'Cameras & Photography', 'image' => 'https://picsum.photos/seed/cat-photo/200/200', 'subs' => ['Cameras', 'Photo Cameras', 'Video Cameras']],
+        ];
+    @endphp
     <section class="py-12 bg-white">
         <div class="app-container">
-            <h2 class="text-headline-md font-bold mb-8 border-b border-outline-variant pb-4">Top Categories this Month</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                @foreach ([
-                    ['name' => 'Accessories', 'icon' => 'headphones', 'sub' => 'Cases, Chargers'],
-                    ['name' => 'Laptops', 'icon' => 'laptop_mac', 'sub' => 'Ultrabooks & Gaming'],
-                    ['name' => 'Smartphones', 'icon' => 'smartphone', 'sub' => 'iOS & Android'],
-                    ['name' => 'TV & Audio', 'icon' => 'tv', 'sub' => 'OLED, QLED & Hi-Fi'],
-                    ['name' => 'Cameras', 'icon' => 'photo_camera', 'sub' => 'DSLR & Mirrorless'],
-                    ['name' => 'Gaming', 'icon' => 'sports_esports', 'sub' => 'Consoles & PC'],
-                ] as $cat)
-                    <a href="{{ route('shop') }}"
-                        class="bg-surface p-6 rounded-lg flex flex-col items-center text-center group hover:bg-surface-container transition-colors">
-                        <span class="material-symbols-outlined text-5xl mb-4 text-primary">{{ $cat['icon'] }}</span>
-                        <h4 class="font-bold">{{ $cat['name'] }}</h4>
-                        <p class="text-label-sm text-on-surface-variant">{{ $cat['sub'] }}</p>
-                    </a>
+            <x-storefront.section-title title="Top Categories this Month" />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:[&>*]:border-gray-200 lg:[&>*:not(:nth-child(4n+1))]:border-l">
+                @foreach ($topCategories as $cat)
+                    <div class="flex items-start gap-4 px-6 py-4">
+                        <a href="{{ route('shop') }}" class="w-20 h-20 shrink-0">
+                            <img src="{{ $cat['image'] }}" alt="{{ $cat['name'] }}" loading="lazy"
+                                class="w-full h-full object-contain">
+                        </a>
+                        <div class="flex-1 flex flex-col min-h-[170px]">
+                            <h4 class="text-base font-semibold text-on-surface mb-3">
+                                <a href="{{ route('shop') }}" class="hover:text-primary transition-colors">{{ $cat['name'] }}</a>
+                            </h4>
+                            @if (count($cat['subs']))
+                                <ul class="space-y-1.5 mb-3">
+                                    @foreach ($cat['subs'] as $sub)
+                                        <li>
+                                            <a href="{{ route('shop') }}"
+                                                class="text-label-sm text-on-surface-variant hover:text-primary transition-colors">{{ $sub }}</a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                            <a href="{{ route('shop') }}"
+                                class="mt-auto self-end text-label-sm font-bold text-on-surface-variant hover:text-primary transition-colors">See all</a>
+                        </div>
+                    </div>
                 @endforeach
             </div>
         </div>
@@ -381,29 +350,59 @@
     {{-- Promo banners --}}
     <section class="py-12 bg-white">
         <div class="app-container grid grid-cols-1 md:grid-cols-2 gap-8">
-            @foreach ([
-                ['title' => 'G9 Laptops with Ultra 4K', 'sub' => 'Fastest Intel Core i7 processor ever', 'icon' => 'laptop_windows'],
-                ['title' => 'smartG3 Now with 4G', 'sub' => 'From Rs 12,999', 'icon' => 'smartphone'],
-            ] as $banner)
-                <div class="bg-surface-container rounded-xl p-12 flex items-center justify-between overflow-hidden">
-                    <div>
-                        <h3 class="text-headline-md font-bold mb-2">{{ $banner['title'] }}</h3>
-                        <p class="text-body-base">{{ $banner['sub'] }}</p>
-                    </div>
-                    <span class="material-symbols-outlined text-8xl text-primary-container">{{ $banner['icon'] }}</span>
+            {{-- G9 Laptops --}}
+            <a href="{{ route('shop') }}"
+                class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
+                <div class="max-w-[55%]">
+                    <h3 class="text-headline-md font-bold mb-2 text-on-surface">G9 Laptops with Ultra 4K</h3>
+                    <p class="text-body-base text-on-surface-variant">and the fastest Intel Core i7 processor ever</p>
                 </div>
-            @endforeach
+                <img src="/assets/images/banner-laptops.png" alt="G9 Laptops"
+                    class="w-40 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
+            </a>
+
+            {{-- smartG3 --}}
+            <a href="{{ route('shop') }}"
+                class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
+                <div class="flex items-center gap-5">
+                    <div>
+                        <p class="text-2xl leading-none">
+                            <span class="font-bold text-on-surface">smart</span><span class="font-bold text-[#29b6f6]">G3</span>
+                        </p>
+                        <p class="text-label-sm text-on-surface-variant mt-1">Now with 4G</p>
+                    </div>
+                    <div class="border-l border-outline-variant pl-5">
+                        <p class="text-label-sm text-on-surface-variant">from</p>
+                        <p class="text-2xl font-bold text-on-surface leading-none">
+                            <span class="text-base align-top">$</span>129<sup class="text-[0.6em] align-super">99</sup>
+                        </p>
+                    </div>
+                </div>
+                <img src="/assets/images/banner-smartg3.png" alt="smartG3"
+                    class="w-36 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
+            </a>
         </div>
     </section>
 
-    {{-- Brand strip --}}
-    <section class="py-12 bg-white border-t border-outline-variant">
-        <div class="app-container">
-            <div class="flex flex-wrap items-center justify-between gap-12 opacity-50 hover:opacity-100 transition-opacity">
-                @foreach (['airnd', 'coinbuild', 'dirrbble', 'Instagrom', 'NEETFLIX'] as $brand)
-                    <span class="text-headline-md font-bold tracking-tighter">{{ $brand }}</span>
-                @endforeach
+    {{-- Your Recently Viewed Products --}}
+    @if ($recentlyViewed->isNotEmpty())
+        <section class="py-12 bg-white">
+            <div class="app-container">
+                <x-storefront.section-title title="Your Recently Viewed Products" />
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 border border-gray-200">
+                    @foreach ($recentlyViewed as $product)
+                        <x-storefront.product-card :product="$product" class="hover:border-transparent" />
+                    @endforeach
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
+
+    <x-storefront.brand-strip />
+
+    <x-storefront.product-columns :columns="[
+        ['title' => 'Featured Products', 'items' => $featured->take(3), 'rating' => null],
+        ['title' => 'Top Selling Products', 'items' => $bestsellers->take(3), 'rating' => null],
+        ['title' => 'On-sale Products', 'items' => $onSale->take(3), 'rating' => 5],
+    ]" />
 @endsection

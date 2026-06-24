@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Storefront\HomeController;
+use App\Http\Controllers\Storefront\ShopController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -10,11 +11,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.
 $placeholders = [
-    'shop' => 'Shop',
     'cart' => 'Shopping Cart',
     'wishlist' => 'Wishlist',
     'compare' => 'Compare',

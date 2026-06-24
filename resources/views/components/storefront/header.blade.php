@@ -51,12 +51,13 @@
     {{-- Main header --}}
     <header class="bg-surface sticky top-0 z-40 shadow-sm">
         <div class="app-container flex items-center justify-between gap-8 py-5">
-            <div class="flex items-center gap-4">
-                <button type="button" class="md:hidden" aria-label="Open menu" @click="mobileMenu = true">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" class="md:hidden shrink-0" aria-label="Open menu" @click="mobileMenu = true">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
-                <a class="text-headline-lg font-bold text-on-surface" href="{{ route('home') }}">
-                    {{ config('app.name') }}<span class="text-primary-container">.</span>
+                <a class="flex items-baseline min-w-0 font-bold text-on-surface" href="{{ route('home') }}">
+                    <span class="truncate text-xl sm:text-2xl lg:text-headline-lg">{{ config('app.name') }}</span>
+                    <span class="shrink-0 text-xl sm:text-2xl lg:text-headline-lg text-primary-container">.</span>
                 </a>
             </div>
 
@@ -83,7 +84,7 @@
             </form>
 
             {{-- Actions --}}
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-6 shrink-0">
                 <div class="hidden lg:flex items-center gap-4">
                     <a class="hover:text-primary transition-colors" href="{{ route('compare') }}" aria-label="Compare">
                         <span class="material-symbols-outlined">sync</span>
