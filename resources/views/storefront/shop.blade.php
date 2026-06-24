@@ -13,88 +13,90 @@
                 <span class="text-on-surface">Shop</span>
             </nav>
 
-            {{-- Mobile: toggle to show/hide categories + filters (always shown on lg) --}}
+            {{-- Mobile: animated toggle for the categories + filters panel (always shown on lg) --}}
             <button type="button" @click="filtersOpen = !filtersOpen" :aria-expanded="filtersOpen.toString()"
-                class="lg:hidden mb-6 w-full flex items-center justify-center gap-2 border border-gray-300 rounded-full py-2.5 font-bold hover:bg-surface-container transition-colors">
+                class="lg:hidden mb-6 w-full flex items-center justify-center gap-2 bg-surface-container-low border border-gray-300 rounded-full py-3 font-bold hover:bg-surface-container transition-colors">
                 <span class="material-symbols-outlined text-[20px]">tune</span>
-                <span x-text="filtersOpen ? 'Hide Categories & Filters' : 'Show Categories & Filters'"></span>
+                <span x-text="filtersOpen ? 'Hide Filters' : 'Categories & Filters'"></span>
+                <span class="material-symbols-outlined text-[20px] transition-transform duration-300"
+                    :class="{ 'rotate-180': filtersOpen }">expand_more</span>
             </button>
 
             <div class="flex flex-col lg:flex-row gap-8">
                 {{-- ============================ Sidebar ============================ --}}
-                <aside class="w-full lg:w-64 shrink-0 hidden lg:block" :class="{ '!block': filtersOpen }">
-                    {{-- Categories --}}
-                    <div class="mb-10">
-                        <h3 class="font-bold border-b border-gray-200 pb-3 mb-4 text-lg">All Categories</h3>
-                        <ul class="space-y-3 text-body-base text-on-surface-variant">
-                            <li class="font-bold text-on-surface">Smart Phones &amp; Tablets <span class="font-normal text-gray-400">(25)</span></li>
-                            <li class="pl-4"><a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Smartphones <span class="text-gray-400">(21)</span></a></li>
-                            <li class="pl-4"><a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Tablets <span class="text-gray-400">(4)</span></a></li>
-                        </ul>
-                    </div>
+                <aside class="w-full lg:w-64 shrink-0">
+                    {{-- Animated collapse: hidden on mobile until toggled; always open on lg.
+                         The grid-rows 0fr→1fr trick gives a smooth height transition. --}}
+                    <div class="grid lg:!grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out"
+                        :class="filtersOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'">
+                        <div class="overflow-hidden lg:overflow-visible">
+                            {{-- Categories (accordion) --}}
+                            <x-storefront.filter-section title="All Categories">
+                                <ul class="space-y-3 text-body-base text-on-surface-variant">
+                                    <li class="font-bold text-on-surface">Smart Phones &amp; Tablets <span class="font-normal text-gray-400">(25)</span></li>
+                                    <li class="pl-4"><a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Smartphones <span class="text-gray-400">(21)</span></a></li>
+                                    <li class="pl-4"><a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Tablets <span class="text-gray-400">(4)</span></a></li>
+                                </ul>
+                            </x-storefront.filter-section>
 
-                    {{-- Filters --}}
-                    <h3 class="font-bold text-lg mb-6">Filters</h3>
+                            {{-- Brands (accordion) --}}
+                            <x-storefront.filter-section title="Brands">
+                                <div class="space-y-2 text-body-base text-on-surface-variant">
+                                    @foreach (['Apple' => 4, 'Gionee' => 2, 'HTC' => 2, 'LG' => 2, 'Micromax' => 1] as $brand => $n)
+                                        <label class="flex items-center cursor-pointer hover:text-primary">
+                                            <input type="checkbox" class="rounded border-gray-300 accent-primary-container mr-2"> {{ $brand }}
+                                            <span class="ml-1 text-gray-400">({{ $n }})</span>
+                                        </label>
+                                    @endforeach
+                                    <button type="button" class="text-secondary text-label-sm font-medium hover:text-primary">+ Show more</button>
+                                </div>
+                            </x-storefront.filter-section>
 
-                    {{-- Brands --}}
-                    <div class="mb-8">
-                        <h4 class="font-bold text-body-base mb-4">Brands</h4>
-                        <div class="space-y-2 text-body-base text-on-surface-variant">
-                            @foreach (['Apple' => 4, 'Gionee' => 2, 'HTC' => 2, 'LG' => 2, 'Micromax' => 1] as $brand => $n)
-                                <label class="flex items-center cursor-pointer hover:text-primary">
-                                    <input type="checkbox" class="rounded border-gray-300 accent-primary-container mr-2"> {{ $brand }}
-                                    <span class="ml-1 text-gray-400">({{ $n }})</span>
-                                </label>
-                            @endforeach
-                            <button type="button" class="text-secondary text-label-sm font-medium hover:text-primary">+ Show more</button>
-                        </div>
-                    </div>
+                            {{-- Color (accordion) --}}
+                            <x-storefront.filter-section title="Color">
+                                <div class="space-y-2 text-body-base text-on-surface-variant">
+                                    @foreach (['Black' => 3, 'Black Leather' => 2, 'Gold' => 4, 'Spacegrey' => 3, 'Turquoise' => 2] as $color => $n)
+                                        <label class="flex items-center cursor-pointer hover:text-primary">
+                                            <input type="checkbox" class="rounded border-gray-300 accent-primary-container mr-2"> {{ $color }}
+                                            <span class="ml-1 text-gray-400">({{ $n }})</span>
+                                        </label>
+                                    @endforeach
+                                    <button type="button" class="text-secondary text-label-sm font-medium hover:text-primary">+ Show more</button>
+                                </div>
+                            </x-storefront.filter-section>
 
-                    {{-- Color --}}
-                    <div class="mb-8">
-                        <h4 class="font-bold text-body-base mb-4">Color</h4>
-                        <div class="space-y-2 text-body-base text-on-surface-variant">
-                            @foreach (['Black' => 3, 'Black Leather' => 2, 'Gold' => 4, 'Spacegrey' => 3, 'Turquoise' => 2] as $color => $n)
-                                <label class="flex items-center cursor-pointer hover:text-primary">
-                                    <input type="checkbox" class="rounded border-gray-300 accent-primary-container mr-2"> {{ $color }}
-                                    <span class="ml-1 text-gray-400">({{ $n }})</span>
-                                </label>
-                            @endforeach
-                            <button type="button" class="text-secondary text-label-sm font-medium hover:text-primary">+ Show more</button>
-                        </div>
-                    </div>
+                            {{-- Price (accordion) --}}
+                            <x-storefront.filter-section title="Price">
+                                <input type="range" min="60" max="3490" value="1500"
+                                    class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-container">
+                                <div class="flex justify-between text-label-sm text-on-surface-variant mt-4">
+                                    <span>Price: Rs 6,000 — Rs 349,000</span>
+                                </div>
+                                <button type="button" class="mt-4 bg-surface-container px-6 py-2 rounded-full text-label-sm font-bold hover:bg-primary-container transition-colors">Filter</button>
+                            </x-storefront.filter-section>
 
-                    {{-- Price --}}
-                    <div class="mb-10">
-                        <h4 class="font-bold text-body-base mb-4">Price</h4>
-                        <input type="range" min="60" max="3490" value="1500"
-                            class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-container">
-                        <div class="flex justify-between text-label-sm text-on-surface-variant mt-4">
-                            <span>Price: Rs 6,000 — Rs 349,000</span>
-                        </div>
-                        <button type="button" class="mt-4 bg-surface-container px-6 py-2 rounded-full text-label-sm font-bold hover:bg-primary-container transition-colors">Filter</button>
-                    </div>
+                            {{-- Ad banner --}}
+                            <a href="{{ route('shop') }}" class="block relative rounded-lg overflow-hidden bg-surface-container group mt-8 mb-10">
+                                <img src="/images/promos/promo-1.png" alt="Cameras promo"
+                                    class="w-full h-56 object-contain p-6 group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute top-6 left-6">
+                                    <p class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant mb-1">All-new</p>
+                                    <h4 class="text-3xl font-black text-on-surface leading-none">4K</h4>
+                                    <p class="text-body-base font-bold text-on-surface">CAMERAS</p>
+                                    <p class="text-[10px] text-on-surface-variant mt-3">STARTING AT</p>
+                                    <p class="text-2xl font-bold text-primary">$79.99</p>
+                                </div>
+                            </a>
 
-                    {{-- Ad banner --}}
-                    <a href="{{ route('shop') }}" class="block relative rounded-lg overflow-hidden bg-surface-container group mb-10">
-                        <img src="/images/promos/promo-1.png" alt="Cameras promo"
-                            class="w-full h-56 object-contain p-6 group-hover:scale-105 transition-transform duration-500">
-                        <div class="absolute top-6 left-6">
-                            <p class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant mb-1">All-new</p>
-                            <h4 class="text-3xl font-black text-on-surface leading-none">4K</h4>
-                            <p class="text-body-base font-bold text-on-surface">CAMERAS</p>
-                            <p class="text-[10px] text-on-surface-variant mt-3">STARTING AT</p>
-                            <p class="text-2xl font-bold text-primary">$79.99</p>
-                        </div>
-                    </a>
-
-                    {{-- Latest Products --}}
-                    <div>
-                        <h3 class="font-bold border-b border-gray-200 pb-3 mb-6 text-lg">Latest Products</h3>
-                        <div class="space-y-6">
-                            @foreach ($latest as $product)
-                                <x-storefront.product-list-item :product="$product" />
-                            @endforeach
+                            {{-- Latest Products --}}
+                            <div>
+                                <h3 class="font-bold border-b border-gray-200 pb-3 mb-6 text-lg">Latest Products</h3>
+                                <div class="space-y-6">
+                                    @foreach ($latest as $product)
+                                        <x-storefront.product-list-item :product="$product" />
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </aside>

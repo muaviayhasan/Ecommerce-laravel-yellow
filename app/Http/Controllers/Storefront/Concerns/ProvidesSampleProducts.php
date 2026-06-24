@@ -34,7 +34,7 @@ trait ProvidesSampleProducts
         return collect($items)->map(function (array $item, int $i): array {
             return [
                 ...$item,
-                'url' => '#',
+                'url' => route('product.show', \Illuminate\Support\Str::slug($item['name'])),
                 'image' => "https://picsum.photos/seed/usman-shop-{$i}/400/400",
             ];
         });
