@@ -13,13 +13,14 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'parent_id', 'name', 'slug', 'image_media_id', 'description',
-        'sort_order', 'is_active', 'meta_title', 'meta_description', 'meta_image_media_id',
+        'parent_id', 'name', 'slug', 'image_media_id', 'description', 'sort_order',
+        'markup_percent', 'is_active', 'meta_title', 'meta_description', 'meta_image_media_id',
     ];
 
     protected function casts(): array
     {
         return [
+            'markup_percent' => 'decimal:2',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];

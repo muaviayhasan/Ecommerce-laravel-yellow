@@ -22,7 +22,7 @@ class OrderItem extends Model
         return [
             'attributes_snapshot' => 'array',
             'unit_price' => 'decimal:2',
-            'quantity' => 'integer',
+            'quantity' => 'decimal:3',
             'line_total' => 'decimal:2',
             'cost_snapshot' => 'decimal:2',
         ];

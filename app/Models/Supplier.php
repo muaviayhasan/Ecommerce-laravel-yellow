@@ -11,11 +11,17 @@ class Supplier extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'email', 'phone', 'address', 'payment_terms', 'is_active'];
+    protected $fillable = [
+        'name', 'company', 'phone', 'email', 'address', 'tax_number',
+        'payment_terms', 'opening_balance', 'is_active', 'notes',
+    ];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'opening_balance' => 'decimal:2',
+            'is_active' => 'boolean',
+        ];
     }
 
     public function purchases(): HasMany

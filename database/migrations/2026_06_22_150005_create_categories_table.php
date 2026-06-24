@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('image_media_id')->nullable()->constrained('media')->nullOnDelete();
             $table->text('description')->nullable();
             $table->integer('sort_order')->default(0);
+            $table->decimal('markup_percent', 5, 2)->nullable();     // category-level default markup (pricing)
             $table->boolean('is_active')->default(true);
 
             // SEO

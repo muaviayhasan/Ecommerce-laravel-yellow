@@ -13,12 +13,17 @@ class Order extends Model
 {
     use HasFactory;
 
+    public const CHANNEL_WEB = 'web';
+    public const CHANNEL_POS = 'pos';
+    public const CHANNEL_VENDOR = 'vendor';
+
     protected $fillable = [
-        'order_number', 'user_id', 'status', 'payment_method', 'payment_status',
-        'subtotal', 'discount_total', 'tax_total', 'shipping_total', 'grand_total',
+        'order_number', 'channel', 'customer_id', 'user_id', 'quotation_id', 'price_tier',
+        'status', 'payment_method', 'payment_status',
+        'subtotal', 'discount_total', 'tax_total', 'shipping_total', 'grand_total', 'paid_total',
         'coupon_id', 'currency', 'shipping_method', 'courier', 'tracking_number',
         'estimated_delivery_date', 'delivered_at', 'customer_notes', 'internal_notes',
-        'ip_address', 'placed_at',
+        'ip_address', 'created_by', 'placed_at',
     ];
 
     protected function casts(): array
@@ -29,6 +34,7 @@ class Order extends Model
             'tax_total' => 'decimal:2',
             'shipping_total' => 'decimal:2',
             'grand_total' => 'decimal:2',
+            'paid_total' => 'decimal:2',
             'estimated_delivery_date' => 'date',
             'delivered_at' => 'datetime',
             'placed_at' => 'datetime',
@@ -37,14 +43,29 @@ class Order extends Model
 
     // Relations ----------------------------------------------------------------
 
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    public function quotation(): BelongsTo
+    {
+        return $this->belongsTo(Quotation::class);
+    }
+
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function items(): HasMany
@@ -87,5 +108,10 @@ class Order extends Model
     public function scopePaid(Builder $query): Builder
     {
         return $query->where('payment_status', 'paid');
+    }
+
+    public function scopeChannel(Builder $query, string $channel): Builder
+    {
+        return $query->where('channel', $channel);
     }
 }

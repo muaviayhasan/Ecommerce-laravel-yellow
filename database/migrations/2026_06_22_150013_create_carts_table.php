@@ -22,7 +22,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('cart_id')->constrained('carts')->cascadeOnDelete();
             $table->foreignId('product_variant_id')->constrained('product_variants')->cascadeOnDelete();
-            $table->integer('quantity')->default(1);
+            $table->decimal('quantity', 12, 3)->default(1);
             $table->decimal('price_snapshot', 12, 2);
             $table->timestamps();
 

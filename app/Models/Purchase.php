@@ -12,16 +12,18 @@ class Purchase extends Model
     use HasFactory;
 
     protected $fillable = [
-        'reference', 'supplier_id', 'status', 'purchased_at',
-        'total', 'amount_paid', 'notes', 'created_by',
+        'purchase_number', 'supplier_id', 'status', 'reference', 'purchase_date',
+        'subtotal', 'tax_total', 'grand_total', 'paid_total', 'notes', 'created_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'purchased_at' => 'date',
-            'total' => 'decimal:2',
-            'amount_paid' => 'decimal:2',
+            'purchase_date' => 'date',
+            'subtotal' => 'decimal:2',
+            'tax_total' => 'decimal:2',
+            'grand_total' => 'decimal:2',
+            'paid_total' => 'decimal:2',
         ];
     }
 

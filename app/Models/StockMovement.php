@@ -11,20 +11,26 @@ class StockMovement extends Model
 {
     use HasFactory;
 
-    public const TYPE_INCOMING = 'incoming';
-    public const TYPE_OUTGOING = 'outgoing';
+    // Signed movement types (§3.5 / §8)
+    public const TYPE_PURCHASE_IN = 'purchase_in';
+    public const TYPE_SALE_OUT = 'sale_out';
+    public const TYPE_PRODUCTION_CONSUME = 'production_consume';
+    public const TYPE_PRODUCTION_OUTPUT = 'production_output';
     public const TYPE_ADJUSTMENT = 'adjustment';
+    public const TYPE_RETURN_IN = 'return_in';
+    public const TYPE_TRANSFER = 'transfer';
 
     protected $fillable = [
-        'product_variant_id', 'type', 'reason', 'quantity_change', 'balance_after',
-        'location', 'reference_type', 'reference_id', 'note', 'created_by',
+        'product_variant_id', 'type', 'quantity', 'balance_after', 'unit_cost',
+        'reference_type', 'reference_id', 'reason', 'created_by',
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity_change' => 'integer',
-            'balance_after' => 'integer',
+            'quantity' => 'decimal:3',
+            'balance_after' => 'decimal:3',
+            'unit_cost' => 'decimal:2',
         ];
     }
 

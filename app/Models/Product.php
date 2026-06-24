@@ -15,12 +15,21 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public const TYPE_SIMPLE = 'simple';
-    public const TYPE_VARIABLE = 'variable';
+    // Item type (§4.1)
+    public const TYPE_TRADING = 'trading';
+    public const TYPE_MANUFACTURED = 'manufactured';
+    public const TYPE_RAW = 'raw';
+    public const TYPE_SERVICE = 'service';
+
+    // Variant mode (§5.2)
+    public const VARIANT_SIMPLE = 'simple';
+    public const VARIANT_VARIABLE = 'variable';
 
     protected $fillable = [
-        'category_id', 'brand_id', 'name', 'slug', 'sku', 'type',
-        'short_description', 'description', 'base_price',
+        'category_id', 'brand_id', 'name', 'slug', 'sku',
+        'type', 'is_stock_tracked', 'is_purchasable', 'is_manufacturable',
+        'is_sellable', 'is_web_listed', 'manufacture_mode', 'variant_mode',
+        'short_description', 'description', 'specifications', 'base_price', 'markup_percent',
         'warranty', 'return_policy', 'video_url', 'length', 'width', 'height',
         'is_active', 'is_featured', 'published_at',
         'meta_title', 'meta_description', 'meta_keywords',
@@ -30,7 +39,14 @@ class Product extends Model
     protected function casts(): array
     {
         return [
+            'is_stock_tracked' => 'boolean',
+            'is_purchasable' => 'boolean',
+            'is_manufacturable' => 'boolean',
+            'is_sellable' => 'boolean',
+            'is_web_listed' => 'boolean',
+            'specifications' => 'array',
             'base_price' => 'decimal:2',
+            'markup_percent' => 'decimal:2',
             'length' => 'decimal:3',
             'width' => 'decimal:3',
             'height' => 'decimal:3',
@@ -85,6 +101,11 @@ class Product extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function boms(): HasMany
+    {
+        return $this->hasMany(Bom::class);
+    }
+
     // Scopes -------------------------------------------------------------------
 
     public function scopeActive(Builder $query): Builder
@@ -102,8 +123,18 @@ class Product extends Model
         return $query->where('is_featured', true);
     }
 
+    /** The storefront catalog gate (§4.2): web-listed, active, sellable, published. */
+    public function scopeWebListed(Builder $query): Builder
+    {
+        return $query->where('is_web_listed', true)
+            ->where('is_active', true)
+            ->where('is_sellable', true)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
+    }
+
     public function isVariable(): bool
     {
-        return $this->type === self::TYPE_VARIABLE;
+        return $this->variant_mode === self::VARIANT_VARIABLE;
     }
 }

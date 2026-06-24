@@ -19,9 +19,9 @@ return new class extends Migration
             $table->json('attributes_snapshot')->nullable();
 
             $table->decimal('unit_price', 12, 2);
-            $table->integer('quantity');
-            $table->decimal('line_total', 12, 2);
-            $table->decimal('cost_snapshot', 12, 2)->nullable();    // COGS at sale time
+            $table->decimal('quantity', 12, 3);
+            $table->decimal('line_total', 15, 2);
+            $table->decimal('cost_snapshot', 12, 2)->nullable();     // moving-avg cost at sale -> COGS
 
             $table->index('order_id');
         });

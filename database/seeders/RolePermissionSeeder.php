@@ -18,26 +18,37 @@ class RolePermissionSeeder extends Seeder
      */
     public static array $groups = [
         'dashboard' => ['view'],
+        // Catalog
         'products' => ['view', 'create', 'edit', 'delete'],
         'variants' => ['edit'],
         'categories' => ['view', 'create', 'edit', 'delete'],
         'brands' => ['view', 'create', 'edit', 'delete'],
         'attributes' => ['view', 'create', 'edit', 'delete'],
         'media' => ['view', 'create', 'edit', 'delete'],
-        'inventory' => ['view', 'edit'],
+        'gallery' => ['view', 'create', 'edit', 'delete'],
+        // Supply, manufacturing, inventory
         'suppliers' => ['view', 'create', 'edit', 'delete'],
-        'purchases' => ['view', 'create', 'edit', 'delete'],
-        'orders' => ['view', 'edit'],
+        'purchases' => ['view', 'create', 'edit', 'delete', 'receive'],
+        'boms' => ['view', 'create', 'edit', 'delete'],
+        'production' => ['view', 'create', 'edit', 'delete', 'complete'],
+        'stock' => ['view', 'adjust', 'transfer'],
+        // Sales
+        'customers' => ['view', 'create', 'edit', 'delete'],
+        'quotations' => ['view', 'create', 'edit', 'delete', 'convert'],
+        'pos' => ['access', 'sell', 'refund'],
+        'orders' => ['view', 'edit', 'refund', 'fulfil'],
         'coupons' => ['view', 'create', 'edit', 'delete'],
         'reviews' => ['view', 'moderate'],
         'wishlists' => ['view'],
+        // Content
         'blog-posts' => ['view', 'create', 'edit', 'delete'],
         'blog-categories' => ['view', 'create', 'edit', 'delete'],
         'blog-tags' => ['view', 'create', 'edit', 'delete'],
-        'customers' => ['view', 'create', 'edit', 'delete'],
+        // Finance & system
         'ledger' => ['view'],
-        'reports' => ['view'],
+        'reports' => ['view', 'export'],
         'settings' => ['view', 'edit'],
+        'users' => ['view', 'create', 'edit', 'delete'],
         'roles' => ['view', 'create', 'edit', 'delete'],
     ];
 
@@ -51,11 +62,16 @@ class RolePermissionSeeder extends Seeder
         'admin' => ['*'],
         'catalog-manager' => [
             'dashboard', 'products', 'variants', 'categories', 'brands',
-            'attributes', 'media', 'inventory', 'suppliers', 'purchases', 'reviews',
+            'attributes', 'media', 'gallery', 'reviews',
         ],
+        'procurement' => ['dashboard', 'suppliers', 'purchases', 'stock'],
+        'production-manager' => ['dashboard', 'boms', 'production', 'stock'],
+        'inventory-manager' => ['dashboard', 'stock', 'products', 'variants'],
+        'cashier' => ['dashboard', 'pos', 'customers', 'orders'],
+        'sales-rep' => ['dashboard', 'quotations', 'orders', 'customers'],
         'order-manager' => ['dashboard', 'orders', 'customers', 'reports'],
         'accountant' => ['dashboard', 'ledger', 'reports', 'orders', 'purchases'],
-        'editor' => ['dashboard', 'blog-posts', 'blog-categories', 'blog-tags', 'media'],
+        'editor' => ['dashboard', 'blog-posts', 'blog-categories', 'blog-tags', 'media', 'gallery'],
         'customer' => [],
     ];
 

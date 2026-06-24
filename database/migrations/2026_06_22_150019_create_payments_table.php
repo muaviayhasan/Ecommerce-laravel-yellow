@@ -11,11 +11,12 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
-            $table->string('gateway')->default('cod');              // cod|jazzcash|easypaisa|manual_qr
-            $table->decimal('amount', 12, 2);
-            $table->string('status')->default('pending');           // pending|succeeded|failed|refunded
+            $table->string('gateway')->default('cod');               // cod|cash|manual_qr|jazzcash|easypaisa|bank|card
+            $table->decimal('amount', 15, 2);
+            $table->string('status')->default('pending');            // pending|succeeded|failed|refunded
             $table->string('transaction_ref')->nullable();
             $table->json('payload')->nullable();
+            $table->foreignId('received_by')->nullable()->constrained('users')->nullOnDelete(); // staff who took it
             $table->timestamps();
 
             $table->index('order_id');

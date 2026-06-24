@@ -15,7 +15,7 @@ class CartItem extends Model
     protected function casts(): array
     {
         return [
-            'quantity' => 'integer',
+            'quantity' => 'decimal:3',
             'price_snapshot' => 'decimal:2',
         ];
     }
