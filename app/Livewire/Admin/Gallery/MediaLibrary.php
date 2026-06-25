@@ -85,8 +85,8 @@ class MediaLibrary extends Component
         $this->showUploader = true;
     }
 
-    /** Close the panel and discard anything staged. */
-    public function cancelUpload(): void
+    /** Close the upload modal and discard anything staged. */
+    public function closeUploader(): void
     {
         $this->reset('uploads', 'showUploader');
         $this->resetValidation();
@@ -99,8 +99,8 @@ class MediaLibrary extends Component
         $this->validate($rules, $messages);
     }
 
-    /** Drop a single staged file before saving. */
-    public function removeUpload(int $index): void
+    /** Drop a single staged file before saving. (Not `removeUpload` — that's reserved by WithFileUploads.) */
+    public function removeStaged(int $index): void
     {
         unset($this->uploads[$index]);
         $this->uploads = array_values($this->uploads);

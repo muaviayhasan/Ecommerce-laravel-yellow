@@ -33,15 +33,24 @@
         </div>
     @endif
 
-    {{-- Upload panel — revealed by the Upload button, saved explicitly --}}
+    {{-- Upload modal — Alpine hides instantly; $wire.closeUploader() discards + closes server-side --}}
     @if ($showUploader)
-        <x-admin.panel>
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-on-surface">Upload media</h3>
-                <button type="button" wire:click="cancelUpload" class="p-1 -mr-1 text-on-surface-variant hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
+        <div x-data="{ shown: true, close() { this.shown = false; $wire.closeUploader() } }"
+            x-show="shown"
+            @keydown.escape.window="close()"
+            class="fixed inset-0 z-50 overflow-y-auto">
+            {{-- backdrop --}}
+            <div class="fixed inset-0 bg-black/50"></div>
+
+            {{-- click the area outside the dialog to close (.self → not when clicking the dialog) --}}
+            <div class="relative min-h-full flex items-start justify-center p-4 sm:p-6" @click.self="close()">
+                <div class="w-full max-w-2xl my-4 sm:my-8 bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-xl shadow-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-on-surface">Upload media</h3>
+                        <button type="button" @click="close()" title="Close" class="cursor-pointer p-1 -mr-1 text-on-surface-variant hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
 
             {{-- Drag & drop zone --}}
             <label x-data="{ over: false }"
@@ -69,7 +78,7 @@
 
             {{-- Staged previews --}}
             @if (! empty($uploads))
-                <div class="mt-5 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                <div class="mt-5 grid grid-cols-3 sm:grid-cols-4 gap-4 max-h-72 overflow-y-auto">
                     @foreach ($uploads as $i => $upload)
                         <div class="relative group" wire:key="staged-{{ $i }}">
                             <div class="aspect-square rounded-xl bg-surface-container-low border border-outline-variant/50 overflow-hidden flex items-center justify-center">
@@ -79,8 +88,8 @@
                                     <span class="material-symbols-outlined text-outline">image</span>
                                 @endif
                             </div>
-                            <button type="button" wire:click="removeUpload({{ $i }})" title="Remove"
-                                class="absolute -top-2 -right-2 w-6 h-6 grid place-items-center rounded-full bg-error text-on-error shadow opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button type="button" wire:click="removeStaged({{ $i }})" title="Remove"
+                                class="cursor-pointer absolute top-1 right-1 w-6 h-6 grid place-items-center rounded-full bg-error text-on-error shadow-md ring-2 ring-surface-container-lowest dark:ring-surface-container opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">
                                 <span class="material-symbols-outlined text-[16px]">close</span>
                             </button>
                             <p class="mt-1 text-[11px] text-on-surface-variant truncate">{{ $upload->getClientOriginalName() }}</p>
@@ -90,8 +99,8 @@
                 </div>
 
                 <div class="mt-5 flex items-center justify-end gap-3">
-                    <button type="button" wire:click="cancelUpload"
-                        class="px-5 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">Cancel</button>
+                    <button type="button" @click="close()"
+                        class="cursor-pointer px-5 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">Cancel</button>
                     <button type="button" wire:click="save" wire:target="save" wire:loading.attr="disabled"
                         class="px-6 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-sm shadow-primary/20 disabled:opacity-60">
                         <span class="material-symbols-outlined text-[20px]">save</span>
@@ -100,7 +109,9 @@
                     </button>
                 </div>
             @endif
-        </x-admin.panel>
+                </div>
+            </div>
+        </div>
     @endif
 
     {{-- Toolbar --}}
@@ -135,19 +146,19 @@
             <div class="flex items-center bg-surface-container-low rounded-lg p-1">
                 <button type="button" wire:click="$set('view', 'grid')" title="Grid view"
                     @class([
-                        'p-1.5 rounded transition-colors',
+                        'p-1.5 rounded transition-colors inline-flex items-center justify-center',
                         'bg-primary-container text-white shadow-sm' => $view === 'grid',
-                        'text-on-surface-variant hover:text-primary' => $view !== 'grid',
+                        'text-on-surface-variant hover:bg-primary-container/20 hover:text-primary' => $view !== 'grid',
                     ])>
-                    <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                    <span class="material-symbols-outlined text-[20px] leading-none">grid_view</span>
                 </button>
                 <button type="button" wire:click="$set('view', 'list')" title="List view"
                     @class([
-                        'p-1.5 rounded transition-colors',
+                        'p-1.5 rounded transition-colors inline-flex items-center justify-center',
                         'bg-primary-container text-white shadow-sm' => $view === 'list',
-                        'text-on-surface-variant hover:text-primary' => $view !== 'list',
+                        'text-on-surface-variant hover:bg-primary-container/20 hover:text-primary' => $view !== 'list',
                     ])>
-                    <span class="material-symbols-outlined text-[20px]">view_list</span>
+                    <span class="material-symbols-outlined text-[20px] leading-none">view_list</span>
                 </button>
             </div>
         </div>

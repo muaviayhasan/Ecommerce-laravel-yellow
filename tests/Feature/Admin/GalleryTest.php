@@ -66,6 +66,22 @@ class GalleryTest extends TestCase
         Storage::disk('public')->assertExists($media->path);
     }
 
+    public function test_a_staged_upload_can_be_removed_before_saving(): void
+    {
+        Storage::fake('public');
+
+        $component = Livewire::actingAs($this->admin())
+            ->test(MediaLibrary::class)
+            ->set('uploads', [UploadedFile::fake()->image('a.png'), UploadedFile::fake()->image('b.png')])
+            ->assertHasNoErrors();
+
+        $this->assertCount(2, $component->get('uploads'));
+
+        $component->call('removeStaged', 0);
+
+        $this->assertCount(1, $component->get('uploads'));
+    }
+
     public function test_uploading_a_non_image_is_rejected(): void
     {
         Storage::fake('public');
