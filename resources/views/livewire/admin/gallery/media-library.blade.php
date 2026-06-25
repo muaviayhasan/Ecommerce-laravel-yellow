@@ -14,12 +14,14 @@
             <h2 class="text-2xl font-bold text-on-surface">Media Gallery</h2>
         </div>
 
-        <label class="cursor-pointer bg-primary text-on-primary px-5 py-2.5 rounded-lg font-semibold text-sm
-                      flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-sm shadow-primary/20">
-            <input type="file" wire:model="uploads" multiple accept="image/*" class="hidden">
-            <span class="material-symbols-outlined">cloud_upload</span>
-            Upload
-        </label>
+        @can('gallery.create')
+            <button type="button" wire:click="openUploader"
+                class="cursor-pointer bg-primary text-on-primary px-5 py-2.5 rounded-lg font-semibold text-sm
+                       flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-sm shadow-primary/20">
+                <span class="material-symbols-outlined">cloud_upload</span>
+                Upload
+            </button>
+        @endcan
     </div>
 
     {{-- Flash --}}
@@ -31,83 +33,124 @@
         </div>
     @endif
 
-    {{-- Toolbar --}}
-    <x-admin.panel class="!p-4">
-        <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+    {{-- Upload panel — revealed by the Upload button, saved explicitly --}}
+    @if ($showUploader)
+        <x-admin.panel>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-on-surface">Upload media</h3>
+                <button type="button" wire:click="cancelUpload" class="p-1 -mr-1 text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
             {{-- Drag & drop zone --}}
             <label x-data="{ over: false }"
                 x-on:dragover.prevent="over = true"
                 x-on:dragleave.prevent="over = false"
                 x-on:drop.prevent="over = false; $refs.input.files = $event.dataTransfer.files; $refs.input.dispatchEvent(new Event('change', { bubbles: true }))"
                 :class="over ? 'border-primary bg-primary-container/10' : 'border-outline-variant'"
-                class="cursor-pointer flex-1 flex items-center gap-3 border-2 border-dashed rounded-xl px-4 py-2.5 transition-colors">
+                class="cursor-pointer flex flex-col items-center justify-center gap-2 text-center border-2 border-dashed rounded-xl px-4 py-10 transition-colors">
                 <input x-ref="input" type="file" wire:model="uploads" multiple accept="image/*" class="hidden">
-                <span class="material-symbols-outlined text-primary">cloud_upload</span>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-on-surface">Drop images here or <span class="text-primary">browse</span></p>
-                    <p class="text-[11px] text-outline">PNG, JPG, WEBP · up to 5 MB each</p>
-                </div>
+                <span class="material-symbols-outlined text-primary" style="font-size:36px;">cloud_upload</span>
+                <p class="text-sm font-medium text-on-surface">Drop images here or <span class="text-primary">browse</span></p>
+                <p class="text-[11px] text-outline">PNG, JPG, WEBP · up to 5 MB each</p>
                 <span wire:loading wire:target="uploads"
-                    class="ml-auto flex items-center gap-1.5 text-primary text-xs font-semibold shrink-0">
+                    class="flex items-center gap-1.5 text-primary text-xs font-semibold">
                     <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
                     Uploading…
                 </span>
             </label>
 
-            {{-- Filters --}}
-            <div class="flex items-center gap-2 shrink-0">
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search files…" maxlength="255"
-                        class="w-44 lg:w-56 bg-surface-container-low border border-outline-variant/40 rounded-lg pl-10 pr-3 py-2
-                               text-sm text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+            @error('uploads.*')
+                <p class="mt-3 text-sm text-error flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">error</span>{{ $message }}
+                </p>
+            @enderror
+
+            {{-- Staged previews --}}
+            @if (! empty($uploads))
+                <div class="mt-5 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+                    @foreach ($uploads as $i => $upload)
+                        <div class="relative group" wire:key="staged-{{ $i }}">
+                            <div class="aspect-square rounded-xl bg-surface-container-low border border-outline-variant/50 overflow-hidden flex items-center justify-center">
+                                @if ($upload->isPreviewable())
+                                    <img src="{{ $upload->temporaryUrl() }}" alt="" class="w-full h-full object-cover">
+                                @else
+                                    <span class="material-symbols-outlined text-outline">image</span>
+                                @endif
+                            </div>
+                            <button type="button" wire:click="removeUpload({{ $i }})" title="Remove"
+                                class="absolute -top-2 -right-2 w-6 h-6 grid place-items-center rounded-full bg-error text-on-error shadow opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="material-symbols-outlined text-[16px]">close</span>
+                            </button>
+                            <p class="mt-1 text-[11px] text-on-surface-variant truncate">{{ $upload->getClientOriginalName() }}</p>
+                            <p class="text-[10px] text-outline">{{ format_bytes($upload->getSize()) }}</p>
+                        </div>
+                    @endforeach
                 </div>
 
-                @if ($this->folders->isNotEmpty())
-                    <select wire:model.live="folder" data-no-select2
-                        class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
-                        <option value="">All folders</option>
-                        @foreach ($this->folders as $f)
-                            <option value="{{ $f }}">{{ $f }}</option>
-                        @endforeach
-                    </select>
-                @endif
+                <div class="mt-5 flex items-center justify-end gap-3">
+                    <button type="button" wire:click="cancelUpload"
+                        class="px-5 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">Cancel</button>
+                    <button type="button" wire:click="save" wire:target="save" wire:loading.attr="disabled"
+                        class="px-6 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-sm shadow-primary/20 disabled:opacity-60">
+                        <span class="material-symbols-outlined text-[20px]">save</span>
+                        <span wire:loading.remove wire:target="save">Save {{ count($uploads) }} {{ \Illuminate\Support\Str::plural('image', count($uploads)) }}</span>
+                        <span wire:loading wire:target="save">Saving…</span>
+                    </button>
+                </div>
+            @endif
+        </x-admin.panel>
+    @endif
 
-                <select wire:model.live="sort" data-no-select2
+    {{-- Toolbar --}}
+    <x-admin.panel class="!p-4">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            <div class="relative flex-1 min-w-48">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+                <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search files…" maxlength="255"
+                    class="w-full bg-surface-container-low border border-outline-variant/40 rounded-lg pl-10 pr-3 py-2
+                           text-sm text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+            </div>
+
+            @if ($this->folders->isNotEmpty())
+                <select wire:model.live="folder" data-no-select2
                     class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
-                    <option value="recent">Recent first</option>
-                    <option value="oldest">Oldest first</option>
-                    <option value="name_asc">Name A–Z</option>
-                    <option value="name_desc">Name Z–A</option>
-                    <option value="largest">Largest</option>
+                    <option value="">All folders</option>
+                    @foreach ($this->folders as $f)
+                        <option value="{{ $f }}">{{ $f }}</option>
+                    @endforeach
                 </select>
+            @endif
 
-                <div class="flex items-center bg-surface-container-low rounded-lg p-1">
-                    <button type="button" wire:click="$set('view', 'grid')" title="Grid view"
-                        @class([
-                            'p-1.5 rounded transition-colors',
-                            'bg-primary-container text-white shadow-sm' => $view === 'grid',
-                            'text-on-surface-variant hover:text-primary' => $view !== 'grid',
-                        ])>
-                        <span class="material-symbols-outlined text-[20px]">grid_view</span>
-                    </button>
-                    <button type="button" wire:click="$set('view', 'list')" title="List view"
-                        @class([
-                            'p-1.5 rounded transition-colors',
-                            'bg-primary-container text-white shadow-sm' => $view === 'list',
-                            'text-on-surface-variant hover:text-primary' => $view !== 'list',
-                        ])>
-                        <span class="material-symbols-outlined text-[20px]">view_list</span>
-                    </button>
-                </div>
+            <select wire:model.live="sort" data-no-select2
+                class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
+                <option value="recent">Recent first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="name_asc">Name A–Z</option>
+                <option value="name_desc">Name Z–A</option>
+                <option value="largest">Largest</option>
+            </select>
+
+            <div class="flex items-center bg-surface-container-low rounded-lg p-1">
+                <button type="button" wire:click="$set('view', 'grid')" title="Grid view"
+                    @class([
+                        'p-1.5 rounded transition-colors',
+                        'bg-primary-container text-white shadow-sm' => $view === 'grid',
+                        'text-on-surface-variant hover:text-primary' => $view !== 'grid',
+                    ])>
+                    <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                </button>
+                <button type="button" wire:click="$set('view', 'list')" title="List view"
+                    @class([
+                        'p-1.5 rounded transition-colors',
+                        'bg-primary-container text-white shadow-sm' => $view === 'list',
+                        'text-on-surface-variant hover:text-primary' => $view !== 'list',
+                    ])>
+                    <span class="material-symbols-outlined text-[20px]">view_list</span>
+                </button>
             </div>
         </div>
-
-        @error('uploads.*')
-            <p class="mt-3 text-sm text-error flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-[18px]">error</span>{{ $message }}
-            </p>
-        @enderror
     </x-admin.panel>
 
     {{-- Assets + detail --}}

@@ -41,19 +41,27 @@ class GalleryTest extends TestCase
             ->assertSeeLivewire(MediaLibrary::class);
     }
 
-    public function test_uploading_an_image_creates_a_media_record(): void
+    public function test_staged_uploads_are_saved_only_on_save(): void
     {
         Storage::fake('public');
         $admin = $this->admin();
 
-        Livewire::actingAs($admin)
+        $component = Livewire::actingAs($admin)
             ->test(MediaLibrary::class)
+            ->call('openUploader')
+            ->assertSet('showUploader', true)
             ->set('uploads', [UploadedFile::fake()->image('photo.png', 120, 90)])
             ->assertHasNoErrors();
 
-        $media = Media::where('uploaded_by', $admin->id)->where('title', 'photo.png')->first();
+        // Staged but not yet persisted.
+        $this->assertDatabaseMissing('media', ['title' => 'photo.png', 'uploaded_by' => $admin->id]);
 
-        $this->assertNotNull($media, 'Media row was not created.');
+        $component->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('showUploader', false);
+
+        $media = Media::where('uploaded_by', $admin->id)->where('title', 'photo.png')->first();
+        $this->assertNotNull($media, 'Media row was not created on save.');
         $this->assertSame('public', $media->disk);
         Storage::disk('public')->assertExists($media->path);
     }

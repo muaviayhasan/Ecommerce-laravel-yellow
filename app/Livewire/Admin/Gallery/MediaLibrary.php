@@ -35,7 +35,10 @@ class MediaLibrary extends Component
 
     public ?int $selectedId = null;
 
-    /** Pending uploads bound to the file input (processed in updatedUploads). */
+    /** Whether the upload panel is open. */
+    public bool $showUploader = false;
+
+    /** Files staged in the uploader (previewed, not yet saved to the gallery). */
     public array $uploads = [];
 
     // Inline-edit fields for the selected asset.
@@ -64,17 +67,56 @@ class MediaLibrary extends Component
         $this->resetPage();
     }
 
-    /**
-     * Persist each freshly-picked/dropped upload as a Media record on the public disk.
-     */
+    /** Validation rules + messages shared by staging and saving. */
+    protected function uploadRules(): array
+    {
+        return [
+            ['uploads.*' => ['image', 'max:5120']], // 5 MB each
+            ['uploads.*.image' => 'Each file must be an image.', 'uploads.*.max' => 'Each image may not exceed 5 MB.'],
+        ];
+    }
+
+    /** Open the upload panel (fresh). */
+    public function openUploader(): void
+    {
+        $this->authorize('gallery.create');
+        $this->reset('uploads');
+        $this->resetValidation();
+        $this->showUploader = true;
+    }
+
+    /** Close the panel and discard anything staged. */
+    public function cancelUpload(): void
+    {
+        $this->reset('uploads', 'showUploader');
+        $this->resetValidation();
+    }
+
+    /** Validate files as they're staged so problems surface before saving. */
     public function updatedUploads(): void
+    {
+        [$rules, $messages] = $this->uploadRules();
+        $this->validate($rules, $messages);
+    }
+
+    /** Drop a single staged file before saving. */
+    public function removeUpload(int $index): void
+    {
+        unset($this->uploads[$index]);
+        $this->uploads = array_values($this->uploads);
+    }
+
+    /** Commit the staged uploads to the gallery as Media records (public disk). */
+    public function save(): void
     {
         $this->authorize('gallery.create');
 
-        $this->validate(
-            ['uploads.*' => ['image', 'max:5120']], // 5 MB each
-            ['uploads.*.image' => 'Each file must be an image.', 'uploads.*.max' => 'Each image may not exceed 5 MB.'],
-        );
+        if (empty($this->uploads)) {
+            return;
+        }
+
+        [$rules, $messages] = $this->uploadRules();
+        $this->validate($rules, $messages);
 
         foreach ($this->uploads as $file) {
             $path = $file->store('gallery', 'public');
@@ -95,7 +137,7 @@ class MediaLibrary extends Component
         }
 
         $count = count($this->uploads);
-        $this->uploads = [];
+        $this->reset('uploads', 'showUploader');
         $this->resetPage();
         unset($this->folders);
 
