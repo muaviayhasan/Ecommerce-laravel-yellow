@@ -25,6 +25,9 @@ class ProductController extends Controller
         $product = array_merge($base, [
             'categories' => 'Smart Phones & Tablets, Smartphones, Laptops & Computers',
             'availability' => 'In stock',
+            'stock' => 14,
+            'rating' => 4,
+            'reviews_count' => 0,
             'features' => [
                 'Fingertip controls: on-speaker volume and bass.',
                 'Handy headphone jack — listen to music, movies and games in total privacy.',
@@ -54,6 +57,17 @@ class ProductController extends Controller
                 '16 GB DDR5 RAM, expandable to 32 GB',
                 '512 GB ultra-fast NVMe SSD',
                 'Wi-Fi 6E + Bluetooth 5.3',
+            ],
+            // Rich description blocks (heading + copy) for the 2-column Description layout
+            'description_blocks' => [
+                ['heading' => 'Perfectly Done', 'body' => 'Every detail is engineered for the long haul — a precision-milled chassis, '
+                    . 'tactile controls and a finish that shrugs off daily wear. It looks as good on your desk as it performs under load.'],
+                ['heading' => 'Truly Wireless', 'body' => 'Pair in seconds over Bluetooth 5.3 and roam freely with a rock-solid connection. '
+                    . 'Seamless multi-device switching keeps your phone and laptop a tap away.'],
+                ['heading' => 'Intelligent Bass', 'body' => 'Adaptive tuning reads the room and your content, delivering deep, controlled low-end '
+                    . 'without muddying the mids — so vocals stay crisp and detail comes through.'],
+                ['heading' => 'All-Day Battery', 'body' => 'Up to 30 hours on a charge, and a rapid 10-minute top-up buys you hours more. '
+                    . 'Leave the charger behind and keep the music — and the work — going.'],
             ],
             // ----- Specification tab (grouped) -----
             'specifications' => [
@@ -88,7 +102,7 @@ class ProductController extends Controller
         return view('storefront.product', [
             'product' => $product,
             'accessories' => $pool->slice(2, 4)->values(),
-            'related' => $pool->slice(1, 4)->values(),
+            'related' => $pool->slice(1, 5)->values(),
             'moreProducts' => $pool->slice(6, 4)->values(),
             'latest' => $pool->slice(1, 3)->values(),
             'featured' => $pool->take(2)->values(),

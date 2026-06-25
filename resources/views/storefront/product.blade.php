@@ -5,264 +5,263 @@
 
 @php
     $isOnSale = $product['compare'] !== null && (float) $product['compare'] > (float) $product['price'];
+    $rating = (int) ($product['rating'] ?? 0);
+    // Flatten the grouped specs into a single key/value list for the 2-column table.
+    $specRows = [];
+    foreach (($product['specifications'] ?? []) as $group) {
+        foreach ($group as $label => $value) {
+            $specRows[] = [$label, $value];
+        }
+    }
+    $specHalf = (int) ceil(count($specRows) / 2);
 @endphp
 
 @section('content')
-    <div class="bg-white py-8">
+    <div class="bg-background py-8">
         <div class="app-container">
             {{-- Breadcrumbs --}}
-            <nav class="text-label-sm text-on-surface-variant mb-8 flex flex-wrap items-center gap-2" aria-label="Breadcrumb">
+            <nav class="flex flex-wrap items-center gap-2 text-label-sm text-on-surface-variant mb-8" aria-label="Breadcrumb">
                 <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
-                <span>&rsaquo;</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
                 <a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Shop</a>
-                <span>&rsaquo;</span>
+                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span class="text-on-surface line-clamp-1">{{ $product['name'] }}</span>
             </nav>
 
-            <div class="flex flex-col lg:flex-row gap-8">
-                {{-- ===================== Sidebar (below product on mobile) ===================== --}}
-                <aside class="w-full lg:w-1/4 shrink-0 order-2 lg:order-1 space-y-8">
-                    {{-- Categories --}}
-                    <div class="border border-gray-200 rounded p-6">
-                        <h3 class="font-bold border-b border-gray-200 pb-3 mb-4">All Categories</h3>
-                        <ul class="space-y-3 text-body-base text-on-surface-variant">
-                            <li class="font-bold text-on-surface">Smart Phones &amp; Tablets <span class="font-normal text-gray-400">(25)</span></li>
-                            <li class="pl-4"><a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Smartphones <span class="text-gray-400">(21)</span></a></li>
-                            <li class="pl-4"><a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Tablets <span class="text-gray-400">(4)</span></a></li>
-                        </ul>
+            {{-- ===================== Product hero card ===================== --}}
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12 bg-white p-6 lg:p-8 rounded-lg shadow-sm border border-outline-variant"
+                x-data="{ active: 0, images: @js($product['gallery']) }">
+                {{-- Gallery: main image on top, thumbnails below --}}
+                <div class="space-y-6">
+                    <div class="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center p-6 sm:p-8 group cursor-zoom-in">
+                        <img :src="images[active]" alt="{{ $product['name'] }}"
+                            class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <div class="flex gap-3 sm:gap-4 overflow-x-auto pb-2 no-scrollbar">
+                        @foreach ($product['gallery'] as $i => $img)
+                            <button type="button" @click="active = {{ $i }}" aria-label="View image {{ $i + 1 }}"
+                                class="w-20 h-20 shrink-0 border-2 rounded-lg p-2 transition-colors"
+                                :class="active === {{ $i }} ? 'border-primary' : 'border-outline-variant hover:border-primary'">
+                                <img src="{{ $img }}" alt="" loading="lazy" class="w-full h-full object-contain">
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Product info --}}
+                <div class="flex flex-col">
+                    <a href="{{ route('shop') }}" class="text-primary font-bold text-label-sm uppercase tracking-wider mb-2">{{ $product['categories'] }}</a>
+                    <h1 class="text-headline-md font-medium mb-4">{{ $product['name'] }}</h1>
+
+                    {{-- Rating --}}
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="flex text-primary-container">
+                            @for ($s = 1; $s <= 5; $s++)
+                                <span class="material-symbols-outlined text-[20px]" @if ($s <= $rating) style="font-variation-settings: 'FILL' 1;" @endif>star</span>
+                            @endfor
+                        </div>
+                        <span class="text-label-sm text-on-surface-variant">({{ $product['reviews_count'] ?? 0 }} Customer Reviews)</span>
                     </div>
 
-                    {{-- Ad banner --}}
-                    <a href="{{ route('shop') }}" class="block relative rounded-lg overflow-hidden bg-surface-container group">
-                        <img src="/images/promos/promo-1.png" alt="Cameras promo"
-                            class="w-full h-64 object-contain p-6 group-hover:scale-105 transition-transform duration-500">
-                        <div class="absolute top-6 left-6">
-                            <p class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant mb-1">All-new</p>
-                            <h4 class="text-3xl font-black text-on-surface leading-none">4K</h4>
-                            <p class="text-body-base font-bold text-on-surface">CAMERAS</p>
-                            <p class="text-[10px] text-on-surface-variant mt-3">STARTING AT</p>
-                            <p class="text-2xl font-bold text-primary">$79.99</p>
-                        </div>
-                    </a>
-
-                    {{-- Latest products --}}
-                    <div>
-                        <h3 class="font-bold border-b border-gray-200 pb-3 mb-6">Latest Products</h3>
-                        <div class="space-y-6">
-                            @foreach ($latest as $item)
-                                <x-storefront.product-list-item :product="$item" />
+                    {{-- Feature box + SKU --}}
+                    <div class="bg-surface p-4 rounded-lg mb-6 text-body-base border border-outline-variant">
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach ($product['features'] as $feature)
+                                <li>{{ $feature }}</li>
                             @endforeach
-                        </div>
+                        </ul>
+                        <p class="mt-4 text-on-surface-variant italic">SKU: {{ $product['sku'] ?? 'N/A' }}</p>
                     </div>
-                </aside>
 
-                {{-- ===================== Main product section ===================== --}}
-                <div class="w-full lg:w-3/4 order-1 lg:order-2">
-                    <div class="flex flex-col md:flex-row gap-8 lg:gap-10 mb-12">
-                        {{-- Gallery --}}
-                        <div class="w-full md:w-1/2 flex gap-3"
-                            x-data="{ active: 0, images: @js($product['gallery']) }">
-                            <div class="flex flex-col gap-2 w-16 sm:w-20 shrink-0">
-                                @foreach ($product['gallery'] as $i => $img)
-                                    <button type="button" @click="active = {{ $i }}" aria-label="View image {{ $i + 1 }}"
-                                        class="border-2 rounded p-1 transition-colors"
-                                        :class="active === {{ $i }} ? 'border-primary-container' : 'border-gray-200 hover:border-primary-container'">
-                                        <img src="{{ $img }}" alt="" loading="lazy" class="w-full aspect-square object-contain">
-                                    </button>
-                                @endforeach
-                            </div>
-                            <div class="flex-grow relative border border-gray-200 rounded-lg p-6 sm:p-8 aspect-square flex items-center justify-center overflow-hidden group cursor-zoom-in">
-                                <span class="material-symbols-outlined absolute top-3 right-3 text-on-surface-variant text-[22px]">zoom_in</span>
-                                <img :src="images[active]" alt="{{ $product['name'] }}"
-                                    class="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-110">
-                            </div>
+                    {{-- Availability + price + actions --}}
+                    <div class="border-t border-outline-variant pt-6">
+                        <div class="text-label-sm text-green-600 font-bold mb-2">Availability: {{ $product['stock'] ?? 0 }} in stock</div>
+                        <div class="flex items-end gap-3 mb-6">
+                            <span class="text-[40px] leading-none font-black {{ $isOnSale ? 'text-error' : 'text-on-surface' }}">Rs {{ number_format($product['price']) }}</span>
+                            @if ($isOnSale)
+                                <span class="text-xl text-on-surface-variant line-through pb-1">Rs {{ number_format($product['compare']) }}</span>
+                            @endif
                         </div>
 
-                        {{-- Info --}}
-                        <div class="w-full md:w-1/2">
-                            <p class="text-label-sm text-on-surface-variant mb-2 line-clamp-2">{{ $product['categories'] }}</p>
-                            <h1 class="text-3xl font-normal mb-3">{{ $product['name'] }}</h1>
-                            <p class="text-body-base text-on-surface-variant mb-5">
-                                Availability: <span class="text-green-600 font-bold">{{ $product['availability'] }}</span>
-                            </p>
-
-                            <div class="flex items-center gap-6 text-label-sm text-primary mb-6">
-                                <button type="button" class="flex items-center gap-1 hover:underline">
-                                    <span class="material-symbols-outlined text-[18px]">favorite</span> Wishlist
-                                </button>
-                                <button type="button" class="flex items-center gap-1 hover:underline">
-                                    <span class="material-symbols-outlined text-[18px]">sync</span> Compare
-                                </button>
+                        <div class="flex flex-wrap gap-4 items-center" x-data="{ qty: 1 }">
+                            <div class="flex border border-outline rounded-lg overflow-hidden h-12">
+                                <button type="button" @click="qty = Math.max(1, qty - 1)" aria-label="Decrease quantity" class="px-4 hover:bg-surface transition-colors">&minus;</button>
+                                <input type="number" min="1" x-model.number="qty" aria-label="Quantity"
+                                    class="w-12 text-center border-none focus:ring-0 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
+                                <button type="button" @click="qty++" aria-label="Increase quantity" class="px-4 hover:bg-surface transition-colors">+</button>
                             </div>
-
-                            <ul class="list-disc list-inside text-body-base text-on-surface-variant space-y-2 mb-8">
-                                @foreach ($product['features'] as $feature)
-                                    <li>{{ $feature }}</li>
-                                @endforeach
-                            </ul>
-
-                            {{-- Price --}}
-                            <div class="flex items-end gap-3 mb-6">
-                                <span class="text-4xl font-medium {{ $isOnSale ? 'text-error' : 'text-on-surface' }}">Rs {{ number_format($product['price']) }}</span>
-                                @if ($isOnSale)
-                                    <span class="text-xl text-on-surface-variant line-through pb-1">Rs {{ number_format($product['compare']) }}</span>
-                                @endif
-                            </div>
-
-                            {{-- Qty + add to cart --}}
-                            <div class="flex flex-wrap items-center gap-4 mb-4" x-data="{ qty: 1 }">
-                                <div class="flex items-center border border-gray-300 rounded-full overflow-hidden">
-                                    <button type="button" @click="qty = Math.max(1, qty - 1)" aria-label="Decrease quantity" class="px-4 py-2 hover:bg-surface-container transition-colors">&minus;</button>
-                                    <input type="number" min="1" x-model.number="qty" aria-label="Quantity"
-                                        class="w-12 border-none text-center py-2 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
-                                    <button type="button" @click="qty++" aria-label="Increase quantity" class="px-4 py-2 hover:bg-surface-container transition-colors">+</button>
-                                </div>
-                                <button type="button" class="bg-primary-container text-on-surface font-bold px-8 py-3 rounded-full hover:bg-primary-fixed-dim transition-colors flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[20px]">shopping_cart</span> Add to cart
-                                </button>
-                            </div>
-                            <button type="button" class="w-full sm:w-auto bg-inverse-surface text-inverse-on-surface font-bold px-10 py-3 rounded-full hover:opacity-90 transition-opacity">
-                                Buy Now
+                            <button type="button" class="bg-primary-container text-on-primary-container px-10 h-12 font-bold rounded hover:brightness-95 transition-all flex items-center gap-2">
+                                <span class="material-symbols-outlined">shopping_cart</span> Add to Cart
                             </button>
                         </div>
+
+                        <button type="button" class="w-full mt-4 bg-[#00d084] text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                            Pay with <span class="font-black italic">link</span>
+                        </button>
+
+                        <div class="flex gap-8 mt-6 text-label-sm font-bold text-on-surface-variant">
+                            <button type="button" class="flex items-center gap-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">favorite</span> Wishlist</button>
+                            <button type="button" class="flex items-center gap-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">sync</span> Compare</button>
+                        </div>
                     </div>
+                </div>
+            </section>
 
-                    {{-- ===================== Tabs ===================== --}}
-                    <div class="mb-16" x-data="{ tab: 'accessories' }">
-                        <div class="flex justify-start lg:justify-center border-b border-gray-200 mb-10 gap-6 sm:gap-10 lg:gap-12 overflow-x-auto no-scrollbar">
-                            @foreach (['accessories' => 'Accessories', 'description' => 'Description', 'specification' => 'Specification', 'reviews' => 'Reviews', 'more' => 'More Products'] as $key => $label)
-                                <button type="button" @click="tab = '{{ $key }}'"
-                                    class="shrink-0 pb-3 text-lg font-bold border-b-4 transition-colors whitespace-nowrap"
-                                    :class="tab === '{{ $key }}' ? 'border-primary-container text-on-surface' : 'border-transparent text-on-surface-variant hover:text-on-surface'">
-                                    {{ $label }}
-                                </button>
+            {{-- ===================== Tabbed content ===================== --}}
+            <section class="bg-white rounded-lg border border-outline-variant mb-12 overflow-hidden" x-data="{ tab: 'description' }">
+                <div class="border-b border-outline-variant flex justify-start lg:justify-center gap-8 lg:gap-12 px-4 overflow-x-auto no-scrollbar font-bold text-label-sm uppercase tracking-wide">
+                    @foreach (['accessories' => 'Accessories', 'description' => 'Description', 'specification' => 'Specification', 'reviews' => 'Reviews', 'more' => 'More Products'] as $key => $label)
+                        <button type="button" @click="tab = '{{ $key }}'"
+                            class="py-4 px-1 border-b-2 transition-colors whitespace-nowrap"
+                            :class="tab === '{{ $key }}' ? 'border-primary text-on-surface' : 'border-transparent text-on-surface-variant hover:text-primary'">
+                            {{ $label }}
+                        </button>
+                    @endforeach
+                </div>
+
+                {{-- Description --}}
+                <div x-show="tab === 'description'" class="p-6 lg:p-12 space-y-16">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+                        <div class="space-y-4">
+                            <h2 class="text-headline-md">{{ $product['description_blocks'][0]['heading'] }}</h2>
+                            <p class="text-on-surface-variant leading-relaxed">{{ $product['description_blocks'][0]['body'] }}</p>
+                            <h2 class="text-headline-md !mt-8">{{ $product['description_blocks'][1]['heading'] }}</h2>
+                            <p class="text-on-surface-variant leading-relaxed">{{ $product['description_blocks'][1]['body'] }}</p>
+                        </div>
+                        <div class="w-full h-80 bg-surface rounded-xl overflow-hidden flex items-center justify-center">
+                            <img src="{{ $product['gallery'][1] ?? $product['gallery'][0] }}" alt="" class="w-full h-full object-contain p-8">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+                        <div class="order-2 lg:order-1 w-full h-80 bg-surface rounded-xl overflow-hidden flex items-center justify-center">
+                            <img src="{{ $product['gallery'][2] ?? $product['gallery'][0] }}" alt="" class="w-full h-full object-contain p-8">
+                        </div>
+                        <div class="order-1 lg:order-2 space-y-4">
+                            <h2 class="text-headline-md">{{ $product['description_blocks'][2]['heading'] }}</h2>
+                            <p class="text-on-surface-variant leading-relaxed">{{ $product['description_blocks'][2]['body'] }}</p>
+                            <h2 class="text-headline-md !mt-8">{{ $product['description_blocks'][3]['heading'] }}</h2>
+                            <p class="text-on-surface-variant leading-relaxed">{{ $product['description_blocks'][3]['body'] }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Accessories --}}
+                <div x-show="tab === 'accessories'" x-cloak class="p-6 lg:p-12">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        @foreach ($accessories as $item)
+                            <x-storefront.product-card-grid :product="$item" />
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Specification --}}
+                <div x-show="tab === 'specification'" x-cloak class="p-6 lg:p-12">
+                    <h2 class="text-headline-md mb-8 text-center">Technical Specifications</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 border-t border-outline-variant max-w-4xl mx-auto">
+                        <div class="divide-y divide-outline-variant">
+                            @foreach (array_slice($specRows, 0, $specHalf) as [$label, $value])
+                                <div class="py-4 flex justify-between gap-4">
+                                    <span class="font-bold">{{ $label }}</span>
+                                    <span class="text-on-surface-variant text-right">{{ $value }}</span>
+                                </div>
                             @endforeach
                         </div>
-
-                        {{-- Accessories --}}
-                        <div x-show="tab === 'accessories'">
-                            <p class="text-on-surface-variant mb-8 max-w-3xl">Recommended add-ons and accessories that pair perfectly with the {{ $product['name'] }}.</p>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 border-t border-l border-gray-200">
-                                @foreach ($accessories as $item)
-                                    <x-storefront.product-card :product="$item" class="border-b border-gray-200 hover:border-transparent" />
-                                @endforeach
-                            </div>
-                        </div>
-
-                        {{-- Description --}}
-                        <div x-show="tab === 'description'" x-cloak class="max-w-4xl">
-                            <p class="text-lg text-on-surface-variant leading-relaxed mb-6">{{ $product['description_intro'] }}</p>
-                            @foreach ($product['description_body'] as $paragraph)
-                                <p class="text-on-surface-variant leading-relaxed mb-4">{{ $paragraph }}</p>
+                        <div class="divide-y divide-outline-variant md:border-t-0 border-t border-outline-variant">
+                            @foreach (array_slice($specRows, $specHalf) as [$label, $value])
+                                <div class="py-4 flex justify-between gap-4">
+                                    <span class="font-bold">{{ $label }}</span>
+                                    <span class="text-on-surface-variant text-right">{{ $value }}</span>
+                                </div>
                             @endforeach
-                            <h4 class="font-bold text-xl mt-8 mb-4">Key Features</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                                @foreach ($product['highlights'] as $highlight)
-                                    <div class="flex items-start gap-2 text-on-surface-variant">
-                                        <span class="material-symbols-outlined text-primary text-[20px] shrink-0">check_circle</span>
-                                        <span>{{ $highlight }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Reviews --}}
+                <div x-show="tab === 'reviews'" x-cloak class="p-6 lg:p-12">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        {{-- Summary --}}
+                        <div>
+                            <h2 class="text-headline-md mb-8">Based on {{ $product['reviews_count'] ?? 0 }} reviews</h2>
+                            <div class="flex items-center gap-4 mb-8">
+                                <div class="text-[64px] font-black leading-none">0.0</div>
+                                <div>
+                                    <div class="text-on-surface-variant">overall</div>
+                                    <div class="flex text-outline">
+                                        @for ($s = 0; $s < 5; $s++)<span class="material-symbols-outlined">star</span>@endfor
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                @foreach (['★★★★★', '★★★★☆', '★★★☆☆', '★★☆☆☆', '★☆☆☆☆'] as $stars)
+                                    <div class="flex items-center gap-4">
+                                        <div class="text-primary-container text-label-sm w-24 shrink-0">{{ $stars }}</div>
+                                        <div class="flex-1 h-2 bg-surface rounded-full overflow-hidden">
+                                            <div class="h-full bg-primary-container" style="width: 0"></div>
+                                        </div>
+                                        <span class="text-label-sm w-4 text-right">0</span>
                                     </div>
                                 @endforeach
                             </div>
-                        </div>
-
-                        {{-- Specification --}}
-                        <div x-show="tab === 'specification'" x-cloak class="max-w-4xl">
-                            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                                @foreach ($product['specifications'] as $group => $rows)
-                                    <div class="bg-surface-container px-6 py-3 font-bold border-t border-gray-200 first:border-t-0">{{ $group }}</div>
-                                    @foreach ($rows as $label => $value)
-                                        <div class="flex border-t border-gray-200 text-body-base">
-                                            <div class="w-2/5 sm:w-1/3 px-6 py-3 font-medium bg-surface-container-low">{{ $label }}</div>
-                                            <div class="w-3/5 sm:w-2/3 px-6 py-3 text-on-surface-variant">{{ $value }}</div>
-                                        </div>
-                                    @endforeach
-                                @endforeach
-                            </div>
-                        </div>
-
-                        {{-- Reviews --}}
-                        <div x-show="tab === 'reviews'" x-cloak>
-                            <div class="flex flex-col lg:flex-row gap-12">
-                                {{-- Ratings summary --}}
-                                <div class="lg:w-1/3">
-                                    <h4 class="font-bold mb-4">Based on 0 reviews</h4>
-                                    <div class="flex items-start gap-4 mb-6">
-                                        <div class="text-6xl font-bold leading-none">0.0</div>
-                                        <div class="text-body-base text-on-surface-variant pt-2">overall</div>
-                                    </div>
-                                    <div class="space-y-2">
-                                        @foreach (['★★★★★', '★★★★☆', '★★★☆☆', '★★☆☆☆', '★☆☆☆☆'] as $stars)
-                                            <div class="flex items-center text-label-sm gap-3">
-                                                <div class="text-primary-container">{{ $stars }}</div>
-                                                <div class="flex-grow h-2 bg-surface-container rounded"></div>
-                                                <div class="text-gray-400">0</div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-
-                                {{-- Review form --}}
-                                <div class="lg:w-2/3">
-                                    <h4 class="font-bold mb-6">Be the first to review “{{ $product['name'] }}”</h4>
-                                    <form class="space-y-6" onsubmit="return false">
-                                        <div>
-                                            <label class="block text-label-sm font-bold mb-2">Your Rating</label>
-                                            <div class="text-primary-container text-xl tracking-widest cursor-pointer">☆☆☆☆☆</div>
-                                        </div>
-                                        <div>
-                                            <label for="review-body" class="block text-label-sm font-bold mb-2">Your Review</label>
-                                            <textarea id="review-body" rows="6"
-                                                class="w-full border-gray-300 rounded-2xl focus:ring-primary-container focus:border-primary-container"></textarea>
-                                        </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label for="review-name" class="block text-label-sm font-bold mb-2">Name *</label>
-                                                <input id="review-name" type="text"
-                                                    class="w-full border-gray-300 rounded-full py-3 focus:ring-primary-container focus:border-primary-container">
-                                            </div>
-                                            <div>
-                                                <label for="review-email" class="block text-label-sm font-bold mb-2">Email *</label>
-                                                <input id="review-email" type="email"
-                                                    class="w-full border-gray-300 rounded-full py-3 focus:ring-primary-container focus:border-primary-container">
-                                            </div>
-                                        </div>
-                                        <label class="flex items-start gap-2 text-body-base text-on-surface-variant">
-                                            <input type="checkbox" class="mt-1 rounded border-gray-300 accent-primary-container">
-                                            Save my name and email in this browser for the next time I comment.
-                                        </label>
-                                        <button type="submit" class="bg-primary-container font-bold px-8 py-3 rounded-full hover:bg-primary-fixed-dim transition-colors">
-                                            Add Review
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="mt-12 p-4 bg-primary-container/30 text-center text-on-surface-variant font-medium rounded">
+                            <div class="mt-8 p-4 bg-primary-container/10 border border-primary-container rounded-lg text-label-sm">
                                 There are no reviews yet.
                             </div>
                         </div>
 
-                        {{-- More Products --}}
-                        <div x-show="tab === 'more'" x-cloak>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 border-t border-l border-gray-200">
-                                @foreach ($moreProducts as $item)
-                                    <x-storefront.product-card :product="$item" class="border-b border-gray-200 hover:border-transparent" />
-                                @endforeach
-                            </div>
+                        {{-- Form --}}
+                        <div>
+                            <h2 class="text-headline-md mb-4">Be the first to review</h2>
+                            <p class="text-on-surface-variant text-label-sm mb-6">Your email address will not be published. Required fields are marked *</p>
+                            <form class="space-y-6" onsubmit="return false">
+                                <div>
+                                    <label class="block text-label-sm font-bold mb-2">Your Rating</label>
+                                    <div class="flex text-outline cursor-pointer hover:text-primary-container text-2xl">
+                                        @for ($s = 0; $s < 5; $s++)<span class="material-symbols-outlined">star</span>@endfor
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="review-body" class="block text-label-sm font-bold mb-2">Your Review *</label>
+                                    <textarea id="review-body" rows="5" class="w-full border border-outline-variant rounded px-4 py-2 focus:ring-primary focus:border-primary"></textarea>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="review-name" class="block text-label-sm font-bold mb-2">Name *</label>
+                                        <input id="review-name" type="text" class="w-full border border-outline-variant rounded px-4 py-2 focus:ring-primary focus:border-primary">
+                                    </div>
+                                    <div>
+                                        <label for="review-email" class="block text-label-sm font-bold mb-2">Email *</label>
+                                        <input id="review-email" type="email" class="w-full border border-outline-variant rounded px-4 py-2 focus:ring-primary focus:border-primary">
+                                    </div>
+                                </div>
+                                <label class="flex items-start gap-2 text-label-sm text-on-surface-variant">
+                                    <input type="checkbox" class="mt-0.5 rounded border-outline-variant accent-primary-container">
+                                    Save my name and email in this browser for the next time I comment.
+                                </label>
+                                <button type="submit" class="bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded-full hover:brightness-95 transition-all">Add Review</button>
+                            </form>
                         </div>
                     </div>
-
-                    {{-- ===================== Related products ===================== --}}
-                    <section>
-                        <x-storefront.section-title title="Related products" />
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 border-t border-l border-gray-200">
-                            @foreach ($related as $item)
-                                <x-storefront.product-card :product="$item" class="border-b border-gray-200 hover:border-transparent" />
-                            @endforeach
-                        </div>
-                    </section>
                 </div>
-            </div>
+
+                {{-- More Products --}}
+                <div x-show="tab === 'more'" x-cloak class="p-6 lg:p-12">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        @foreach ($moreProducts as $item)
+                            <x-storefront.product-card-grid :product="$item" />
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+
+            {{-- ===================== Related products ===================== --}}
+            <section class="mb-12">
+                <h2 class="text-headline-md mb-8 pb-3 border-b-2 border-primary-container w-max">Related products</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+                    @foreach ($related as $item)
+                        <x-storefront.product-card-grid :product="$item" />
+                    @endforeach
+                </div>
+            </section>
         </div>
     </div>
 
