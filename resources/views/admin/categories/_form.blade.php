@@ -15,7 +15,7 @@
         [
             'title' => 'Image & description',
             'fields' => [
-                'image_media_id' => ['input' => 'select', 'label' => 'Image', 'options' => ['' => '— None —'] + $mediaOptions],
+                'image_media_id' => ['input' => 'media', 'label' => 'Image', 'media' => $mediaItems, 'placeholder' => 'Choose a category image'],
                 'description' => ['input' => 'textarea', 'label' => 'Description', 'rows' => 4, 'max' => 5000],
             ],
         ],
@@ -23,7 +23,7 @@
             'title' => 'SEO',
             'fields' => [
                 'meta_title' => ['input' => 'text', 'label' => 'Meta title', 'max' => 255],
-                'meta_image_media_id' => ['input' => 'select', 'label' => 'Social image', 'options' => ['' => '— None —'] + $mediaOptions],
+                'meta_image_media_id' => ['input' => 'media', 'label' => 'Social image', 'media' => $mediaItems, 'placeholder' => 'Choose a social image'],
                 'meta_description' => ['input' => 'textarea', 'label' => 'Meta description', 'rows' => 3, 'max' => 255],
             ],
         ],

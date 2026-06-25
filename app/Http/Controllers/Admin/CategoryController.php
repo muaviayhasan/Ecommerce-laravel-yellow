@@ -57,7 +57,7 @@ class CategoryController extends Controller implements HasMiddleware
         return view('admin.categories.create', [
             'category' => new Category(['is_active' => true, 'sort_order' => 0]),
             'parentOptions' => $this->parentOptions(),
-            'mediaOptions' => $this->mediaOptions(),
+            'mediaItems' => $this->mediaItems(),
         ]);
     }
 
@@ -75,7 +75,7 @@ class CategoryController extends Controller implements HasMiddleware
         return view('admin.categories.edit', [
             'category' => $category,
             'parentOptions' => $this->parentOptions($category),
-            'mediaOptions' => $this->mediaOptions(),
+            'mediaItems' => $this->mediaItems(),
         ]);
     }
 
@@ -113,14 +113,21 @@ class CategoryController extends Controller implements HasMiddleware
             ->all();
     }
 
-    /** Existing media for the image pickers (id => label). */
-    private function mediaOptions(): array
+    /**
+     * Existing media for the visual image pickers.
+     *
+     * @return \Illuminate\Support\Collection<int, array{id:int, url:string, title:string}>
+     */
+    private function mediaItems(): \Illuminate\Support\Collection
     {
         return Media::query()
             ->latest('id')
             ->limit(200)
-            ->get(['id', 'title', 'path'])
-            ->mapWithKeys(fn (Media $m) => [$m->id => $m->title ?: basename($m->path)])
-            ->all();
+            ->get(['id', 'disk', 'path', 'title'])
+            ->map(fn (Media $m) => [
+                'id' => $m->id,
+                'url' => $m->url,
+                'title' => $m->title ?: basename($m->path),
+            ]);
     }
 }

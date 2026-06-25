@@ -33,6 +33,11 @@
                 <x-settings.secret :id="$id" :name="$name" :has-value="filled($value)" />
                 @break
 
+            @case('media')
+                <x-settings.media-picker :id="$id" :name="$name" :selected="$current"
+                    :media="$meta['media'] ?? []" :placeholder="$meta['placeholder'] ?? 'Choose an image'" />
+                @break
+
             @default
                 <x-settings.input :id="$id" :name="$name" :type="$input" :value="$current"
                     :maxlength="$meta['max'] ?? null" :placeholder="$meta['placeholder'] ?? null" />
