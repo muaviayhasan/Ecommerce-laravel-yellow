@@ -75,12 +75,14 @@ class OrderTest extends TestCase
     {
         $order = $this->makeOrder();
 
+        // Assert on content common to both bill formats (A4 + thermal) so the test
+        // is independent of the ambient store bill_type setting.
         $this->actingAs($this->admin())
             ->get(route('admin.orders.print', $order))
             ->assertOk()
             ->assertSee($order->order_number)
             ->assertSee('Test Product')
-            ->assertSee('Invoice'); // default bill_type is a4
+            ->assertSee('Subtotal');
     }
 
     public function test_printing_requires_view_permission(): void
