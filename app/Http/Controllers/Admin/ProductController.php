@@ -74,7 +74,7 @@ class ProductController extends Controller implements HasMiddleware
     {
         $product->load([
             'category', 'brand', 'media',
-            'variants.attributeValues.attribute',
+            'variants.attributeValues.attribute', 'variants.image',
             'defaultVariant', 'ogImage',
         ])->loadCount('reviews');
 
@@ -226,6 +226,7 @@ class ProductController extends Controller implements HasMiddleware
                 'compare_at_price' => $row['compare_at_price'] ?? null,
                 'stock_quantity' => $row['stock_quantity'] ?? 0,
                 'low_stock_threshold' => $row['low_stock_threshold'] ?? 0,
+                'image_media_id' => filled($row['image_media_id'] ?? null) ? (int) $row['image_media_id'] : null,
                 'is_default' => $i === $defaultIndex,
                 'is_active' => (bool) ($row['is_active'] ?? true),
             ])->save();
@@ -315,6 +316,7 @@ class ProductController extends Controller implements HasMiddleware
             'cost' => $this->trimDecimal($v->cost),
             'stock_quantity' => $this->trimDecimal($v->stock_quantity),
             'low_stock_threshold' => $this->trimDecimal($v->low_stock_threshold),
+            'image_media_id' => $v->image_media_id ? (string) $v->image_media_id : '',
             'is_active' => (bool) $v->is_active,
         ])->all();
 

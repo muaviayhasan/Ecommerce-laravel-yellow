@@ -84,7 +84,7 @@
         </x-settings.section>
 
         <x-settings.section title="Pricing & variants">
-            <div x-data="productVariants(@js($jsState), @js($variationAttributes))" class="space-y-5">
+            <div x-data="productVariants(@js($jsState), @js($variationAttributes), @js($mediaItems))" class="space-y-5">
                 <input type="hidden" name="variant_mode" :value="mode">
 
                 {{-- Mode switch --}}
@@ -178,6 +178,7 @@
                             <thead class="text-[10px] font-bold text-outline uppercase tracking-wider border-b border-outline-variant/60 bg-surface-container-low/40">
                                 <tr>
                                     <th class="px-3 py-2">Variant</th>
+                                    <th class="px-3 py-2 text-center">Img</th>
                                     <th class="px-3 py-2">SKU</th>
                                     <th class="px-3 py-2">Price <span class="text-error">*</span></th>
                                     <th class="px-3 py-2">Compare</th>
@@ -196,6 +197,14 @@
                                             <template x-for="vid in v.value_ids" :key="vid"><input type="hidden" :name="`variants[${idx}][value_ids][]`" :value="vid"></template>
                                             <input type="hidden" :name="`variants[${idx}][id]`" :value="v.id || ''">
                                             <input type="hidden" :name="`variants[${idx}][is_active]`" :value="v.is_active ? 1 : 0">
+                                        </td>
+                                        <td class="px-3 py-2 text-center">
+                                            <button type="button" @click="openImagePicker(idx)" title="Variant image"
+                                                class="w-9 h-9 rounded-lg border border-outline-variant overflow-hidden grid place-items-center bg-surface-container-low hover:border-primary transition-colors mx-auto">
+                                                <template x-if="v.image_media_id && mediaUrl(v.image_media_id)"><img :src="mediaUrl(v.image_media_id)" alt="" class="w-full h-full object-cover"></template>
+                                                <template x-if="!(v.image_media_id && mediaUrl(v.image_media_id))"><span class="material-symbols-outlined text-[16px] text-outline">add_photo_alternate</span></template>
+                                            </button>
+                                            <input type="hidden" :name="`variants[${idx}][image_media_id]`" :value="v.image_media_id || ''">
                                         </td>
                                         <td class="px-3 py-2"><input type="text" :name="`variants[${idx}][sku]`" x-model="v.sku" placeholder="auto" class="w-28 {{ $numCell }}"></td>
                                         <td class="px-3 py-2"><input type="number" step="0.01" min="0" :name="`variants[${idx}][retail_price]`" x-model="v.retail_price" class="{{ $numCell }}"></td>
@@ -218,6 +227,35 @@
                     @error('variants')<p class="text-xs text-error">{{ $message }}</p>@enderror
                     @error('variants.*.value_ids')<p class="text-xs text-error">{{ $message }}</p>@enderror
                     @error('variants.*.retail_price')<p class="text-xs text-error">{{ $message }}</p>@enderror
+
+                    {{-- Per-variant image picker (optional; powers variant switching on the product page) --}}
+                    <div x-show="pickerOpen" x-cloak @keydown.escape.window="pickerOpen = false" class="fixed inset-0 z-50 overflow-y-auto">
+                        <div class="fixed inset-0 bg-black/50"></div>
+                        <div class="relative min-h-full flex items-start justify-center p-4 sm:p-6" @click.self="pickerOpen = false">
+                            <div class="w-full max-w-3xl my-4 sm:my-8 bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-xl shadow-2xl">
+                                <div class="flex items-center justify-between p-5 border-b border-outline-variant/60">
+                                    <h3 class="text-lg font-bold text-on-surface">Variant image</h3>
+                                    <button type="button" @click="pickerOpen = false" class="cursor-pointer p-1 -mr-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">close</span></button>
+                                </div>
+                                <template x-if="!mediaItems.length">
+                                    <div class="p-12 text-center text-sm text-on-surface-variant">No media yet. Upload images in the <a href="{{ route('admin.gallery.index') }}" class="text-primary font-semibold hover:underline">Gallery</a> first.</div>
+                                </template>
+                                <div x-show="mediaItems.length" class="p-5 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 max-h-[60vh] overflow-y-auto">
+                                    <template x-for="m in mediaItems" :key="m.id">
+                                        <button type="button" @click="chooseImage(m.id)"
+                                            :class="(pickingIndex !== null && variants[pickingIndex] && String(variants[pickingIndex].image_media_id) === String(m.id)) ? 'ring-2 ring-primary border-primary' : 'border-outline-variant/50 hover:border-primary/50'"
+                                            class="cursor-pointer rounded-xl border overflow-hidden">
+                                            <div class="aspect-square bg-surface-container-low overflow-hidden"><img :src="m.url" :alt="m.title" loading="lazy" class="w-full h-full object-cover"></div>
+                                        </button>
+                                    </template>
+                                </div>
+                                <div class="flex justify-between gap-3 p-5 border-t border-outline-variant/60">
+                                    <button type="button" @click="chooseImage('')" class="cursor-pointer px-4 py-2.5 text-sm font-semibold text-on-surface-variant hover:text-error">Use none</button>
+                                    <button type="button" @click="pickerOpen = false" class="cursor-pointer px-5 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110">Done</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </x-settings.section>
@@ -306,9 +344,12 @@
 @push('scripts')
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('productVariants', (state, attributes) => ({
+            Alpine.data('productVariants', (state, attributes, media) => ({
                 mode: state.mode || 'simple',
                 allAttributes: (attributes || []).map(a => ({ id: a.id, name: a.name, values: a.values || [] })),
+                mediaItems: (media || []).map(m => ({ id: m.id, url: m.url, title: m.title })),
+                pickerOpen: false,
+                pickingIndex: null,
                 options: ((state.options && state.options.length) ? state.options : [{ attributeId: '', valueIds: [] }])
                     .map(o => ({ attributeId: o.attributeId ? String(o.attributeId) : '', valueIds: (o.valueIds || []).map(Number) })),
                 variants: (state.variants || []).map(v => ({
@@ -320,6 +361,7 @@
                     cost: v.cost ?? '',
                     stock_quantity: v.stock_quantity ?? '',
                     low_stock_threshold: v.low_stock_threshold ?? '',
+                    image_media_id: v.image_media_id ? String(v.image_media_id) : '',
                     is_active: v.is_active === undefined ? true : (v.is_active === true || v.is_active === 1 || v.is_active === '1'),
                 })),
                 defaultIndex: Number(state.defaultIndex || 0),
@@ -380,13 +422,22 @@
                         const prev = existing[keyOf(ids)];
                         return prev
                             ? { ...prev, value_ids: ids }
-                            : { id: null, value_ids: ids, sku: '', retail_price: this.prefillPrice(ids), compare_at_price: '', cost: '', stock_quantity: '', low_stock_threshold: '', is_active: true };
+                            : { id: null, value_ids: ids, sku: '', retail_price: this.prefillPrice(ids), compare_at_price: '', cost: '', stock_quantity: '', low_stock_threshold: '', image_media_id: '', is_active: true };
                     });
                     if (this.defaultIndex >= this.variants.length) this.defaultIndex = 0;
                 },
                 removeVariant(i) {
                     this.variants.splice(i, 1);
                     if (this.defaultIndex >= this.variants.length) this.defaultIndex = Math.max(0, this.variants.length - 1);
+                },
+
+                mediaUrl(id) { const m = this.mediaItems.find(x => String(x.id) === String(id)); return m ? m.url : ''; },
+                openImagePicker(i) { this.pickingIndex = i; this.pickerOpen = true; },
+                chooseImage(id) {
+                    if (this.pickingIndex !== null && this.variants[this.pickingIndex]) {
+                        this.variants[this.pickingIndex].image_media_id = id ? String(id) : '';
+                    }
+                    this.pickerOpen = false;
                 },
             }));
 

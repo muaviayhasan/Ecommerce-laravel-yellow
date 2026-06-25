@@ -130,7 +130,14 @@
                         <tbody class="divide-y divide-outline-variant/40">
                             @foreach ($product->variants as $v)
                                 <tr>
-                                    <td class="px-6 py-3 font-mono text-[12px] text-on-surface-variant">{{ $v->sku }}</td>
+                                    <td class="px-6 py-3">
+                                        <div class="flex items-center gap-2">
+                                            @if ($v->image)
+                                                <img src="{{ $v->image->url }}" alt="" class="w-8 h-8 rounded object-cover border border-outline-variant/40 shrink-0">
+                                            @endif
+                                            <span class="font-mono text-[12px] text-on-surface-variant">{{ $v->sku }}</span>
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-3">
                                         @if ($v->attributeValues->isNotEmpty())
                                             {{ $v->attributeValues->map(fn ($av) => $av->label ?: $av->value)->implode(' / ') }}

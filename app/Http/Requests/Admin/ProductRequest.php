@@ -139,6 +139,7 @@ class ProductRequest extends FormRequest
             'variants.*.wholesale_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'variants.*.stock_quantity' => ['nullable', 'numeric', 'min:0'],
             'variants.*.low_stock_threshold' => ['nullable', 'numeric', 'min:0'],
+            'variants.*.image_media_id' => ['nullable', 'integer', Rule::exists('media', 'id')],
             'variants.*.is_active' => ['nullable', 'boolean'],
 
             // SEO
