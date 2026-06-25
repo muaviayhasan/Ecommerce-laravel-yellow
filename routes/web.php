@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\AttributeController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Storefront\BlogController;
@@ -46,3 +50,27 @@ foreach ($placeholders as $uri => $title) {
 }
 
 Route::get('/track-order', fn () => app(HomeController::class)->placeholder('Track Your Order'))->name('track.order');
+
+/*
+|--------------------------------------------------------------------------
+| Admin panel (CONVENTIONS §8) — auth + per-action RBAC
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Catalog
+    Route::resource('categories', CategoryController::class)->except('show');
+    Route::resource('attributes', AttributeController::class)->except('show');
+
+    // Gallery / media library (Livewire) — guarded; per-action checks live in the component.
+    Route::view('/gallery', 'admin.gallery.index')
+        ->middleware('can:gallery.view')
+        ->name('gallery.index');
+
+    // Settings — tabbed groups (CONVENTIONS §6); guards live on the controller.
+    Route::get('/settings', fn () => redirect()->route('admin.settings.show', 'general'))->name('settings.index');
+    Route::get('/settings/{group}', [SettingsController::class, 'show'])->name('settings.show');
+    Route::put('/settings/{group}', [SettingsController::class, 'update'])->name('settings.update');
+});

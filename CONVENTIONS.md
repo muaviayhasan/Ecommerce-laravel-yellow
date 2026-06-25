@@ -138,6 +138,18 @@ matching page) and, if it affects runtime, wire it in `App\Support\SettingsAppli
 - Use the **design-token classes** (`primary`, `tertiary`, `surface-container-*`,
   `on-surface-variant`, `outline-variant`, …). Tokens from mockups that aren't defined
   (`*-fixed-variant`) must be substituted.
+- **Three themes, one token set.** The storefront is theme #1 (yellow, `:root`). The
+  admin is theme #2 **light** + #3 **dark**, scoped to `.admin-scope` (set on the admin
+  `<html>`) with `.admin-scope.dark` overriding the same CSS variables. Dark mode is
+  **class-based** (`@custom-variant dark`), toggled in the header and persisted to
+  `localStorage` (applied pre-paint to avoid a flash). Palettes are the **official**
+  `public/stich/admin/{light,dark}/DESIGN_*.md` frontmatter ("Core Admin" / "Midnight
+  Executive") — copy those hexes verbatim; don't invent values.
+- **Material dark elevation caveat.** In the dark ramp `surface-container-lowest` is the
+  *darkest* surface (opposite of light). So chrome that uses `surface-container-lowest`
+  in light must elevate in dark via a `dark:` variant (e.g. cards =
+  `bg-surface-container-lowest dark:bg-surface-container`). The shared `x-admin.*`
+  components already encode this — reuse them and new screens get dark for free.
 
 ---
 
@@ -163,6 +175,9 @@ controller + Blade views + routes + nav, reusing the existing model/FormRequest.
   (`campuses[]`) → add the rule to the shared FormRequest, `Arr::except` before create,
   `->sync()` after.
 - Always use the settings helpers (§6) and wire the screen into `config/navigation.php`.
+- **Every admin screen ships in both light and dark mode** (§7). Build with the design
+  tokens / `x-admin.*` components so both themes work, and verify the screen in **both**
+  before calling it done — never hardcode a hex that only reads in one mode.
 
 **Recurring gotcha:** a `date` cast stores `Y-m-d 00:00:00`, so `updateOrCreate` /
 `where('date','Y-m-d')` won't match — use `whereDate(...)` + explicit

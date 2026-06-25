@@ -10,6 +10,14 @@
 @import 'tailwindcss';
 @import 'select2/dist/css/select2.css';
 
+/*
+ * Class-based dark mode (admin theme #3). Tailwind v4 defaults `dark:` to the OS
+ * `prefers-color-scheme`; we drive it from a `.dark` class on <html> instead so
+ * the admin's theme toggle controls it. The storefront has no `.dark` ancestor,
+ * so its `dark:` utilities simply never activate.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source "../**/*.blade.php";
@@ -79,6 +87,22 @@
     --color-outline: #7e775f;
     --color-outline-variant: #d0c6ab;
 
+    /*
+     | Admin-only token NAMES (theme #2 / #3). These don't exist in the storefront
+     | yellow palette but the admin screens use them, so we register them here so
+     | Tailwind generates their background and text utilities, then override the
+     | values inside the `.admin-scope` block below. Defaults = admin-light values.
+     */
+    --color-surface-tint: #0053db;
+    --color-secondary-fixed: #6ffbbe;
+    --color-secondary-fixed-dim: #4edea3;
+    --color-on-secondary-fixed: #002113;
+    --color-on-secondary-fixed-variant: #005236;
+    --color-tertiary-fixed: #ffddb8;
+    --color-tertiary-fixed-dim: #ffb95f;
+    --color-on-tertiary-fixed: #2a1700;
+    --color-on-tertiary-fixed-variant: #653e00;
+
     /* Typography scale */
     --text-display-hero: 48px;
     --text-display-hero--line-height: 56px;
@@ -108,6 +132,147 @@
     --text-label-sm: 12px;
     --text-label-sm--line-height: 16px;
     --text-label-sm--font-weight: 400;
+}
+
+/*
+|------------------------------------------------------------------------------
+| Admin theme (theme #2 light + #3 dark)
+|------------------------------------------------------------------------------
+| The admin panel uses a Material *blue* palette, distinct from the storefront's
+| yellow. We scope it to `.admin-scope` (set on <html> in layouts/admin.blade.php)
+| by overriding the same token CSS variables — Tailwind v4 utilities reference
+| `var(--color-*)`, so every `bg-primary`, `text-on-surface`, … inside the admin
+| picks up these values. `.admin-scope.dark` provides the dark-mode overrides.
+| Storefront pages (no `.admin-scope`) keep the yellow :root values untouched.
+*/
+.admin-scope {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Primary (brand blue) */
+    --color-primary: #004ac6;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #2563eb;
+    --color-on-primary-container: #eeefff;
+    --color-primary-fixed: #dbe1ff;
+    --color-primary-fixed-dim: #b4c5ff;
+    --color-on-primary-fixed: #00174b;
+    --color-on-primary-fixed-variant: #003ea8;
+    --color-inverse-primary: #b4c5ff;
+    --color-surface-tint: #0053db;
+
+    /* Secondary (green) */
+    --color-secondary: #006c49;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #6cf8bb;
+    --color-on-secondary-container: #00714d;
+    --color-secondary-fixed: #6ffbbe;
+    --color-secondary-fixed-dim: #4edea3;
+    --color-on-secondary-fixed: #002113;
+    --color-on-secondary-fixed-variant: #005236;
+
+    /* Tertiary (amber) */
+    --color-tertiary: #784b00;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #996100;
+    --color-on-tertiary-container: #ffeedd;
+    --color-tertiary-fixed: #ffddb8;
+    --color-tertiary-fixed-dim: #ffb95f;
+    --color-on-tertiary-fixed: #2a1700;
+    --color-on-tertiary-fixed-variant: #653e00;
+
+    /* Error */
+    --color-error: #ba1a1a;
+    --color-on-error: #ffffff;
+    --color-error-container: #ffdad6;
+    --color-on-error-container: #93000a;
+
+    /* Surfaces & background */
+    --color-background: #f8f9ff;
+    --color-on-background: #0b1c30;
+    --color-surface: #f8f9ff;
+    --color-on-surface: #0b1c30;
+    --color-surface-variant: #d3e4fe;
+    --color-on-surface-variant: #434655;
+    --color-surface-dim: #cbdbf5;
+    --color-surface-bright: #f8f9ff;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #eff4ff;
+    --color-surface-container: #e5eeff;
+    --color-surface-container-high: #dce9ff;
+    --color-surface-container-highest: #d3e4fe;
+    --color-inverse-surface: #213145;
+    --color-inverse-on-surface: #eaf1ff;
+
+    /* Lines */
+    --color-outline: #737686;
+    --color-outline-variant: #c3c6d7;
+}
+
+.admin-scope.dark {
+    /*
+     | "Midnight Executive" dark palette — public/stich/admin/dark/DESIGN_DARK.md.
+     | A proper Material-3 dark ramp: surface-container-lowest is the DARKEST
+     | surface (closest to background), so cards/chrome elevate by using a HIGHER
+     | container level in dark (see the dark: variants on x-admin.panel/stat-card/
+     | sidebar/header). Accents, text and outlines are used verbatim.
+     */
+    --color-primary: #adc6ff;
+    --color-on-primary: #002e6a;
+    --color-primary-container: #4d8eff;
+    --color-on-primary-container: #00285d;
+    --color-primary-fixed: #d8e2ff;
+    --color-primary-fixed-dim: #adc6ff;
+    --color-on-primary-fixed: #001a42;
+    --color-on-primary-fixed-variant: #004395;
+    --color-inverse-primary: #005ac2;
+    --color-surface-tint: #adc6ff;
+
+    /* Secondary (green) */
+    --color-secondary: #4edea3;
+    --color-on-secondary: #003824;
+    --color-secondary-container: #00a572;
+    --color-on-secondary-container: #00311f;
+    --color-secondary-fixed: #6ffbbe;
+    --color-secondary-fixed-dim: #4edea3;
+    --color-on-secondary-fixed: #002113;
+    --color-on-secondary-fixed-variant: #005236;
+
+    /* Tertiary (amber) */
+    --color-tertiary: #ffb95f;
+    --color-on-tertiary: #472a00;
+    --color-tertiary-container: #ca8100;
+    --color-on-tertiary-container: #3e2400;
+    --color-tertiary-fixed: #ffddb8;
+    --color-tertiary-fixed-dim: #ffb95f;
+    --color-on-tertiary-fixed: #2a1700;
+    --color-on-tertiary-fixed-variant: #653e00;
+
+    /* Error */
+    --color-error: #ffb4ab;
+    --color-on-error: #690005;
+    --color-error-container: #93000a;
+    --color-on-error-container: #ffdad6;
+
+    /* Surfaces & background — Midnight Navy ramp (lowest = darkest) */
+    --color-background: #0b1326;
+    --color-on-background: #dae2fd;
+    --color-surface: #0b1326;
+    --color-on-surface: #dae2fd;
+    --color-surface-variant: #2d3449;
+    --color-on-surface-variant: #c2c6d6;
+    --color-surface-dim: #0b1326;
+    --color-surface-bright: #31394d;
+    --color-surface-container-lowest: #060e20;
+    --color-surface-container-low: #131b2e;
+    --color-surface-container: #171f33;
+    --color-surface-container-high: #222a3d;
+    --color-surface-container-highest: #2d3449;
+    --color-inverse-surface: #dae2fd;
+    --color-inverse-on-surface: #283044;
+
+    /* Lines */
+    --color-outline: #8c909f;
+    --color-outline-variant: #424754;
 }
 
 @layer base {
