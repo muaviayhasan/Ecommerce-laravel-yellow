@@ -64,6 +64,10 @@ Route::get('/track-order', fn () => app(HomeController::class)->placeholder('Tra
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Heartbeat — keeps the session alive and hands back a fresh CSRF token so
+    // long-open admin forms don't fail with a 419 (see layouts/admin.blade.php).
+    Route::get('keep-alive', fn () => response()->json(['token' => csrf_token()]))->name('keep-alive');
+
     // Catalog
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class)->except('show');

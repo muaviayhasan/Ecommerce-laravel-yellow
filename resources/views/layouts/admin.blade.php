@@ -47,6 +47,24 @@
 
     @livewireScripts
     @stack('scripts')
+
+    {{-- Keep the session + CSRF token fresh so long-open forms don't 419 on submit. --}}
+    <script>
+        (function () {
+            var url = @json(route('admin.keep-alive'));
+            setInterval(function () {
+                fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (d) {
+                        if (!d || !d.token) return;
+                        var meta = document.querySelector('meta[name="csrf-token"]');
+                        if (meta) meta.setAttribute('content', d.token);
+                        document.querySelectorAll('input[name="_token"]').forEach(function (i) { i.value = d.token; });
+                    })
+                    .catch(function () {});
+            }, 240000); // every 4 min — comfortably under the session lifetime
+        })();
+    </script>
 </body>
 
 </html>
