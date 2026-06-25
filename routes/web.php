@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AuthController;
@@ -69,6 +70,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // People
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('users', UserController::class)->except('show');
+
+    // Orders — view + detail + status update (no create/delete; orders come from checkout/POS).
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/{order}/print', [OrderController::class, 'print'])->name('orders.print');
+    Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     // Gallery / media library (Livewire) — guarded; per-action checks live in the component.
     Route::view('/gallery', 'admin.gallery.index')
