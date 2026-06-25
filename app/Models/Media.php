@@ -34,6 +34,16 @@ class Media extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::disk($this->disk)->url($this->path);
+        $url = Storage::disk($this->disk)->url($this->path);
+
+        // For same-origin local/public media, return a root-relative URL so images
+        // resolve against whatever host:port serves the page — independent of APP_URL
+        // (e.g. `php artisan serve` on a non-default port). Remote disks (s3, …) keep
+        // their absolute URL.
+        if (in_array($this->disk, ['public', 'local'], true)) {
+            return parse_url($url, PHP_URL_PATH) ?: $url;
+        }
+
+        return $url;
     }
 }
