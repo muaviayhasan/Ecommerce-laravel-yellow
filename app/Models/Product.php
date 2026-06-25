@@ -29,9 +29,9 @@ class Product extends Model
         'category_id', 'brand_id', 'name', 'slug', 'sku',
         'type', 'is_stock_tracked', 'is_purchasable', 'is_manufacturable',
         'is_sellable', 'is_web_listed', 'manufacture_mode', 'variant_mode',
-        'short_description', 'description', 'specifications', 'base_price', 'markup_percent',
+        'short_description', 'description', 'highlights', 'specifications', 'base_price', 'markup_percent',
         'warranty', 'return_policy', 'video_url', 'length', 'width', 'height',
-        'is_active', 'is_featured', 'published_at',
+        'is_active', 'is_featured', 'is_trending', 'is_bestseller', 'published_at',
         'meta_title', 'meta_description', 'meta_keywords',
         'og_image_media_id', 'canonical_url', 'no_index',
     ];
@@ -44,6 +44,7 @@ class Product extends Model
             'is_manufacturable' => 'boolean',
             'is_sellable' => 'boolean',
             'is_web_listed' => 'boolean',
+            'highlights' => 'array',
             'specifications' => 'array',
             'base_price' => 'decimal:2',
             'markup_percent' => 'decimal:2',
@@ -52,6 +53,8 @@ class Product extends Model
             'height' => 'decimal:3',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'is_trending' => 'boolean',
+            'is_bestseller' => 'boolean',
             'no_index' => 'boolean',
             'published_at' => 'datetime',
         ];
@@ -121,6 +124,18 @@ class Product extends Model
     public function scopeFeatured(Builder $query): Builder
     {
         return $query->where('is_featured', true);
+    }
+
+    /** Curated for the home-page "Trending" section. */
+    public function scopeTrending(Builder $query): Builder
+    {
+        return $query->where('is_trending', true);
+    }
+
+    /** Curated for the home-page "Bestsellers" section. */
+    public function scopeBestseller(Builder $query): Builder
+    {
+        return $query->where('is_bestseller', true);
     }
 
     /** The storefront catalog gate (§4.2): web-listed, active, sellable, published. */
