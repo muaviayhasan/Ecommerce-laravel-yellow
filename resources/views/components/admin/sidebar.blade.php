@@ -90,18 +90,4 @@
             @endif
         @endforeach
     </nav>
-
-    {{-- Help card --}}
-    <div class="m-4 p-5 bg-surface-container dark:bg-surface-container-high rounded-xl text-center border border-outline-variant">
-        <div class="flex justify-center mb-3">
-            <span class="material-symbols-outlined text-primary" style="font-size:40px;">support_agent</span>
-        </div>
-        <h4 class="font-bold text-on-surface mb-1">Need Help?</h4>
-        <p class="text-xs text-on-surface-variant mb-4 leading-relaxed">
-            Contact us if you need any assistance, we'll get back to you soon.
-        </p>
-        <a href="#" class="block w-full py-2.5 bg-primary text-on-primary font-bold text-sm rounded-lg hover:opacity-90 transition-opacity">
-            Contact Us
-        </a>
-    </div>
 </aside>
