@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -63,6 +65,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Catalog
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('attributes', AttributeController::class)->except('show');
+
+    // People
+    Route::resource('customers', CustomerController::class)->except('show');
+    Route::resource('users', UserController::class)->except('show');
 
     // Gallery / media library (Livewire) — guarded; per-action checks live in the component.
     Route::view('/gallery', 'admin.gallery.index')
