@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\ProductionController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
@@ -91,9 +92,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::resource('attributes', AttributeController::class)->except('show');
     Route::resource('coupons', CouponController::class)->except('show');
 
-    // People
+    // People & access
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('users', UserController::class)->except('show');
+    Route::resource('roles', RoleController::class)->except('show');
 
     // POS — fast counter-sale screen (Alpine cart + JSON search + SalesService).
     Route::get('pos', [PosController::class, 'index'])->name('pos.index');

@@ -205,6 +205,13 @@ return [
 
         ['heading' => 'Settings'],
         [
+            'label' => 'Roles & Permissions',
+            'icon' => 'admin_panel_settings',
+            'route' => 'admin.roles.index',
+            'active' => 'admin.roles.*',
+            'permission' => 'roles.view',
+        ],
+        [
             'label' => 'Settings',
             'icon' => 'settings',
             'route' => 'admin.settings.index',
