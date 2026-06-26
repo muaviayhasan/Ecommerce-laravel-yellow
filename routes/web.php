@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Storefront\BlogController;
+use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\ProductController;
@@ -48,6 +49,13 @@ Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
+// Cart (session-based)
+Route::get('/cart', [CartController::class, 'index'])->name('cart');
+Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
+Route::patch('/cart/{variant}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{variant}', [CartController::class, 'remove'])->name('cart.remove');
+Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
+
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 
 // Authentication (login + register are functional)
@@ -60,7 +68,6 @@ Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.
 $placeholders = [
-    'cart' => 'Shopping Cart',
     'wishlist' => 'Wishlist',
     'compare' => 'Compare',
     'account' => 'My Account',

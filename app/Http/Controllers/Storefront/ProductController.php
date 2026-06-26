@@ -41,6 +41,7 @@ class ProductController extends Controller
 
         $card = [
             'id' => $product->id,
+            'variant_id' => $variant?->id,
             'name' => $product->name,
             'slug' => $product->slug,
             'category' => $product->category?->name,

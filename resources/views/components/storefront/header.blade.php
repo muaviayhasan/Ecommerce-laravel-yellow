@@ -17,8 +17,9 @@
     // Shorter set shown inline in the yellow bar.
     $navCategories = ['Laptops & Computers', 'Smartphones & Tablets', 'TV & Audio', 'Cameras', 'Gaming', 'Accessories'];
 
-    $cartCount = 0;
-    $cartTotal = 'Rs 0';
+    $cart = app(\App\Services\CartService::class);
+    $cartCount = $cart->count();
+    $cartTotal = 'Rs ' . number_format($cart->subtotal());
     $wishlistCount = 0;
 @endphp
 

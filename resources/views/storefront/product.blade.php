@@ -83,17 +83,22 @@
                             @endif
                         </div>
 
-                        <div class="flex flex-wrap gap-4 items-center" x-data="{ qty: 1 }">
-                            <div class="flex border border-outline rounded-lg overflow-hidden h-12">
-                                <button type="button" @click="qty = Math.max(1, qty - 1)" aria-label="Decrease quantity" class="px-4 hover:bg-surface transition-colors">&minus;</button>
-                                <input type="number" min="1" x-model.number="qty" aria-label="Quantity"
-                                    class="w-12 text-center border-none focus:ring-0 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
-                                <button type="button" @click="qty++" aria-label="Increase quantity" class="px-4 hover:bg-surface transition-colors">+</button>
-                            </div>
-                            <button type="button" class="bg-primary-container text-on-primary-container px-10 h-12 font-bold rounded hover:brightness-95 transition-all flex items-center gap-2">
-                                <span class="material-symbols-outlined">shopping_cart</span> Add to Cart
-                            </button>
-                        </div>
+                        @if ($product['variant_id'])
+                            <form method="POST" action="{{ route('cart.add') }}" class="flex flex-wrap gap-4 items-center" x-data="{ qty: 1 }">
+                                @csrf
+                                <input type="hidden" name="variant_id" value="{{ $product['variant_id'] }}">
+                                <input type="hidden" name="quantity" :value="qty">
+                                <div class="flex border border-outline rounded-lg overflow-hidden h-12">
+                                    <button type="button" @click="qty = Math.max(1, qty - 1)" aria-label="Decrease quantity" class="px-4 hover:bg-surface transition-colors">&minus;</button>
+                                    <input type="number" min="1" x-model.number="qty" aria-label="Quantity"
+                                        class="w-12 text-center border-none focus:ring-0 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
+                                    <button type="button" @click="qty++" aria-label="Increase quantity" class="px-4 hover:bg-surface transition-colors">+</button>
+                                </div>
+                                <button type="submit" @class(['bg-primary-container text-on-primary-container px-10 h-12 font-bold rounded hover:brightness-95 transition-all flex items-center gap-2', 'opacity-50 pointer-events-none' => $product['stock'] <= 0])>
+                                    <span class="material-symbols-outlined">shopping_cart</span> {{ $product['stock'] > 0 ? 'Add to Cart' : 'Out of stock' }}
+                                </button>
+                            </form>
+                        @endif
 
                         <button type="button" class="w-full mt-4 bg-[#00d084] text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
                             Pay with <span class="font-black italic">link</span>
