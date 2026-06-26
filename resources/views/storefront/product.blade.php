@@ -120,29 +120,36 @@
                 </div>
 
                 {{-- Description --}}
-                <div x-show="tab === 'description'" class="p-6 lg:p-12 space-y-16">
+                <div x-show="tab === 'description'" class="p-6 lg:p-12">
+                    @if (! empty($product['short_description']))
+                        <p class="text-headline-sm font-light text-on-surface-variant max-w-3xl mx-auto text-center mb-10">{{ $product['short_description'] }}</p>
+                    @endif
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
-                        <div class="space-y-4">
-                            <h2 class="text-headline-md">{{ $product['description_blocks'][0]['heading'] }}</h2>
-                            <p class="text-on-surface-variant leading-relaxed">{{ $product['description_blocks'][0]['body'] }}</p>
-                            <h2 class="text-headline-md !mt-8">{{ $product['description_blocks'][1]['heading'] }}</h2>
-                            <p class="text-on-surface-variant leading-relaxed">{{ $product['description_blocks'][1]['body'] }}</p>
+                        <div class="leading-relaxed text-on-surface-variant space-y-4">
+                            @if (! empty($product['description']))
+                                {!! nl2br(e($product['description'])) !!}
+                            @else
+                                <p>No description has been added for this product yet.</p>
+                            @endif
                         </div>
                         <div class="w-full h-80 bg-surface rounded-xl overflow-hidden flex items-center justify-center">
-                            <img src="{{ $product['gallery'][1] ?? $product['gallery'][0] }}" alt="" class="w-full h-full object-contain p-8">
+                            <img src="{{ $product['gallery'][1] ?? $product['gallery'][0] }}" alt="{{ $product['name'] }}" class="w-full h-full object-contain p-8">
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
-                        <div class="order-2 lg:order-1 w-full h-80 bg-surface rounded-xl overflow-hidden flex items-center justify-center">
-                            <img src="{{ $product['gallery'][2] ?? $product['gallery'][0] }}" alt="" class="w-full h-full object-contain p-8">
+                    @if (! empty($product['features']))
+                        <div class="mt-12 max-w-3xl mx-auto">
+                            <h3 class="text-headline-sm mb-4">Key features</h3>
+                            <ul class="grid sm:grid-cols-2 gap-x-8 gap-y-2 list-disc list-inside text-on-surface-variant">
+                                @foreach ($product['features'] as $feature)<li>{{ $feature }}</li>@endforeach
+                            </ul>
                         </div>
-                        <div class="order-1 lg:order-2 space-y-4">
-                            <h2 class="text-headline-md">{{ $product['description_blocks'][2]['heading'] }}</h2>
-                            <p class="text-on-surface-variant leading-relaxed">{{ $product['description_blocks'][2]['body'] }}</p>
-                            <h2 class="text-headline-md !mt-8">{{ $product['description_blocks'][3]['heading'] }}</h2>
-                            <p class="text-on-surface-variant leading-relaxed">{{ $product['description_blocks'][3]['body'] }}</p>
+                    @endif
+                    @if (! empty($product['warranty']))
+                        <div class="mt-10 max-w-3xl mx-auto p-4 bg-surface rounded-lg border border-outline-variant flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">verified_user</span>
+                            <span class="text-on-surface-variant">{{ $product['warranty'] }}</span>
                         </div>
-                    </div>
+                    @endif
                 </div>
 
                 {{-- Accessories --}}
@@ -182,30 +189,48 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
                         {{-- Summary --}}
                         <div>
-                            <h2 class="text-headline-md mb-8">Based on {{ $product['reviews_count'] ?? 0 }} reviews</h2>
-                            <div class="flex items-center gap-4 mb-8">
-                                <div class="text-[64px] font-black leading-none">0.0</div>
-                                <div>
-                                    <div class="text-on-surface-variant">overall</div>
-                                    <div class="flex text-outline">
-                                        @for ($s = 0; $s < 5; $s++)<span class="material-symbols-outlined">star</span>@endfor
+                            <h2 class="text-headline-md mb-8">Based on {{ $product['reviews_count'] }} review{{ $product['reviews_count'] === 1 ? '' : 's' }}</h2>
+                            @if ($product['reviews_count'])
+                                @php $byStar = $reviews->groupBy('rating'); @endphp
+                                <div class="flex items-center gap-4 mb-8">
+                                    <div class="text-[64px] font-black leading-none">{{ number_format($product['avg_rating'], 1) }}</div>
+                                    <div>
+                                        <div class="text-on-surface-variant">overall</div>
+                                        <div class="flex text-primary-container">
+                                            @for ($s = 1; $s <= 5; $s++)<span class="material-symbols-outlined" @if ($s <= round($product['avg_rating'])) style="font-variation-settings: 'FILL' 1;" @endif>star</span>@endfor
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="space-y-2">
-                                @foreach (['★★★★★', '★★★★☆', '★★★☆☆', '★★☆☆☆', '★☆☆☆☆'] as $stars)
-                                    <div class="flex items-center gap-4">
-                                        <div class="text-primary-container text-label-sm w-24 shrink-0">{{ $stars }}</div>
-                                        <div class="flex-1 h-2 bg-surface rounded-full overflow-hidden">
-                                            <div class="h-full bg-primary-container" style="width: 0"></div>
+                                <div class="space-y-2 mb-10">
+                                    @for ($star = 5; $star >= 1; $star--)
+                                        @php $n = $byStar->get($star)?->count() ?? 0; $pct = $product['reviews_count'] ? round($n / $product['reviews_count'] * 100) : 0; @endphp
+                                        <div class="flex items-center gap-4">
+                                            <div class="text-primary-container text-label-sm w-24 shrink-0">{{ str_repeat('★', $star) }}{{ str_repeat('☆', 5 - $star) }}</div>
+                                            <div class="flex-1 h-2 bg-surface rounded-full overflow-hidden"><div class="h-full bg-primary-container" style="width: {{ $pct }}%"></div></div>
+                                            <span class="text-label-sm w-4 text-right">{{ $n }}</span>
                                         </div>
-                                        <span class="text-label-sm w-4 text-right">0</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <div class="mt-8 p-4 bg-primary-container/10 border border-primary-container rounded-lg text-label-sm">
-                                There are no reviews yet.
-                            </div>
+                                    @endfor
+                                </div>
+                                <div class="space-y-6">
+                                    @foreach ($reviews as $review)
+                                        <div class="border-b border-outline-variant pb-6 last:border-0">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <span class="font-bold">{{ $review->user?->name ?? 'Customer' }}</span>
+                                                <span class="text-label-sm text-on-surface-variant">{{ $review->created_at?->format('d M Y') }}</span>
+                                            </div>
+                                            <div class="flex text-primary-container mb-2">
+                                                @for ($s = 1; $s <= 5; $s++)<span class="material-symbols-outlined text-[16px]" @if ($s <= $review->rating) style="font-variation-settings: 'FILL' 1;" @endif>star</span>@endfor
+                                            </div>
+                                            @if ($review->title)<p class="font-semibold">{{ $review->title }}</p>@endif
+                                            <p class="text-on-surface-variant">{{ $review->body }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="mt-4 p-4 bg-primary-container/10 border border-primary-container rounded-lg text-label-sm">
+                                    There are no reviews yet. Be the first to review this product.
+                                </div>
+                            @endif
                         </div>
 
                         {{-- Form --}}
