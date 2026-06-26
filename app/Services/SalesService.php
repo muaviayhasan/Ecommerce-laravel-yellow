@@ -1,0 +1,156 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\Payment;
+use App\Models\ProductVariant;
+use App\Models\StockMovement;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Sales (§12). The single entry point for placing a sale on any channel
+ * (web / pos / vendor). One transaction: resolve prices, create the order +
+ * items (with cost snapshots), move stock out, record payment, and post the
+ * revenue + COGS entries to the ledger.
+ */
+class SalesService
+{
+    public function __construct(
+        private StockService $stock,
+        private LedgerService $ledger,
+    ) {}
+
+    /**
+     * @param  array<int, array{variant: ProductVariant, quantity: float}>  $lines
+     * @param  array{payment_method?: string, paid?: float, tax_total?: float, shipping_total?: float, discount_total?: float}  $opts
+     */
+    public function place(string $channel, ?Customer $customer, array $lines, array $opts = []): Order
+    {
+        return DB::transaction(function () use ($channel, $customer, $lines, $opts) {
+            $tier = ($channel === Order::CHANNEL_VENDOR || $customer?->price_tier === 'wholesale') ? 'wholesale' : 'retail';
+
+            // 1) Build line items (priced + cost-snapshotted).
+            $rows = [];
+            $subtotal = 0.0;
+            $cogs = 0.0;
+            foreach ($lines as $line) {
+                $variant = $line['variant'];
+                $qty = (float) $line['quantity'];
+                $unitPrice = $this->price($variant, $tier);
+                $lineTotal = round($unitPrice * $qty, 2);
+                $cost = (float) $variant->cost;
+
+                $subtotal += $lineTotal;
+                $cogs += round($cost * $qty, 2);
+                $rows[] = [
+                    'variant' => $variant,
+                    'name_snapshot' => $variant->product?->name ?? 'Item',
+                    'sku_snapshot' => $variant->sku,
+                    'attributes_snapshot' => $variant->relationLoaded('attributeValues')
+                        ? $variant->attributeValues->map(fn ($a) => $a->label ?: $a->value)->values()->all()
+                        : [],
+                    'unit_price' => $unitPrice,
+                    'quantity' => $qty,
+                    'line_total' => $lineTotal,
+                    'cost_snapshot' => $cost,
+                ];
+            }
+
+            $subtotal = round($subtotal, 2);
+            $cogs = round($cogs, 2);
+            $discount = round((float) ($opts['discount_total'] ?? 0), 2);
+            $tax = round((float) ($opts['tax_total'] ?? 0), 2);
+            $shipping = round((float) ($opts['shipping_total'] ?? 0), 2);
+            $grand = round($subtotal - $discount + $tax + $shipping, 2);
+            $paid = round((float) ($opts['paid'] ?? 0), 2);
+
+            // 2) The order.
+            $order = Order::create([
+                'order_number' => $this->nextNumber(),
+                'channel' => $channel,
+                'customer_id' => $customer?->id,
+                'price_tier' => $tier,
+                'status' => $paid >= $grand ? 'paid' : 'pending',
+                'payment_method' => $opts['payment_method'] ?? 'cash',
+                'payment_status' => $paid <= 0 ? 'unpaid' : ($paid >= $grand ? 'paid' : 'partial'),
+                'subtotal' => $subtotal,
+                'discount_total' => $discount,
+                'tax_total' => $tax,
+                'shipping_total' => $shipping,
+                'grand_total' => $grand,
+                'paid_total' => $paid,
+                'currency' => setting('general', 'currency', 'PKR'),
+                'placed_at' => now(),
+                'created_by' => auth()->id(),
+            ]);
+
+            // 3) Items + stock out (cost snapshot at sale time).
+            foreach ($rows as $row) {
+                $variant = $row['variant'];
+                unset($row['variant']);
+                $order->items()->create($row);
+                $this->stock->move($variant, StockMovement::TYPE_SALE_OUT, -(float) $row['quantity'], (float) $row['cost_snapshot'], $order, "Sale {$order->order_number}");
+            }
+
+            // 4) Payment (skip pure credit/unpaid).
+            if ($paid > 0) {
+                $order->payments()->create([
+                    'gateway' => $this->gateway($order->payment_method),
+                    'amount' => $paid,
+                    'status' => 'succeeded',
+                    'received_by' => auth()->id(),
+                ]);
+            }
+
+            // 5) Ledger — revenue + tax + shipping, and COGS vs inventory (one balanced post).
+            $lines = [];
+            if ($paid > 0) {
+                $lines[] = ['account' => 'cash', 'debit' => $paid];
+            }
+            if ($grand - $paid > 0) {
+                $lines[] = ['account' => 'accounts_receivable', 'debit' => round($grand - $paid, 2)];
+            }
+            $lines[] = ['account' => 'sales_revenue', 'credit' => round($subtotal - $discount, 2)];
+            if ($tax > 0) {
+                $lines[] = ['account' => 'tax_payable', 'credit' => $tax];
+            }
+            if ($shipping > 0) {
+                $lines[] = ['account' => 'shipping_income', 'credit' => $shipping];
+            }
+            if ($cogs > 0) {
+                $lines[] = ['account' => 'cogs', 'debit' => $cogs];
+                $lines[] = ['account' => 'inventory', 'credit' => $cogs];
+            }
+            $this->ledger->post($lines, $order, "Sale {$order->order_number}");
+
+            return $order;
+        });
+    }
+
+    private function price(ProductVariant $variant, string $tier): float
+    {
+        if ($tier === 'wholesale' && $variant->wholesale_price !== null) {
+            return (float) $variant->wholesale_price;
+        }
+
+        return (float) $variant->retail_price;
+    }
+
+    private function gateway(string $method): string
+    {
+        return match ($method) {
+            'qr' => 'manual_qr',
+            'credit' => 'manual_qr',
+            default => $method, // cod | cash | card | bank
+        };
+    }
+
+    private function nextNumber(): string
+    {
+        $prefix = (string) setting('numbering', 'order_prefix', 'ORD-');
+
+        return $prefix . str_pad((string) ((Order::max('id') ?? 0) + 1), 5, '0', STR_PAD_LEFT);
+    }
+}
