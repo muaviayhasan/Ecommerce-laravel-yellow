@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
@@ -61,10 +60,14 @@ class SalesService
             $subtotal = round($subtotal, 2);
             $cogs = round($cogs, 2);
             $discount = round((float) ($opts['discount_total'] ?? 0), 2);
-            $tax = round((float) ($opts['tax_total'] ?? 0), 2);
+            // Tax: an explicit amount, or computed from a rate on the net subtotal.
+            $tax = isset($opts['tax_total'])
+                ? round((float) $opts['tax_total'], 2)
+                : round(($subtotal - $discount) * (float) ($opts['tax_rate'] ?? 0) / 100, 2);
             $shipping = round((float) ($opts['shipping_total'] ?? 0), 2);
             $grand = round($subtotal - $discount + $tax + $shipping, 2);
-            $paid = round((float) ($opts['paid'] ?? 0), 2);
+            // `pay_full` (POS/immediate) settles the whole total; otherwise use the given amount.
+            $paid = ! empty($opts['pay_full']) ? $grand : round((float) ($opts['paid'] ?? 0), 2);
 
             // 2) The order.
             $order = Order::create([

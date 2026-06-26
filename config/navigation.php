@@ -35,6 +35,13 @@ return [
 
         ['heading' => 'All Pages'],
         [
+            'label' => 'Point of Sale',
+            'icon' => 'point_of_sale',
+            'route' => 'admin.pos.index',
+            'active' => 'admin.pos.*',
+            'permission' => 'pos.access',
+        ],
+        [
             'label' => 'Ecommerce',
             'icon' => 'shopping_cart',
             'children' => [

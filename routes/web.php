@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\LedgerController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PosController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductionController;
 use App\Http\Controllers\Admin\PurchaseController;
@@ -83,6 +84,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // People
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('users', UserController::class)->except('show');
+
+    // POS — fast counter-sale screen (Alpine cart + JSON search + SalesService).
+    Route::get('pos', [PosController::class, 'index'])->name('pos.index');
+    Route::get('pos/search', [PosController::class, 'search'])->name('pos.search');
+    Route::post('pos', [PosController::class, 'store'])->name('pos.store');
 
     // Orders — view + detail + status update (no create/delete; orders come from checkout/POS).
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
