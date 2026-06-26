@@ -58,6 +58,12 @@ return [
                     'permission' => 'categories.view',
                 ],
                 [
+                    'label' => 'Brands',
+                    'route' => 'admin.brands.index',
+                    'active' => 'admin.brands.*',
+                    'permission' => 'brands.view',
+                ],
+                [
                     'label' => 'Attributes',
                     'route' => 'admin.attributes.index',
                     'active' => 'admin.attributes.*',

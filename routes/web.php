@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BomController;
+use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -79,6 +80,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Catalog
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class)->except('show');
+    Route::resource('brands', BrandController::class)->except('show');
     Route::resource('attributes', AttributeController::class)->except('show');
 
     // People
