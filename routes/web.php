@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InventoryController;
+use App\Http\Controllers\Admin\LedgerController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductionController;
@@ -109,6 +110,9 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Reports — analytics dashboard + CSV export.
     Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::get('reports/export', [ReportsController::class, 'export'])->name('reports.export');
+
+    // Ledger — the financial source of truth (read-only): position, trial balance, entries.
+    Route::get('ledger', [LedgerController::class, 'index'])->name('ledger.index');
 
     // Gallery / media library (Livewire) — guarded; per-action checks live in the component.
     Route::view('/gallery', 'admin.gallery.index')

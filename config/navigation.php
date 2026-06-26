@@ -133,6 +133,13 @@ return [
             'active' => 'admin.reports.*',
             'permission' => 'reports.view',
         ],
+        [
+            'label' => 'Ledger',
+            'icon' => 'account_balance',
+            'route' => 'admin.ledger.index',
+            'active' => 'admin.ledger.*',
+            'permission' => 'ledger.view',
+        ],
 
         ['heading' => 'Settings'],
         [
