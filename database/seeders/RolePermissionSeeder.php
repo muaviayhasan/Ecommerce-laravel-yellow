@@ -47,6 +47,7 @@ class RolePermissionSeeder extends Seeder
         // Finance & system
         'ledger' => ['view'],
         'reports' => ['view', 'export'],
+        'audit' => ['view'],
         'settings' => ['view', 'edit'],
         'users' => ['view', 'create', 'edit', 'delete'],
         'roles' => ['view', 'create', 'edit', 'delete'],

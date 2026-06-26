@@ -212,6 +212,13 @@ return [
             'permission' => 'roles.view',
         ],
         [
+            'label' => 'Activity Log',
+            'icon' => 'history',
+            'route' => 'admin.activity.index',
+            'active' => 'admin.activity.*',
+            'permission' => 'audit.view',
+        ],
+        [
             'label' => 'Settings',
             'icon' => 'settings',
             'route' => 'admin.settings.index',

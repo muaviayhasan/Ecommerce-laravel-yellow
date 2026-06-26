@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
@@ -154,6 +155,9 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Ledger — the financial source of truth (read-only): position, trial balance, entries.
     Route::get('ledger', [LedgerController::class, 'index'])->name('ledger.index');
+
+    // Activity log — read-only audit trail of admin mutations (§23).
+    Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');
 
     // Gallery / media library (Livewire) — guarded; per-action checks live in the component.
     Route::view('/gallery', 'admin.gallery.index')
