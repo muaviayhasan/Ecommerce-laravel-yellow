@@ -4,7 +4,7 @@
         'address' => setting('store', 'address', ''),
         'phone' => setting('store', 'phone', ''),
         'email' => setting('store', 'support_email', ''),
-        'footer' => setting('store', 'invoice_footer', ''),
+        'footer' => trim(setting('store', 'invoice_footer', '') . ($order->channel === 'pos' && setting('pos', 'receipt_footer') ? "\n" . setting('pos', 'receipt_footer') : '')),
     ];
     $billing = $order->addresses->firstWhere('type', 'billing');
     $shipping = $order->addresses->firstWhere('type', 'shipping');

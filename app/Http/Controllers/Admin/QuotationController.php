@@ -63,7 +63,11 @@ class QuotationController extends Controller implements HasMiddleware
     public function create(): View
     {
         return view('admin.quotations.create', [
-            'quotation' => new Quotation(['price_tier' => 'retail']),
+            'quotation' => new Quotation([
+                'price_tier' => 'retail',
+                'valid_until' => now()->addDays((int) setting('quotation', 'default_validity_days', 14)),
+                'notes' => setting('quotation', 'default_terms'),
+            ]),
             'customers' => $this->customers(),
             'variantOptions' => $this->variantOptions(),
             'initialItems' => [['product_variant_id' => '', 'quantity' => '1', 'unit_price' => '', 'description' => '']],

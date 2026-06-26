@@ -257,6 +257,105 @@ class SettingsController extends Controller implements HasMiddleware
                     ],
                 ],
             ],
+
+            'inventory' => [
+                'label' => 'Inventory',
+                'icon' => 'inventory_2',
+                'sections' => [
+                    [
+                        'title' => 'Stock control',
+                        'description' => 'How stock movements behave across purchases, production and sales.',
+                        'fields' => [
+                            'allow_negative_stock' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Allow negative stock', 'help' => 'Let a sale or consumption push a variant below zero. Off = block when short.', 'default' => false],
+                            'costing_method' => ['input' => 'select', 'label' => 'Costing method', 'options' => ['moving_average' => 'Moving average (weighted)', 'fifo' => 'FIFO'], 'rules' => ['required', 'in:moving_average,fifo'], 'default' => 'moving_average', 'help' => 'Moving average is applied to all stock-in today; FIFO is planned.'],
+                        ],
+                    ],
+                ],
+            ],
+
+            'pricing' => [
+                'label' => 'Pricing',
+                'icon' => 'sell',
+                'sections' => [
+                    [
+                        'title' => 'Default markups',
+                        'description' => 'Used to suggest selling prices from cost (applied by the pricing helper once enabled).',
+                        'fields' => [
+                            'default_markup_percent' => ['type' => 'int', 'input' => 'number', 'label' => 'Default markup (%)', 'rules' => ['required', 'integer', 'min:0', 'max:1000'], 'default' => 30, 'help' => 'Retail = cost × (1 + markup%).'],
+                            'wholesale_discount_percent' => ['type' => 'int', 'input' => 'number', 'label' => 'Wholesale discount (%)', 'rules' => ['required', 'integer', 'min:0', 'max:100'], 'default' => 10, 'help' => 'Wholesale price = retail − this %.'],
+                        ],
+                    ],
+                ],
+            ],
+
+            'numbering' => [
+                'label' => 'Numbering',
+                'icon' => 'tag',
+                'sections' => [
+                    [
+                        'title' => 'Document prefixes',
+                        'description' => 'Prepended to the running number on each document type.',
+                        'fields' => [
+                            'order_prefix' => ['input' => 'text', 'label' => 'Order prefix', 'max' => 12, 'rules' => ['required', 'string', 'max:12'], 'default' => 'ORD-'],
+                            'quotation_prefix' => ['input' => 'text', 'label' => 'Quotation prefix', 'max' => 12, 'rules' => ['required', 'string', 'max:12'], 'default' => 'QUO-'],
+                            'purchase_prefix' => ['input' => 'text', 'label' => 'Purchase prefix', 'max' => 12, 'rules' => ['required', 'string', 'max:12'], 'default' => 'PUR-'],
+                            'production_prefix' => ['input' => 'text', 'label' => 'Production prefix', 'max' => 12, 'rules' => ['required', 'string', 'max:12'], 'default' => 'PRD-'],
+                        ],
+                    ],
+                ],
+            ],
+
+            'pos' => [
+                'label' => 'POS',
+                'icon' => 'point_of_sale',
+                'sections' => [
+                    [
+                        'title' => 'Counter & receipt',
+                        'fields' => [
+                            'receipt_footer' => ['input' => 'textarea', 'label' => 'Receipt footer', 'rows' => 2, 'max' => 500, 'rules' => ['nullable', 'string', 'max:500'], 'help' => 'Printed at the bottom of POS receipts.'],
+                            'auto_print_receipt' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Show receipt after sale', 'help' => 'Surface the print link immediately after a sale completes.', 'default' => true],
+                        ],
+                    ],
+                ],
+            ],
+
+            'quotation' => [
+                'label' => 'Quotation',
+                'icon' => 'request_quote',
+                'sections' => [
+                    [
+                        'title' => 'Defaults',
+                        'description' => 'Pre-filled onto every new quotation.',
+                        'fields' => [
+                            'default_validity_days' => ['type' => 'int', 'input' => 'number', 'label' => 'Valid for (days)', 'rules' => ['required', 'integer', 'min:1', 'max:365'], 'default' => 14, 'help' => 'Sets the “valid until” date on a new quotation.'],
+                            'default_terms' => ['input' => 'textarea', 'label' => 'Default terms / notes', 'rows' => 3, 'max' => 2000, 'rules' => ['nullable', 'string', 'max:2000']],
+                        ],
+                    ],
+                ],
+            ],
+
+            'social_login' => [
+                'label' => 'Social login',
+                'icon' => 'passkey',
+                'sections' => [
+                    [
+                        'title' => 'Google',
+                        'fields' => [
+                            'google_enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Enable Google sign-in'],
+                            'google_client_id' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'Client ID', 'rules' => ['nullable', 'string', 'max:255']],
+                            'google_client_secret' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'Client secret', 'rules' => ['nullable', 'string', 'max:255']],
+                        ],
+                    ],
+                    [
+                        'title' => 'Facebook',
+                        'fields' => [
+                            'facebook_enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Enable Facebook sign-in'],
+                            'facebook_app_id' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'App ID', 'rules' => ['nullable', 'string', 'max:255']],
+                            'facebook_app_secret' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'App secret', 'rules' => ['nullable', 'string', 'max:255']],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 }

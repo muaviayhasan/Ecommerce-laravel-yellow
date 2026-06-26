@@ -113,4 +113,43 @@ class SettingsTest extends TestCase
             ->put('/admin/settings/mail', ['from_name' => 'X', 'from_address' => 'x@y.test'])
             ->assertForbidden();
     }
+
+    /** @dataProvider newTabs */
+    public function test_new_operational_tabs_render(string $group, string $expect): void
+    {
+        $this->actingAs($this->admin())->get("/admin/settings/{$group}")->assertOk()->assertSee($expect);
+    }
+
+    public static function newTabs(): array
+    {
+        return [
+            ['inventory', 'Allow negative stock'],
+            ['pricing', 'Default markup (%)'],
+            ['numbering', 'Order prefix'],
+            ['pos', 'Receipt footer'],
+            ['quotation', 'Valid for (days)'],
+            ['social_login', 'Enable Google sign-in'],
+        ];
+    }
+
+    public function test_updating_numbering_persists_prefixes(): void
+    {
+        $this->actingAs($this->admin())->put('/admin/settings/numbering', [
+            'order_prefix' => 'SO-', 'quotation_prefix' => 'QT-',
+            'purchase_prefix' => 'PO-', 'production_prefix' => 'MO-',
+        ])->assertRedirect();
+
+        $this->assertSame('SO-', $this->typed('numbering', 'order_prefix'));
+        $this->assertSame('MO-', $this->typed('numbering', 'production_prefix'));
+    }
+
+    public function test_updating_inventory_persists_costing_and_negative_flag(): void
+    {
+        $this->actingAs($this->admin())->put('/admin/settings/inventory', [
+            'costing_method' => 'moving_average', 'allow_negative_stock' => '1',
+        ])->assertRedirect();
+
+        $this->assertSame('moving_average', $this->typed('inventory', 'costing_method'));
+        $this->assertTrue($this->typed('inventory', 'allow_negative_stock'));
+    }
 }
