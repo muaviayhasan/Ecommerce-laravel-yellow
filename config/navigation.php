@@ -95,6 +95,12 @@ return [
                     'permission' => 'coupons.view',
                 ],
                 [
+                    'label' => 'Reviews',
+                    'route' => 'admin.reviews.index',
+                    'active' => 'admin.reviews.*',
+                    'permission' => 'reviews.view',
+                ],
+                [
                     'label' => 'Customers',
                     'route' => 'admin.customers.index',
                     'active' => 'admin.customers.*',

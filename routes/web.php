@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductionController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\QuotationController;
+use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
@@ -98,6 +99,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('pos', [PosController::class, 'index'])->name('pos.index');
     Route::get('pos/search', [PosController::class, 'search'])->name('pos.search');
     Route::post('pos', [PosController::class, 'store'])->name('pos.store');
+
+    // Reviews — customer review moderation queue (view + approve/unapprove/delete).
+    Route::get('reviews', [ReviewController::class, 'index'])->name('reviews.index');
+    Route::patch('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
+    Route::patch('reviews/{review}/unapprove', [ReviewController::class, 'unapprove'])->name('reviews.unapprove');
+    Route::delete('reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
     // Quotations — draft sales; "convert" turns an accepted quote into a credit order.
     Route::post('quotations/{quotation}/status', [QuotationController::class, 'status'])->name('quotations.status');
