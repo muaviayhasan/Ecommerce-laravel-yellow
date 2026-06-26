@@ -42,6 +42,13 @@ return [
             'permission' => 'pos.access',
         ],
         [
+            'label' => 'Vendor Sale',
+            'icon' => 'sell',
+            'route' => 'admin.vendor-sales.index',
+            'active' => 'admin.vendor-sales.*',
+            'permission' => 'orders.create',
+        ],
+        [
             'label' => 'Ecommerce',
             'icon' => 'shopping_cart',
             'children' => [

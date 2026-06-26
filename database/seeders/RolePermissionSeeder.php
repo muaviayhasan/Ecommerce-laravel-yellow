@@ -36,7 +36,7 @@ class RolePermissionSeeder extends Seeder
         'customers' => ['view', 'create', 'edit', 'delete'],
         'quotations' => ['view', 'create', 'edit', 'delete', 'convert'],
         'pos' => ['access', 'sell', 'refund'],
-        'orders' => ['view', 'edit', 'refund', 'fulfil'],
+        'orders' => ['view', 'create', 'edit', 'refund', 'fulfil'],
         'coupons' => ['view', 'create', 'edit', 'delete'],
         'reviews' => ['view', 'moderate'],
         'wishlists' => ['view'],

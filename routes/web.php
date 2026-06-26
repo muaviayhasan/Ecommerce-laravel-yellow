@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VendorSaleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -99,6 +100,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('quotations/{quotation}/status', [QuotationController::class, 'status'])->name('quotations.status');
     Route::post('quotations/{quotation}/convert', [QuotationController::class, 'convert'])->name('quotations.convert');
     Route::resource('quotations', QuotationController::class);
+
+    // Vendor / wholesale credit sale — POS-style on the vendor channel (deferred payment → AR).
+    Route::get('vendor-sales', [VendorSaleController::class, 'index'])->name('vendor-sales.index');
+    Route::get('vendor-sales/search', [VendorSaleController::class, 'search'])->name('vendor-sales.search');
+    Route::post('vendor-sales', [VendorSaleController::class, 'store'])->name('vendor-sales.store');
 
     // Orders — view + detail + status update (no create/delete; orders come from checkout/POS).
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
