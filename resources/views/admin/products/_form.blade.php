@@ -68,6 +68,13 @@
         'highlights' => array_values((array) old('highlights', $product->highlights ?? [])),
         'specs' => array_values(old('specs', $flatSpecs)),
     ];
+
+    // Markup config for the "suggest price from cost" helper (Pricing settings tab).
+    $pricingService = app(\App\Services\PricingService::class);
+    $pricing = [
+        'markup' => $pricingService->markupPercent(),
+        'wholesaleDiscount' => $pricingService->wholesaleDiscountPercent(),
+    ];
 @endphp
 
 <div class="grid grid-cols-12 gap-6 items-start">
@@ -84,7 +91,7 @@
         </x-settings.section>
 
         <x-settings.section title="Pricing & variants">
-            <div x-data="productVariants(@js($jsState), @js($variationAttributes), @js($mediaItems))" class="space-y-5">
+            <div x-data="productVariants(@js($jsState), @js($variationAttributes), @js($mediaItems), @js($pricing))" class="space-y-5">
                 <input type="hidden" name="variant_mode" :value="mode">
 
                 {{-- Mode switch --}}
@@ -113,6 +120,11 @@
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-sm font-medium text-on-surface-variant">Barcode</label>
                         <input type="text" name="variant[barcode]" maxlength="100" value="{{ old('variant.barcode', $variant?->barcode) }}" class="{{ $inputClass }}">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="button" @click="suggestSimple()" class="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">auto_fix_high</span> Suggest retail &amp; wholesale from cost (<span x-text="markup"></span>% markup)
+                        </button>
                     </div>
                 </div>
 
@@ -169,6 +181,10 @@
                         <button type="button" x-show="variants.length" @click="applyPrices()"
                             class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2">
                             <span class="material-symbols-outlined text-[18px]">calculate</span> Recalculate prices
+                        </button>
+                        <button type="button" x-show="variants.length" @click="suggestVariants()" :title="`Set each variant's price to cost + ${markup}% markup`"
+                            class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">auto_fix_high</span> Suggest from cost
                         </button>
                     </div>
                     <p class="text-xs text-on-surface-variant -mt-2">Each variant's price = <span class="font-medium">base price + its options' adjustments</span>. Every price stays editable in the table below.</p>
@@ -344,8 +360,10 @@
 @push('scripts')
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('productVariants', (state, attributes, media) => ({
+            Alpine.data('productVariants', (state, attributes, media, pricing) => ({
                 mode: state.mode || 'simple',
+                markup: Number((pricing && pricing.markup) || 0),
+                wholesaleDiscount: Number((pricing && pricing.wholesaleDiscount) || 0),
                 allAttributes: (attributes || []).map(a => ({ id: a.id, name: a.name, values: a.values || [] })),
                 mediaItems: (media || []).map(m => ({ id: m.id, url: m.url, title: m.title })),
                 pickerOpen: false,
@@ -405,6 +423,21 @@
                     return touched ? String(this.computedPrice(ids)) : '';
                 },
                 applyPrices() { this.variants.forEach(v => { v.retail_price = String(this.computedPrice(v.value_ids)); }); },
+
+                // Pricing suggestions (§8) — retail = cost × (1 + markup%), wholesale = retail − discount%.
+                suggestRetail(cost) { return Math.round((parseFloat(cost) || 0) * (1 + this.markup / 100) * 100) / 100; },
+                suggestWholesale(retail) { return Math.round((parseFloat(retail) || 0) * (1 - this.wholesaleDiscount / 100) * 100) / 100; },
+                suggestSimple() {
+                    const root = this.$root;
+                    const cost = parseFloat(root.querySelector('[name="variant[cost]"]')?.value) || 0;
+                    if (!cost) return;
+                    const retail = this.suggestRetail(cost);
+                    const r = root.querySelector('[name="variant[retail_price]"]');
+                    const w = root.querySelector('[name="variant[wholesale_price]"]');
+                    if (r) r.value = retail.toFixed(2);
+                    if (w) w.value = this.suggestWholesale(retail).toFixed(2);
+                },
+                suggestVariants() { this.variants.forEach(v => { const c = parseFloat(v.cost) || 0; if (c) v.retail_price = String(this.suggestRetail(c)); }); },
 
                 generate() {
                     const dims = this.options.filter(o => o.attributeId && o.valueIds.length).map(o => o.valueIds.slice());
