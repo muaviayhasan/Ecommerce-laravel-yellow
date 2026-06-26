@@ -95,6 +95,24 @@ return [
             ],
         ],
         [
+            'label' => 'Manufacturing',
+            'icon' => 'precision_manufacturing',
+            'children' => [
+                [
+                    'label' => 'BOMs',
+                    'route' => 'admin.boms.index',
+                    'active' => 'admin.boms.*',
+                    'permission' => 'boms.view',
+                ],
+                [
+                    'label' => 'Production',
+                    'route' => 'admin.production.index',
+                    'active' => 'admin.production.*',
+                    'permission' => 'production.view',
+                ],
+            ],
+        ],
+        [
             'label' => 'Users',
             'icon' => 'group',
             'route' => 'admin.users.index',

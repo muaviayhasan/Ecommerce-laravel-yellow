@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Admin\AttributeController;
+use App\Http\Controllers\Admin\BomController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductionController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SupplierController;
@@ -92,6 +94,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
     Route::post('purchases/{purchase}/cancel', [PurchaseController::class, 'cancel'])->name('purchases.cancel');
     Route::resource('purchases', PurchaseController::class);
+
+    // Manufacturing — BOMs (recipes) + production runs (complete consumes/produces + ledger).
+    Route::resource('boms', BomController::class);
+    Route::post('production/{order}/complete', [ProductionController::class, 'complete'])->name('production.complete');
+    Route::post('production/{order}/cancel', [ProductionController::class, 'cancel'])->name('production.cancel');
+    Route::resource('production', ProductionController::class)->parameters(['production' => 'order']);
 
     // Inventory — stock levels + manual adjustments (StockService + ledger) + movement history.
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
