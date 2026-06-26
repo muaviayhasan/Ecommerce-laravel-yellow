@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\AttributeController;
+use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\BlogPostController;
+use App\Http\Controllers\Admin\BlogTagController;
 use App\Http\Controllers\Admin\BomController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -132,6 +135,13 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Reports — analytics dashboard + CSV export.
     Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::get('reports/export', [ReportsController::class, 'export'])->name('reports.export');
+
+    // Blog — posts (+ many-to-many categories/tags) and the taxonomies they draw from.
+    Route::prefix('blog')->name('blog.')->group(function () {
+        Route::resource('posts', BlogPostController::class)->except('show');
+        Route::resource('categories', BlogCategoryController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
+        Route::resource('tags', BlogTagController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
+    });
 
     // Ledger — the financial source of truth (read-only): position, trial balance, entries.
     Route::get('ledger', [LedgerController::class, 'index'])->name('ledger.index');

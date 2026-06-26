@@ -145,6 +145,30 @@ return [
             ],
         ],
         [
+            'label' => 'Blog',
+            'icon' => 'article',
+            'children' => [
+                [
+                    'label' => 'Posts',
+                    'route' => 'admin.blog.posts.index',
+                    'active' => 'admin.blog.posts.*',
+                    'permission' => 'blog-posts.view',
+                ],
+                [
+                    'label' => 'Categories',
+                    'route' => 'admin.blog.categories.index',
+                    'active' => 'admin.blog.categories.*',
+                    'permission' => 'blog-categories.view',
+                ],
+                [
+                    'label' => 'Tags',
+                    'route' => 'admin.blog.tags.index',
+                    'active' => 'admin.blog.tags.*',
+                    'permission' => 'blog-tags.view',
+                ],
+            ],
+        ],
+        [
             'label' => 'Users',
             'icon' => 'group',
             'route' => 'admin.users.index',
