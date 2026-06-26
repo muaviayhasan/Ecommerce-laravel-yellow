@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Models\AttributeValue;
+use App\Models\Attribute;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Media;
@@ -146,11 +146,25 @@ class ProductTest extends TestCase
             ->assertForbidden();
     }
 
-    /** @return array<int,int> ids of the first $take values of a variation attribute by code */
-    private function values(string $code, int $take): array
+    /**
+     * Create a fresh variation attribute with $take values and return their ids.
+     * Self-contained so the test doesn't depend on seeded attribute data.
+     *
+     * @return array<int,int>
+     */
+    private function values(string $name, int $take): array
     {
-        return AttributeValue::whereHas('attribute', fn ($q) => $q->where('code', $code))
-            ->orderBy('id')->take($take)->pluck('id')->all();
+        $attribute = Attribute::create([
+            'name' => ucfirst($name) . ' ' . uniqid(),
+            'code' => $name . '-' . uniqid(),
+            'type' => 'select', 'is_variation' => true, 'sort_order' => 0,
+        ]);
+
+        return collect(range(1, $take))
+            ->map(fn ($i) => $attribute->values()->create([
+                'value' => $name . $i, 'label' => ucfirst($name) . ' ' . $i, 'sort_order' => $i,
+            ])->id)
+            ->all();
     }
 
     private function variablePayload(array $colors, array $sizes, array $overrides = []): array
