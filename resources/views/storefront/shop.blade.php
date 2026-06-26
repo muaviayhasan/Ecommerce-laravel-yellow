@@ -4,6 +4,10 @@
 @section('meta_description', 'Browse all products at ' . config('app.name') . '.')
 
 @section('content')
+    @php
+        // Build a shop URL that keeps the current filters and changes/clears just a few.
+        $mergeQuery = fn (array $params) => route('shop', array_filter(array_merge(request()->query(), $params), fn ($v) => $v !== null && $v !== ''));
+    @endphp
     <div class="bg-white py-8">
         <div class="app-container" x-data="{ filtersOpen: false }">
             {{-- Breadcrumbs --}}
@@ -33,46 +37,53 @@
                             {{-- Categories (accordion) --}}
                             <x-storefront.filter-section title="All Categories">
                                 <ul class="space-y-3 text-body-base text-on-surface-variant">
-                                    <li class="font-bold text-on-surface">Smart Phones &amp; Tablets <span class="font-normal text-gray-400">(25)</span></li>
-                                    <li class="pl-4"><a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Smartphones <span class="text-gray-400">(21)</span></a></li>
-                                    <li class="pl-4"><a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Tablets <span class="text-gray-400">(4)</span></a></li>
+                                    <li><a href="{{ route('shop') }}" class="hover:text-primary transition-colors {{ empty($filters['category']) ? 'font-bold text-on-surface' : '' }}">All products</a></li>
+                                    @foreach ($categories as $cat)
+                                        <li>
+                                            <a href="{{ $mergeQuery(['category' => $cat->slug]) }}" class="hover:text-primary transition-colors {{ ($filters['category'] ?? '') === $cat->slug ? 'font-bold text-primary' : '' }}">
+                                                {{ $cat->name }} <span class="font-normal text-gray-400">({{ $cat->products_count }})</span>
+                                            </a>
+                                            @if ($cat->children->isNotEmpty())
+                                                <ul class="pl-4 mt-2 space-y-2">
+                                                    @foreach ($cat->children as $child)
+                                                        <li><a href="{{ $mergeQuery(['category' => $child->slug]) }}" class="hover:text-primary transition-colors {{ ($filters['category'] ?? '') === $child->slug ? 'font-bold text-primary' : '' }}">{{ $child->name }}</a></li>
+                                                    @endforeach
+                                                </ul>
+                                            @endif
+                                        </li>
+                                    @endforeach
                                 </ul>
                             </x-storefront.filter-section>
 
                             {{-- Brands (accordion) --}}
-                            <x-storefront.filter-section title="Brands">
-                                <div class="space-y-2 text-body-base text-on-surface-variant">
-                                    @foreach (['Apple' => 4, 'Gionee' => 2, 'HTC' => 2, 'LG' => 2, 'Micromax' => 1] as $brand => $n)
-                                        <label class="flex items-center cursor-pointer hover:text-primary">
-                                            <input type="checkbox" class="rounded border-gray-300 accent-primary-container mr-2"> {{ $brand }}
-                                            <span class="ml-1 text-gray-400">({{ $n }})</span>
-                                        </label>
-                                    @endforeach
-                                    <button type="button" class="text-secondary text-label-sm font-medium hover:text-primary">+ Show more</button>
-                                </div>
-                            </x-storefront.filter-section>
-
-                            {{-- Color (accordion) --}}
-                            <x-storefront.filter-section title="Color">
-                                <div class="space-y-2 text-body-base text-on-surface-variant">
-                                    @foreach (['Black' => 3, 'Black Leather' => 2, 'Gold' => 4, 'Spacegrey' => 3, 'Turquoise' => 2] as $color => $n)
-                                        <label class="flex items-center cursor-pointer hover:text-primary">
-                                            <input type="checkbox" class="rounded border-gray-300 accent-primary-container mr-2"> {{ $color }}
-                                            <span class="ml-1 text-gray-400">({{ $n }})</span>
-                                        </label>
-                                    @endforeach
-                                    <button type="button" class="text-secondary text-label-sm font-medium hover:text-primary">+ Show more</button>
-                                </div>
-                            </x-storefront.filter-section>
+                            @if ($brands->isNotEmpty())
+                                <x-storefront.filter-section title="Brands">
+                                    <div class="space-y-2 text-body-base text-on-surface-variant">
+                                        @foreach ($brands as $brand)
+                                            <a href="{{ $mergeQuery(['brand' => $brand->slug]) }}" class="flex items-center justify-between hover:text-primary transition-colors {{ ($filters['brand'] ?? '') === $brand->slug ? 'font-bold text-primary' : '' }}">
+                                                <span>{{ $brand->name }}</span><span class="text-gray-400">({{ $brand->products_count }})</span>
+                                            </a>
+                                        @endforeach
+                                        @if (! empty($filters['brand']))
+                                            <a href="{{ $mergeQuery(['brand' => null]) }}" class="inline-block pt-1 text-secondary text-label-sm font-medium hover:text-primary">&times; Clear brand</a>
+                                        @endif
+                                    </div>
+                                </x-storefront.filter-section>
+                            @endif
 
                             {{-- Price (accordion) --}}
                             <x-storefront.filter-section title="Price">
-                                <input type="range" min="60" max="3490" value="1500"
-                                    class="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-container">
-                                <div class="flex justify-between text-label-sm text-on-surface-variant mt-4">
-                                    <span>Price: Rs 6,000 — Rs 349,000</span>
-                                </div>
-                                <button type="button" class="mt-4 bg-surface-container px-6 py-2 rounded-full text-label-sm font-bold hover:bg-primary-container transition-colors">Filter</button>
+                                <form method="GET" action="{{ route('shop') }}" class="space-y-3">
+                                    @foreach (['q', 'category', 'brand', 'sort'] as $k)
+                                        @if (! empty($filters[$k]))<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
+                                    @endforeach
+                                    <div class="flex items-center gap-2">
+                                        <input type="number" name="min" min="0" value="{{ $filters['min'] ?? '' }}" placeholder="Min" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
+                                        <span class="text-gray-400">&mdash;</span>
+                                        <input type="number" name="max" min="0" value="{{ $filters['max'] ?? '' }}" placeholder="Max" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
+                                    </div>
+                                    <button type="submit" class="bg-surface-container px-6 py-2 rounded-full text-label-sm font-bold hover:bg-primary-container transition-colors">Filter</button>
+                                </form>
                             </x-storefront.filter-section>
 
                             {{-- Ad banner --}}
@@ -121,8 +132,10 @@
                     </div>
 
                     <div class="flex flex-wrap justify-between items-end gap-4 mb-6">
-                        <h1 class="text-3xl sm:text-4xl font-light">All Products</h1>
-                        <span class="text-body-base text-on-surface-variant">Showing all {{ $products->count() }} results</span>
+                        <h1 class="text-3xl sm:text-4xl font-light">{{ $filters['q'] ?? '' ? 'Results for “' . $filters['q'] . '”' : 'All Products' }}</h1>
+                        <span class="text-body-base text-on-surface-variant">
+                            @if ($products->total())Showing {{ $products->firstItem() }}&ndash;{{ $products->lastItem() }} of {{ $products->total() }} results @else No products found @endif
+                        </span>
                     </div>
 
                     {{-- Control bar --}}
@@ -139,20 +152,16 @@
                                 <span class="material-symbols-outlined text-[20px]">view_list</span>
                             </button>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <select data-no-select2 class="border-none bg-transparent text-body-base outline-none cursor-pointer">
-                                <option>Default sorting</option>
-                                <option>Popularity</option>
-                                <option>Newness</option>
-                                <option>Price: low to high</option>
-                                <option>Price: high to low</option>
+                        <form method="GET" action="{{ route('shop') }}" class="flex items-center gap-4">
+                            @foreach (['q', 'category', 'brand', 'min', 'max'] as $k)
+                                @if (! empty($filters[$k]))<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
+                            @endforeach
+                            <select name="sort" data-no-select2 onchange="this.form.submit()" class="border-none bg-transparent text-body-base outline-none cursor-pointer">
+                                @foreach ($sorts as $val => $label)
+                                    <option value="{{ $val }}" @selected(($filters['sort'] ?? 'newness') === $val)>{{ $label }}</option>
+                                @endforeach
                             </select>
-                            <select data-no-select2 class="border-none bg-transparent text-body-base outline-none cursor-pointer">
-                                <option>Show 20</option>
-                                <option>Show 40</option>
-                                <option>Show all</option>
-                            </select>
-                        </div>
+                        </form>
                     </div>
 
                     {{-- Grid view --}}
@@ -171,16 +180,33 @@
                         @endforeach
                     </div>
 
+                    {{-- Empty state --}}
+                    @if ($products->isEmpty())
+                        <div class="text-center py-20 border border-gray-200 border-t-0">
+                            <span class="material-symbols-outlined text-gray-300" style="font-size:64px;">search_off</span>
+                            <p class="mt-4 text-xl font-light text-on-surface-variant">No products match your filters.</p>
+                            <a href="{{ route('shop') }}" class="inline-block mt-4 text-primary font-bold hover:underline">Clear all filters</a>
+                        </div>
+                    @endif
+
                     {{-- Pagination --}}
-                    <nav class="flex justify-center items-center gap-2 mt-10" aria-label="Pagination">
-                        <span class="w-9 h-9 flex items-center justify-center rounded-full bg-primary-container font-bold">1</span>
-                        @foreach ([2, 3] as $page)
-                            <a href="{{ route('shop') }}" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container font-bold transition-colors">{{ $page }}</a>
-                        @endforeach
-                        <a href="{{ route('shop') }}" aria-label="Next page" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container transition-colors">
-                            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-                        </a>
-                    </nav>
+                    @if ($products->hasPages())
+                        <nav class="flex justify-center items-center gap-2 mt-10" aria-label="Pagination">
+                            @if (! $products->onFirstPage())
+                                <a href="{{ $products->previousPageUrl() }}" aria-label="Previous page" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_left</span></a>
+                            @endif
+                            @foreach ($products->getUrlRange(max(1, $products->currentPage() - 2), min($products->lastPage(), $products->currentPage() + 2)) as $page => $url)
+                                @if ($page == $products->currentPage())
+                                    <span class="w-9 h-9 flex items-center justify-center rounded-full bg-primary-container font-bold">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $url }}" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container font-bold transition-colors">{{ $page }}</a>
+                                @endif
+                            @endforeach
+                            @if ($products->hasMorePages())
+                                <a href="{{ $products->nextPageUrl() }}" aria-label="Next page" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_right</span></a>
+                            @endif
+                        </nav>
+                    @endif
                 </section>
             </div>
         </div>
