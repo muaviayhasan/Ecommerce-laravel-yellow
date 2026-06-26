@@ -82,6 +82,12 @@ return [
                     'permission' => 'quotations.view',
                 ],
                 [
+                    'label' => 'Coupons',
+                    'route' => 'admin.coupons.index',
+                    'active' => 'admin.coupons.*',
+                    'permission' => 'coupons.view',
+                ],
+                [
                     'label' => 'Customers',
                     'route' => 'admin.customers.index',
                     'active' => 'admin.customers.*',
