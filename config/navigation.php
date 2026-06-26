@@ -76,6 +76,12 @@ return [
                     'permission' => 'orders.view',
                 ],
                 [
+                    'label' => 'Quotations',
+                    'route' => 'admin.quotations.index',
+                    'active' => 'admin.quotations.*',
+                    'permission' => 'quotations.view',
+                ],
+                [
                     'label' => 'Customers',
                     'route' => 'admin.customers.index',
                     'active' => 'admin.customers.*',

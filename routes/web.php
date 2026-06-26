@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\PosController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductionController;
 use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\QuotationController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
@@ -91,6 +92,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('pos', [PosController::class, 'index'])->name('pos.index');
     Route::get('pos/search', [PosController::class, 'search'])->name('pos.search');
     Route::post('pos', [PosController::class, 'store'])->name('pos.store');
+
+    // Quotations — draft sales; "convert" turns an accepted quote into a credit order.
+    Route::post('quotations/{quotation}/status', [QuotationController::class, 'status'])->name('quotations.status');
+    Route::post('quotations/{quotation}/convert', [QuotationController::class, 'convert'])->name('quotations.convert');
+    Route::resource('quotations', QuotationController::class);
 
     // Orders — view + detail + status update (no create/delete; orders come from checkout/POS).
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');

@@ -22,8 +22,8 @@ class SalesService
     ) {}
 
     /**
-     * @param  array<int, array{variant: ProductVariant, quantity: float}>  $lines
-     * @param  array{payment_method?: string, paid?: float, tax_total?: float, shipping_total?: float, discount_total?: float}  $opts
+     * @param  array<int, array{variant: ProductVariant, quantity: float, unit_price?: float}>  $lines
+     * @param  array{payment_method?: string, paid?: float, pay_full?: bool, tax_total?: float, tax_rate?: float, shipping_total?: float, discount_total?: float, quotation_id?: int}  $opts
      */
     public function place(string $channel, ?Customer $customer, array $lines, array $opts = []): Order
     {
@@ -37,7 +37,8 @@ class SalesService
             foreach ($lines as $line) {
                 $variant = $line['variant'];
                 $qty = (float) $line['quantity'];
-                $unitPrice = $this->price($variant, $tier);
+                // Honour an explicit price (e.g. a converted quotation) over the tier price.
+                $unitPrice = isset($line['unit_price']) ? (float) $line['unit_price'] : $this->price($variant, $tier);
                 $lineTotal = round($unitPrice * $qty, 2);
                 $cost = (float) $variant->cost;
 
@@ -74,6 +75,7 @@ class SalesService
                 'order_number' => $this->nextNumber(),
                 'channel' => $channel,
                 'customer_id' => $customer?->id,
+                'quotation_id' => $opts['quotation_id'] ?? null,
                 'price_tier' => $tier,
                 'status' => $paid >= $grand ? 'paid' : 'pending',
                 'payment_method' => $opts['payment_method'] ?? 'cash',
