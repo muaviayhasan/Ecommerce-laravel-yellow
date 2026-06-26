@@ -3,35 +3,39 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Storefront\Concerns\ProvidesSampleProducts;
+use App\Support\Storefront;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    use ProvidesSampleProducts;
-
     /**
-     * Storefront home page.
-     *
-     * NOTE: product data here is PLACEHOLDER sample data so the theme renders
-     * fully before the catalog module exists. Swap each collection for real
-     * queries (e.g. Product::active()->published()->featured()->with('defaultVariant')…)
-     * when Products & Variants are built (PROJECT_DOCUMENTATION build order #4).
+     * Storefront home page — real catalog (Product::webListed()), mapped to the
+     * card shape the theme expects. Sections fall back to the latest products so a
+     * thin catalog still fills the page even before the flags are set widely.
      */
     public function index(): View
     {
-        $pool = $this->sampleProducts();
+        $latest = Storefront::cards(Storefront::query()->latest('published_at')->take(12)->get());
+
+        $orLatest = fn (Collection $cards, int $n): Collection => $cards->isEmpty() ? $latest->take($n)->values() : $cards;
+
+        $featured = $orLatest(Storefront::cards(Storefront::query()->featured()->latest('published_at')->take(6)->get()), 6);
+        $trending = $orLatest(Storefront::cards(Storefront::query()->trending()->latest('published_at')->take(8)->get()), 8);
+        $bestsellers = $orLatest(Storefront::cards(Storefront::query()->bestseller()->latest('published_at')->take(8)->get()), 8);
+        $onSale = Storefront::cards(Storefront::onSaleQuery()->take(6)->get());
+        $topRated = $orLatest(Storefront::cards(Storefront::query()->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating')->take(6)->get()), 6);
 
         return view('storefront.home', [
-            'featured' => $pool->take(6)->values(),
-            'onSale' => $pool->whereNotNull('compare')->take(6)->values(),
-            'topRated' => $pool->sortByDesc('price')->take(6)->values(),
-            'laptops' => $pool->values(), // showcased in a slider, chunked into slides in the view
-            'trending' => $pool->reverse()->values(), // slider, chunked into slides of 4 in the view
-            'bestsellers' => $pool->take(8)->values(), // 4x2 grid of small cards
-            'bestsellerFeature' => $pool->firstWhere('name', 'Game Console Controller + USB 3.0') ?? $pool->last(),
-            'tvProducts' => $pool->values(), // Television Entertainment slider (chunked into slides in the view)
-            'recentlyViewed' => $pool->slice(3, 6)->values(), // placeholder; real list comes from session/cookie later
+            'featured' => $featured,
+            'onSale' => $onSale,
+            'topRated' => $topRated,
+            'laptops' => $latest,
+            'trending' => $trending,
+            'bestsellers' => $bestsellers,
+            'bestsellerFeature' => $bestsellers->first() ?? $latest->first() ?? [],
+            'tvProducts' => $latest,
+            'recentlyViewed' => $latest->slice(2, 6)->values(),
         ]);
     }
 
