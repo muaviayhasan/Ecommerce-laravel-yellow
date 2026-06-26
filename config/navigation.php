@@ -86,6 +86,12 @@ return [
                     'active' => 'admin.purchases.*',
                     'permission' => 'purchases.view',
                 ],
+                [
+                    'label' => 'Inventory',
+                    'route' => 'admin.inventory.index',
+                    'active' => 'admin.inventory.*',
+                    'permission' => 'stock.view',
+                ],
             ],
         ],
         [

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\PurchaseController;
@@ -91,6 +92,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
     Route::post('purchases/{purchase}/cancel', [PurchaseController::class, 'cancel'])->name('purchases.cancel');
     Route::resource('purchases', PurchaseController::class);
+
+    // Inventory — stock levels + manual adjustments (StockService + ledger) + movement history.
+    Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::post('inventory/{variant}/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust');
+    Route::get('inventory/{variant}', [InventoryController::class, 'show'])->name('inventory.show');
 
     // Reports — analytics dashboard + CSV export.
     Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
