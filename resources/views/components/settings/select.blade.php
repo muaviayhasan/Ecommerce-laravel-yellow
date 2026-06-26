@@ -3,10 +3,10 @@
     'name',
     'options' => [],
     'selected' => null,
-    'select2' => false, // opt in to the Select2 searchable widget (themed in app.css)
+    'select2' => true, // Select2 searchable widget by default; pass :select2="false" for a native select
 ])
 
-{{-- Native by default (data-no-select2); pass :select2="true" for the searchable widget. --}}
+{{-- Select2 by default (themed in app.css); pass :select2="false" to opt out (e.g. Alpine-bound). --}}
 <select
     id="{{ $id }}"
     name="{{ $name }}"

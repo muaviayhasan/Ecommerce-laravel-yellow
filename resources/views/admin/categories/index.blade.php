@@ -29,14 +29,14 @@
 
     <x-admin.panel class="!p-0 overflow-hidden">
         {{-- Filter bar --}}
-        <form method="GET" class="p-4 border-b border-outline-variant/60 flex flex-wrap items-center gap-3">
+        <form method="GET" class="js-filters p-4 border-b border-outline-variant/60 flex flex-wrap items-center gap-3">
             <div class="relative flex-1 min-w-48">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
                 <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search name or slug…" maxlength="255"
                     class="w-full bg-surface-container-low border border-outline-variant/40 rounded-lg pl-10 pr-3 py-2 text-sm text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary outline-none">
             </div>
 
-            <select name="parent" data-no-select2
+            <select name="parent"
                 class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
                 <option value="">All parents</option>
                 @foreach ($parents as $id => $name)
@@ -44,7 +44,7 @@
                 @endforeach
             </select>
 
-            <select name="status" data-no-select2
+            <select name="status"
                 class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
                 <option value="">Any status</option>
                 <option value="active" @selected(($filters['status'] ?? '') === 'active')>Active</option>

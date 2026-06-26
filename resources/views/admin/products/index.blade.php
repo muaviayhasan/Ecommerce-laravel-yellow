@@ -26,25 +26,25 @@
     </div>
 
     <x-admin.panel class="!p-0 overflow-hidden">
-        <form method="GET" class="p-4 border-b border-outline-variant/60 flex flex-wrap items-center gap-3">
+        <form method="GET" class="js-filters p-4 border-b border-outline-variant/60 flex flex-wrap items-center gap-3">
             <div class="relative flex-1 min-w-48">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
                 <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search name or SKU…" maxlength="255"
                     class="w-full bg-surface-container-low border border-outline-variant/40 rounded-lg pl-10 pr-3 py-2 text-sm text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary outline-none">
             </div>
-            <select name="category" data-no-select2 class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+            <select name="category" class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
                 <option value="">All categories</option>
                 @foreach ($categories as $id => $label)
                     <option value="{{ $id }}" @selected((string) ($filters['category'] ?? '') === (string) $id)>{{ $label }}</option>
                 @endforeach
             </select>
-            <select name="brand" data-no-select2 class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+            <select name="brand" class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
                 <option value="">All brands</option>
                 @foreach ($brands as $id => $label)
                     <option value="{{ $id }}" @selected((string) ($filters['brand'] ?? '') === (string) $id)>{{ $label }}</option>
                 @endforeach
             </select>
-            <select name="status" data-no-select2 class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+            <select name="status" class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
                 <option value="">Any status</option>
                 <option value="active" @selected(($filters['status'] ?? '') === 'active')>Active</option>
                 <option value="inactive" @selected(($filters['status'] ?? '') === 'inactive')>Inactive</option>
