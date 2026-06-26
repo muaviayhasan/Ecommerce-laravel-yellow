@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AuthController;
@@ -82,6 +85,16 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('orders/{order}/print', [OrderController::class, 'print'])->name('orders.print');
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+
+    // Procurement — suppliers + purchasing (receive posts stock + moving-avg cost + ledger).
+    Route::resource('suppliers', SupplierController::class)->except('show');
+    Route::post('purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
+    Route::post('purchases/{purchase}/cancel', [PurchaseController::class, 'cancel'])->name('purchases.cancel');
+    Route::resource('purchases', PurchaseController::class);
+
+    // Reports — analytics dashboard + CSV export.
+    Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
+    Route::get('reports/export', [ReportsController::class, 'export'])->name('reports.export');
 
     // Gallery / media library (Livewire) — guarded; per-action checks live in the component.
     Route::view('/gallery', 'admin.gallery.index')

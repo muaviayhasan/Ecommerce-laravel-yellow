@@ -71,6 +71,24 @@ return [
             ],
         ],
         [
+            'label' => 'Procurement',
+            'icon' => 'local_shipping',
+            'children' => [
+                [
+                    'label' => 'Suppliers',
+                    'route' => 'admin.suppliers.index',
+                    'active' => 'admin.suppliers.*',
+                    'permission' => 'suppliers.view',
+                ],
+                [
+                    'label' => 'Purchases',
+                    'route' => 'admin.purchases.index',
+                    'active' => 'admin.purchases.*',
+                    'permission' => 'purchases.view',
+                ],
+            ],
+        ],
+        [
             'label' => 'Users',
             'icon' => 'group',
             'route' => 'admin.users.index',
