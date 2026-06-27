@@ -104,11 +104,13 @@
                     <x-admin.panel title="Checkout">
                         <div class="space-y-1.5 mb-5">
                             <label class="block text-sm font-medium text-on-surface-variant">Customer</label>
-                            <select name="customer_id" x-model="customerId" data-no-select2 class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+                            <select name="customer_id" data-no-select2
+                                x-init="window.$($el).select2({ width: '100%', dropdownParent: window.$(document.body) }); window.$($el).on('change', () => customerId = $el.value);"
+                                class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
                                 <option value="">Walk-in customer</option>
-                                <template x-for="c in customers" :key="c.id">
-                                    <option :value="c.id" x-text="c.name + (c.wholesale ? ' · wholesale' : '')"></option>
-                                </template>
+                                @foreach ($customers as $c)
+                                    <option value="{{ $c['id'] }}">{{ $c['name'] }}@if ($c['wholesale']) · wholesale @endif</option>
+                                @endforeach
                             </select>
                         </div>
 
