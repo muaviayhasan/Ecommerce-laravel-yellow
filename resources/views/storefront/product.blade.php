@@ -105,8 +105,20 @@
                         </button>
 
                         <div class="flex gap-8 mt-6 text-label-sm font-bold text-on-surface-variant">
-                            <button type="button" class="flex items-center gap-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">favorite</span> Wishlist</button>
-                            <button type="button" class="flex items-center gap-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">sync</span> Compare</button>
+                            <form method="POST" action="{{ route('wishlist.toggle', $product['slug']) }}">
+                                @csrf
+                                <button type="submit" @class(['flex items-center gap-1 hover:text-primary transition-colors', 'text-primary' => app(\App\Services\WishlistService::class)->has($product['id'])])>
+                                    <span class="material-symbols-outlined text-[18px]" @style(["font-variation-settings: 'FILL' 1" => app(\App\Services\WishlistService::class)->has($product['id'])])>favorite</span>
+                                    {{ app(\App\Services\WishlistService::class)->has($product['id']) ? 'In wishlist' : 'Wishlist' }}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('compare.toggle', $product['slug']) }}">
+                                @csrf
+                                <button type="submit" @class(['flex items-center gap-1 hover:text-primary transition-colors', 'text-primary' => app(\App\Services\CompareService::class)->has($product['id'])])>
+                                    <span class="material-symbols-outlined text-[18px]">sync</span>
+                                    {{ app(\App\Services\CompareService::class)->has($product['id']) ? 'In compare' : 'Compare' }}
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

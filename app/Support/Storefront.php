@@ -41,6 +41,7 @@ class Storefront
 
         return [
             'id' => $product->id,
+            'variant_id' => $variant?->id,
             'name' => $product->name,
             'category' => $product->category?->name,
             'price' => $retail,

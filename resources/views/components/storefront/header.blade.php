@@ -20,7 +20,7 @@
     $cart = app(\App\Services\CartService::class);
     $cartCount = $cart->count();
     $cartTotal = 'Rs ' . number_format($cart->subtotal());
-    $wishlistCount = 0;
+    $wishlistCount = app(\App\Services\WishlistService::class)->count();
 @endphp
 
 <div x-data="{ mobileMenu: false }">

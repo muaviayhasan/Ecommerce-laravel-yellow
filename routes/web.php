@@ -31,10 +31,12 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Storefront\BlogController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\CompareController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\ReviewController as StorefrontReviewController;
 use App\Http\Controllers\Storefront\ShopController;
+use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -58,6 +60,17 @@ Route::patch('/cart/{variant}', [CartController::class, 'update'])->name('cart.u
 Route::delete('/cart/{variant}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 
+// Wishlist + Compare (session-based)
+Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
+Route::post('/wishlist/{product:slug}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+Route::delete('/wishlist/{product:slug}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+Route::delete('/wishlist', [WishlistController::class, 'clear'])->name('wishlist.clear');
+
+Route::get('/compare', [CompareController::class, 'index'])->name('compare');
+Route::post('/compare/{product:slug}', [CompareController::class, 'toggle'])->name('compare.toggle');
+Route::delete('/compare/{product:slug}', [CompareController::class, 'remove'])->name('compare.remove');
+Route::delete('/compare', [CompareController::class, 'clear'])->name('compare.clear');
+
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
@@ -72,8 +85,6 @@ Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.
 $placeholders = [
-    'wishlist' => 'Wishlist',
-    'compare' => 'Compare',
     'account' => 'My Account',
     'contact' => 'Contact Us',
 ];

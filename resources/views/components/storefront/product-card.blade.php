@@ -7,6 +7,7 @@
     $compare = data_get($product, 'compare');
     $image = data_get($product, 'image');
     $url = data_get($product, 'url', '#');
+    $slug = data_get($product, 'slug');
     $onSale = $compare !== null && (float) $compare > $price;
     // TODO: swap "Rs " formatting for format_money() once the Settings helpers land.
 @endphp
@@ -41,12 +42,21 @@
     {{-- Hover actions: Wishlist / Compare (revealed below the card on hover) --}}
     <div class="absolute left-0 right-0 top-full -mt-px bg-white px-6 pb-4 z-10 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 shadow-[0_3px_6px_0_rgba(1,1,1,0.3)]">
         <div class="flex items-center justify-center gap-6 border-t border-gray-200 pt-3 text-label-sm font-medium text-on-surface-variant">
-            <button type="button" class="flex items-center gap-1.5 hover:text-primary transition-colors" aria-label="Add to wishlist">
-                <span class="material-symbols-outlined text-[18px]">favorite</span> Wishlist
-            </button>
-            <button type="button" class="flex items-center gap-1.5 hover:text-primary transition-colors" aria-label="Add to compare">
-                <span class="material-symbols-outlined text-[18px]">sync</span> Compare
-            </button>
+            @if ($slug)
+                <form method="POST" action="{{ route('wishlist.toggle', $slug) }}">@csrf
+                    <button type="submit" class="flex items-center gap-1.5 hover:text-primary transition-colors" aria-label="Add to wishlist">
+                        <span class="material-symbols-outlined text-[18px]">favorite</span> Wishlist
+                    </button>
+                </form>
+                <form method="POST" action="{{ route('compare.toggle', $slug) }}">@csrf
+                    <button type="submit" class="flex items-center gap-1.5 hover:text-primary transition-colors" aria-label="Add to compare">
+                        <span class="material-symbols-outlined text-[18px]">sync</span> Compare
+                    </button>
+                </form>
+            @else
+                <a href="{{ route('wishlist') }}" class="flex items-center gap-1.5 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">favorite</span> Wishlist</a>
+                <a href="{{ route('compare') }}" class="flex items-center gap-1.5 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">sync</span> Compare</a>
+            @endif
         </div>
     </div>
 </div>
