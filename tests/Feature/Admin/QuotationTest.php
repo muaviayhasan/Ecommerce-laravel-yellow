@@ -63,7 +63,8 @@ class QuotationTest extends TestCase
 
         $this->actingAs($this->admin())->post(route('admin.quotations.store'), [
             'price_tier' => 'retail',
-            'discount_total' => '10',
+            'discount_type' => 'fixed',
+            'discount_value' => '10',
             'tax_total' => '0',
             'items' => [['product_variant_id' => $v->id, 'quantity' => '2', 'unit_price' => '100']],
         ])->assertRedirect();
@@ -71,6 +72,7 @@ class QuotationTest extends TestCase
         $q = Quotation::latest('id')->firstOrFail();
         $this->assertSame('draft', $q->status);
         $this->assertSame('200.00', (string) $q->subtotal);
+        $this->assertSame('10.00', (string) $q->discount_total);
         $this->assertSame('190.00', (string) $q->grand_total); // 200 - 10 discount
         $this->assertCount(1, $q->items);
     }

@@ -26,7 +26,7 @@ class Product extends Model
     public const VARIANT_VARIABLE = 'variable';
 
     protected $fillable = [
-        'category_id', 'brand_id', 'name', 'slug', 'sku',
+        'category_id', 'brand_id', 'unit_id', 'name', 'slug', 'sku',
         'type', 'is_stock_tracked', 'is_purchasable', 'is_manufacturable',
         'is_sellable', 'is_web_listed', 'manufacture_mode', 'variant_mode',
         'short_description', 'description', 'highlights', 'specifications', 'base_price', 'markup_percent',
@@ -70,6 +70,11 @@ class Product extends Model
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     public function attributes(): BelongsToMany

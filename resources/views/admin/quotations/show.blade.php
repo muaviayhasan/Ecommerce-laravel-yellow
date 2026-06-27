@@ -85,7 +85,7 @@
                 <div class="px-6 py-4 border-t border-outline-variant/60 flex justify-end">
                     <div class="w-full max-w-xs space-y-2 text-sm">
                         <div class="flex justify-between text-on-surface-variant"><span>Subtotal</span><span>{{ format_money($quotation->subtotal) }}</span></div>
-                        @if ((float) $quotation->discount_total > 0)<div class="flex justify-between text-on-surface-variant"><span>Discount</span><span>− {{ format_money($quotation->discount_total) }}</span></div>@endif
+                        @if ((float) $quotation->discount_total > 0)<div class="flex justify-between text-on-surface-variant"><span>Discount{{ $quotation->discount_type === 'percent' ? ' (' . rtrim(rtrim(number_format((float) $quotation->discount_value, 2), '0'), '.') . '%)' : '' }}</span><span>− {{ format_money($quotation->discount_total) }}</span></div>@endif
                         @if ((float) $quotation->tax_total > 0)<div class="flex justify-between text-on-surface-variant"><span>Tax</span><span>{{ format_money($quotation->tax_total) }}</span></div>@endif
                         <div class="flex justify-between font-bold text-on-surface text-base pt-2 border-t border-outline-variant/60"><span>Grand total</span><span>{{ format_money($quotation->grand_total) }}</span></div>
                     </div>

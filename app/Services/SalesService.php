@@ -60,7 +60,7 @@ class SalesService
 
             $subtotal = round($subtotal, 2);
             $cogs = round($cogs, 2);
-            $discount = round((float) ($opts['discount_total'] ?? 0), 2);
+            [$discountType, $discountValue, $discount] = $this->resolveDiscount($subtotal, $opts);
             // Tax: an explicit amount, or computed from a rate on the net subtotal.
             $tax = isset($opts['tax_total'])
                 ? round((float) $opts['tax_total'], 2)
@@ -81,6 +81,8 @@ class SalesService
                 'payment_method' => $opts['payment_method'] ?? 'cash',
                 'payment_status' => $paid <= 0 ? 'unpaid' : ($paid >= $grand ? 'paid' : 'partial'),
                 'subtotal' => $subtotal,
+                'discount_type' => $discountType,
+                'discount_value' => $discountValue,
                 'discount_total' => $discount,
                 'tax_total' => $tax,
                 'shipping_total' => $shipping,
@@ -132,6 +134,31 @@ class SalesService
 
             return $order;
         });
+    }
+
+    /**
+     * Resolve a manual discount into [type, value, amount]. Accepts either an explicit
+     * `discount_type` + `discount_value` (fixed Rs or percent of subtotal) or a plain
+     * `discount_total` (legacy / coupon path). Always capped: percent ≤ 100, amount ≤ subtotal.
+     *
+     * @param  array<string, mixed>  $opts
+     * @return array{0: string, 1: float, 2: float}
+     */
+    private function resolveDiscount(float $subtotal, array $opts): array
+    {
+        if (isset($opts['discount_type']) && in_array($opts['discount_type'], ['fixed', 'percent'], true)) {
+            $type = $opts['discount_type'];
+            $value = round((float) ($opts['discount_value'] ?? 0), 2);
+            $amount = $type === 'percent'
+                ? round($subtotal * min($value, 100) / 100, 2)
+                : min($value, $subtotal);
+
+            return [$type, $value, round($amount, 2)];
+        }
+
+        $value = round((float) ($opts['discount_total'] ?? 0), 2);
+
+        return ['fixed', $value, min($value, $subtotal)];
     }
 
     private function price(ProductVariant $variant, string $tier): float

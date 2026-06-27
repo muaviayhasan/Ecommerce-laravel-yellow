@@ -12,6 +12,7 @@
         'slug' => ['input' => 'text', 'label' => 'Slug', 'max' => 255, 'help' => 'Leave blank to auto-generate from the name.'],
         'category_id' => ['input' => 'select', 'label' => 'Category', 'select2' => true, 'options' => ['' => '— Choose category —'] + $categoryOptions],
         'brand_id' => ['input' => 'select', 'label' => 'Brand', 'select2' => true, 'options' => ['' => '— None —'] + $brandOptions],
+        'unit_id' => ['input' => 'select', 'label' => 'Unit', 'select2' => true, 'options' => ['' => '— None —'] + $unitOptions, 'help' => 'Unit of measure (pcs, kg, ltr, …).'],
         'type' => ['input' => 'select', 'label' => 'Type', 'select2' => true, 'options' => [
             Product::TYPE_TRADING => 'Trading (bought & sold)',
             Product::TYPE_MANUFACTURED => 'Manufactured',

@@ -28,7 +28,7 @@ class RolePermissionSeeder extends Seeder
         'gallery' => ['view', 'create', 'edit', 'delete'],
         // Supply, manufacturing, inventory
         'suppliers' => ['view', 'create', 'edit', 'delete'],
-        'purchases' => ['view', 'create', 'edit', 'delete', 'receive'],
+        'purchases' => ['view', 'create', 'edit', 'delete', 'receive', 'pay'],
         'boms' => ['view', 'create', 'edit', 'delete'],
         'production' => ['view', 'create', 'edit', 'delete', 'complete'],
         'stock' => ['view', 'adjust', 'transfer'],

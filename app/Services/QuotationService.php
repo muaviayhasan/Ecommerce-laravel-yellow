@@ -47,7 +47,8 @@ class QuotationService
                 'payment_method' => 'credit',
                 'paid' => 0,
                 'tax_total' => (float) $quotation->tax_total,
-                'discount_total' => (float) $quotation->discount_total,
+                'discount_type' => $quotation->discount_type,
+                'discount_value' => (float) $quotation->discount_value,
                 'quotation_id' => $quotation->id,
             ]);
 

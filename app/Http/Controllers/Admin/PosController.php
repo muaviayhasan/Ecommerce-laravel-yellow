@@ -94,6 +94,8 @@ class PosController extends Controller implements HasMiddleware
             $order = $sales->place('pos', $customer, $lines, [
                 'payment_method' => $data['payment_method'],
                 'tax_rate' => $taxRate,
+                'discount_type' => $data['discount_type'],
+                'discount_value' => (float) ($data['discount_value'] ?? 0),
                 'pay_full' => true,
             ]);
         } catch (Throwable $e) {

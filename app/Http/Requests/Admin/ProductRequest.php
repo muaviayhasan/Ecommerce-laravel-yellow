@@ -28,6 +28,7 @@ class ProductRequest extends FormRequest
             'no_index' => $this->boolean('no_index'),
             // Empty <select>s → real null so `nullable` short-circuits `exists`.
             'brand_id' => $this->filled('brand_id') ? $this->input('brand_id') : null,
+            'unit_id' => $this->filled('unit_id') ? $this->input('unit_id') : null,
             'base_price' => $this->filled('base_price') ? $this->input('base_price') : null,
         ]);
 
@@ -86,6 +87,7 @@ class ProductRequest extends FormRequest
             'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->ignore($productId)],
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'brand_id' => ['nullable', Rule::exists('brands', 'id')],
+            'unit_id' => ['nullable', Rule::exists('units', 'id')],
             'type' => ['required', Rule::in([Product::TYPE_TRADING, Product::TYPE_MANUFACTURED, Product::TYPE_RAW, Product::TYPE_SERVICE])],
             'variant_mode' => ['required', Rule::in([Product::VARIANT_SIMPLE, Product::VARIANT_VARIABLE])],
             'short_description' => ['nullable', 'string', 'max:500'],

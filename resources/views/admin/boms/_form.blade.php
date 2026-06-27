@@ -64,13 +64,33 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-outline-variant/40">
-                        <template x-for="(row, i) in items" :key="i">
+                        <template x-for="(row, i) in items" :key="row._uid">
                             <tr>
                                 <td class="px-3 py-2">
-                                    <select :name="`items[${i}][component_variant_id]`" x-model="row.component_variant_id" data-no-select2 class="{{ $cell }} cursor-pointer">
-                                        <option value="">Select component…</option>
-                                        <template x-for="v in variants" :key="v.id"><option :value="v.id" x-text="v.label"></option></template>
-                                    </select>
+                                    <div @click.outside="row._open = false">
+                                        <input type="hidden" :name="`items[${i}][component_variant_id]`" :value="row.component_variant_id">
+                                        <button type="button" :data-uid="row._uid" @click="togglePicker(row, $el)"
+                                                class="{{ $cell }} cursor-pointer text-left flex items-center justify-between gap-2 overflow-hidden">
+                                            <span class="truncate" :class="row.component_variant_id ? '' : 'text-outline'" x-text="variantLabel(row.component_variant_id) || 'Select component…'"></span>
+                                            <span class="material-symbols-outlined text-[18px] text-outline shrink-0">expand_more</span>
+                                        </button>
+                                        <div x-show="row._open" x-cloak
+                                             :style="`top:${row._y}px; left:${row._x}px; width:${row._w}px; max-height:${row._maxh}px`"
+                                             class="fixed z-50 mt-1 bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-lg shadow-2xl flex flex-col overflow-hidden">
+                                            <div class="p-2 border-b border-outline-variant/60">
+                                                <input type="text" x-model="row._q" @keydown.escape.stop="row._open = false"
+                                                       placeholder="Search component or SKU…" class="{{ $cell }} !py-1.5">
+                                            </div>
+                                            <ul class="overflow-y-auto">
+                                                <template x-for="v in filterVariants(row._q)" :key="v.id">
+                                                    <li>
+                                                        <button type="button" @click="pick(row, v)" class="w-full text-left px-3 py-2 text-sm text-on-surface hover:bg-surface-container-low" x-text="v.label"></button>
+                                                    </li>
+                                                </template>
+                                                <li x-show="!filterVariants(row._q).length" class="px-3 py-2 text-sm text-on-surface-variant">No matches.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-3 py-2"><input type="number" step="0.001" min="0" :name="`items[${i}][quantity]`" x-model="row.quantity" class="{{ $cell }}"></td>
                                 <td class="px-3 py-2"><input type="number" step="0.01" min="0" max="100" :name="`items[${i}][waste_percent]`" x-model="row.waste_percent" class="{{ $cell }}"></td>
@@ -104,7 +124,12 @@
             Alpine.data('bomItems', (state, variants) => ({
                 variants: (variants || []).map(v => ({ id: String(v.id), label: v.label, cost: v.cost })),
                 cur: state.currency || 'Rs',
-                items: (state.items || []).map(r => ({
+                _seq: (state.items || []).length,
+                items: (state.items || []).map((r, idx) => ({
+                    _uid: idx + 1,
+                    _open: false,
+                    _q: '',
+                    _x: 0, _y: 0, _w: 0, _maxh: 288,
                     component_variant_id: r.component_variant_id ? String(r.component_variant_id) : '',
                     quantity: r.quantity ?? '1',
                     waste_percent: r.waste_percent ?? '0',
@@ -112,9 +137,45 @@
                 output: state.output ?? '1',
                 labor: state.labor ?? '0',
                 overhead: state.overhead ?? '0',
-                init() { if (!this.items.length) this.addItem(); },
-                addItem() { this.items.push({ component_variant_id: '', quantity: '1', waste_percent: '0' }); },
+                init() {
+                    if (!this.items.length) this.addItem();
+                    // The picker dropdown is position:fixed so the table's overflow can't clip it;
+                    // keep it glued to its trigger while the page/table scrolls or resizes.
+                    const reposition = () => {
+                        const open = this.items.find(r => r._open);
+                        if (!open) return;
+                        const btn = this.$root.querySelector(`[data-uid="${open._uid}"]`);
+                        if (btn) this.positionPicker(open, btn); else open._open = false;
+                    };
+                    window.addEventListener('scroll', reposition, true);
+                    window.addEventListener('resize', reposition);
+                },
+                addItem() { this.items.push({ _uid: ++this._seq, _open: false, _q: '', _x: 0, _y: 0, _w: 0, _maxh: 288, component_variant_id: '', quantity: '1', waste_percent: '0' }); },
                 removeItem(i) { this.items.splice(i, 1); if (!this.items.length) this.addItem(); },
+                variantLabel(id) { const v = this.variants.find(x => x.id === String(id)); return v ? v.label : ''; },
+                filterVariants(q) {
+                    q = (q || '').toLowerCase().trim();
+                    if (!q) return this.variants;
+                    return this.variants.filter(v => v.label.toLowerCase().includes(q));
+                },
+                togglePicker(row, btn) {
+                    const opening = !row._open;
+                    this.items.forEach(r => { r._open = false; });
+                    if (opening) {
+                        this.positionPicker(row, btn);
+                        row._q = '';
+                        row._open = true;
+                        this.$nextTick(() => btn?.parentElement?.querySelector('input[type=text]')?.focus());
+                    }
+                },
+                positionPicker(row, btn) {
+                    const r = btn.getBoundingClientRect();
+                    row._x = Math.round(r.left);
+                    row._y = Math.round(r.bottom);
+                    row._w = Math.round(r.width);
+                    row._maxh = Math.min(288, Math.max(160, Math.round(window.innerHeight - r.bottom - 12)));
+                },
+                pick(row, v) { row.component_variant_id = v.id; row._open = false; },
                 varCost(row) { const v = this.variants.find(x => x.id === String(row.component_variant_id)); return v ? (parseFloat(v.cost) || 0) : 0; },
                 lineCost(row) { return this.varCost(row) * (parseFloat(row.quantity) || 0) * (1 + (parseFloat(row.waste_percent) || 0) / 100); },
                 componentTotal() { return this.items.reduce((s, r) => s + this.lineCost(r), 0); },

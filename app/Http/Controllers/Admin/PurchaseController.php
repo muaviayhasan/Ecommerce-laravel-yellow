@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PurchaseRequest;
+use App\Http\Requests\Admin\SupplierPaymentRequest;
 use App\Models\ProductVariant;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Services\PurchaseService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -27,6 +29,7 @@ class PurchaseController extends Controller implements HasMiddleware
             new Middleware('can:purchases.edit', only: ['edit', 'update']),
             new Middleware('can:purchases.delete', only: ['destroy']),
             new Middleware('can:purchases.receive', only: ['receive', 'cancel']),
+            new Middleware('can:purchases.pay', only: ['payment']),
         ];
     }
 
@@ -70,11 +73,10 @@ class PurchaseController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function store(PurchaseRequest $request): RedirectResponse
+    public function store(PurchaseRequest $request): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
-        [$rows, $subtotal] = $this->buildItems($data['items']);
-        $tax = round((float) ($data['tax_total'] ?? 0), 2);
+        $t = $this->totals($data);
 
         $purchase = Purchase::create([
             'purchase_number' => $this->nextNumber(),
@@ -82,21 +84,28 @@ class PurchaseController extends Controller implements HasMiddleware
             'status' => 'draft',
             'reference' => $data['reference'] ?? null,
             'purchase_date' => $data['purchase_date'],
-            'subtotal' => $subtotal,
-            'tax_total' => $tax,
-            'grand_total' => round($subtotal + $tax, 2),
+            'subtotal' => $t['subtotal'],
+            'discount_type' => $t['discount_type'],
+            'discount_value' => $t['discount_value'],
+            'discount_total' => $t['discount'],
+            'tax_total' => $t['tax'],
+            'grand_total' => $t['grand'],
             'paid_total' => round((float) ($data['paid_total'] ?? 0), 2),
             'notes' => $data['notes'] ?? null,
             'created_by' => auth()->id(),
         ]);
-        $purchase->items()->createMany($rows);
+        $purchase->items()->createMany($t['rows']);
 
-        return redirect()->route('admin.purchases.show', $purchase)->with('status', 'Purchase created as a draft.');
+        return $this->saved($request, $purchase, 'Purchase created as a draft.');
     }
 
     public function show(Purchase $purchase): View
     {
-        $purchase->load(['supplier', 'author', 'items.variant.product:id,name']);
+        $purchase->load([
+            'supplier', 'author', 'items.variant.product:id,name',
+            'payments' => fn ($q) => $q->latest('paid_on')->latest('id'),
+            'payments.author:id,name',
+        ]);
 
         return view('admin.purchases.show', ['purchase' => $purchase]);
     }
@@ -120,30 +129,32 @@ class PurchaseController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function update(PurchaseRequest $request, Purchase $purchase): RedirectResponse
+    public function update(PurchaseRequest $request, Purchase $purchase): RedirectResponse|JsonResponse
     {
         if ($purchase->status !== 'draft') {
             return back()->with('error', 'Only draft purchases can be edited.');
         }
 
         $data = $request->validated();
-        [$rows, $subtotal] = $this->buildItems($data['items']);
-        $tax = round((float) ($data['tax_total'] ?? 0), 2);
+        $t = $this->totals($data);
 
         $purchase->update([
             'supplier_id' => $data['supplier_id'],
             'reference' => $data['reference'] ?? null,
             'purchase_date' => $data['purchase_date'],
-            'subtotal' => $subtotal,
-            'tax_total' => $tax,
-            'grand_total' => round($subtotal + $tax, 2),
+            'subtotal' => $t['subtotal'],
+            'discount_type' => $t['discount_type'],
+            'discount_value' => $t['discount_value'],
+            'discount_total' => $t['discount'],
+            'tax_total' => $t['tax'],
+            'grand_total' => $t['grand'],
             'paid_total' => round((float) ($data['paid_total'] ?? 0), 2),
             'notes' => $data['notes'] ?? null,
         ]);
         $purchase->items()->delete();
-        $purchase->items()->createMany($rows);
+        $purchase->items()->createMany($t['rows']);
 
-        return redirect()->route('admin.purchases.show', $purchase)->with('status', 'Purchase updated.');
+        return $this->saved($request, $purchase, 'Purchase updated.');
     }
 
     public function destroy(Purchase $purchase): RedirectResponse
@@ -180,7 +191,66 @@ class PurchaseController extends Controller implements HasMiddleware
         return back()->with('status', "Purchase {$purchase->purchase_number} cancelled.");
     }
 
+    /** Record a payment made to the supplier against this purchase's outstanding balance. */
+    public function payment(SupplierPaymentRequest $request, Purchase $purchase, PurchaseService $service): RedirectResponse
+    {
+        try {
+            $service->recordPayment($purchase, $request->validated());
+        } catch (Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', 'Payment recorded.');
+    }
+
     // Helpers ------------------------------------------------------------------
+
+    /**
+     * Respond to a save. AJAX submits (the create/edit forms post via fetch so a
+     * validation error never reloads/loses the form) get a JSON redirect target;
+     * the success toast is flashed for the next page load. Non-JS falls back to a redirect.
+     */
+    private function saved(Request $request, Purchase $purchase, string $message): RedirectResponse|JsonResponse
+    {
+        $url = route('admin.purchases.show', $purchase);
+
+        if ($request->expectsJson()) {
+            session()->flash('status', $message);
+
+            return response()->json(['redirect' => $url]);
+        }
+
+        return redirect($url)->with('status', $message);
+    }
+
+    /**
+     * Resolve all monetary totals from the submitted data. Discount is a fixed Rs amount
+     * or a percentage of the subtotal, capped (≤ subtotal / ≤ 100%) to match the form & request.
+     *
+     * @return array{rows: array<int, array<string, mixed>>, subtotal: float, discount_type: string, discount_value: float, discount: float, tax: float, grand: float}
+     */
+    private function totals(array $data): array
+    {
+        [$rows, $subtotal] = $this->buildItems($data['items']);
+
+        $type = ($data['discount_type'] ?? 'fixed') === 'percent' ? 'percent' : 'fixed';
+        $value = round((float) ($data['discount_value'] ?? 0), 2);
+        $discount = $type === 'percent'
+            ? round($subtotal * min($value, 100) / 100, 2)
+            : min($value, $subtotal);
+        $tax = round((float) ($data['tax_total'] ?? 0), 2);
+        $grand = round($subtotal - $discount + $tax, 2);
+
+        return [
+            'rows' => $rows,
+            'subtotal' => $subtotal,
+            'discount_type' => $type,
+            'discount_value' => $value,
+            'discount' => round($discount, 2),
+            'tax' => $tax,
+            'grand' => $grand,
+        ];
+    }
 
     /** @return array{0: array<int, array<string, mixed>>, 1: float} rows + subtotal */
     private function buildItems(array $items): array
@@ -218,19 +288,20 @@ class PurchaseController extends Controller implements HasMiddleware
         ];
     }
 
-    /** @return Collection<int, array{id:int, label:string, cost:string}> purchasable variants */
+    /** @return Collection<int, array{id:int, label:string, cost:string, unit:?string}> purchasable variants */
     private function variantOptions(): Collection
     {
         return ProductVariant::query()
             ->where('is_active', true)
             ->whereHas('product', fn ($q) => $q->where('is_purchasable', true))
-            ->with('product:id,name')
+            ->with(['product:id,name,unit_id', 'product.unit:id,code'])
             ->orderBy('id')
             ->get(['id', 'product_id', 'sku', 'cost'])
             ->map(fn (ProductVariant $v) => [
                 'id' => $v->id,
                 'label' => $v->product->name . ' · ' . $v->sku,
                 'cost' => rtrim(rtrim(number_format((float) $v->cost, 2, '.', ''), '0'), '.') ?: '0',
+                'unit' => $v->product->unit?->code,
             ]);
     }
 }

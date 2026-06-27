@@ -151,6 +151,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::resource('suppliers', SupplierController::class)->except('show');
     Route::post('purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
     Route::post('purchases/{purchase}/cancel', [PurchaseController::class, 'cancel'])->name('purchases.cancel');
+    Route::post('purchases/{purchase}/payments', [PurchaseController::class, 'payment'])->name('purchases.payment');
     Route::resource('purchases', PurchaseController::class);
 
     // Manufacturing — BOMs (recipes) + production runs (complete consumes/produces + ledger).

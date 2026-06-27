@@ -13,13 +13,14 @@
         <p class="text-sm text-on-surface-variant mt-1">Saved as a draft — receiving it later updates stock, cost and the ledger.</p>
     </div>
 
-    <form method="POST" action="{{ route('admin.purchases.store') }}">
+    <form method="POST" action="{{ route('admin.purchases.store') }}" x-data="purchaseForm" @submit.prevent="submit($el)">
         @csrf
         @include('admin.purchases._form')
         <div class="mt-6 flex items-center justify-end gap-3">
             <a href="{{ route('admin.purchases.index') }}" class="px-5 py-2.5 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors">Cancel</a>
-            <button type="submit" class="px-6 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
-                <span class="material-symbols-outlined text-[20px]">check</span> Create draft
+            <button type="submit" :disabled="submitting" class="px-6 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100">
+                <span class="material-symbols-outlined text-[20px]" :class="submitting && 'animate-spin'" x-text="submitting ? 'progress_activity' : 'check'">check</span>
+                <span x-text="submitting ? 'Saving…' : 'Create draft'">Create draft</span>
             </button>
         </div>
     </form>

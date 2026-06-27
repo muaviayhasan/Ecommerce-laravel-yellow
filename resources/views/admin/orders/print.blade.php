@@ -95,7 +95,7 @@
             <hr>
             <div class="row"><span>Subtotal</span><span>{{ format_money($order->subtotal) }}</span></div>
             @if ((float) $order->discount_total > 0)
-                <div class="row"><span>Discount</span><span>- {{ format_money($order->discount_total) }}</span></div>
+                <div class="row"><span>Discount{{ $order->discount_type === 'percent' ? ' (' . rtrim(rtrim(number_format((float) $order->discount_value, 2), '0'), '.') . '%)' : '' }}</span><span>- {{ format_money($order->discount_total) }}</span></div>
             @endif
             <div class="row"><span>Tax</span><span>{{ format_money($order->tax_total) }}</span></div>
             <div class="row"><span>Shipping</span><span>{{ format_money($order->shipping_total) }}</span></div>
@@ -189,7 +189,7 @@
             <table class="totals">
                 <tr><td class="muted">Subtotal</td><td class="right">{{ format_money($order->subtotal) }}</td></tr>
                 @if ((float) $order->discount_total > 0)
-                    <tr><td class="muted">Discount</td><td class="right">− {{ format_money($order->discount_total) }}</td></tr>
+                    <tr><td class="muted">Discount{{ $order->discount_type === 'percent' ? ' (' . rtrim(rtrim(number_format((float) $order->discount_value, 2), '0'), '.') . '%)' : '' }}</td><td class="right">− {{ format_money($order->discount_total) }}</td></tr>
                 @endif
                 <tr><td class="muted">Tax</td><td class="right">{{ format_money($order->tax_total) }}</td></tr>
                 <tr><td class="muted">Shipping</td><td class="right">{{ format_money($order->shipping_total) }}</td></tr>

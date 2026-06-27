@@ -94,6 +94,8 @@
                 <form method="POST" action="{{ route('admin.pos.store') }}" @submit="if (!cart.length) $event.preventDefault()">
                     @csrf
                     <input type="hidden" name="payment_method" :value="paymentMethod">
+                    <input type="hidden" name="discount_type" :value="discountType">
+                    <input type="hidden" name="discount_value" :value="discountValue || 0">
                     <template x-for="(l, i) in cart" :key="l.id">
                         <span>
                             <input type="hidden" :name="`items[${i}][variant_id]`" :value="l.id">
@@ -116,6 +118,18 @@
 
                         <dl class="space-y-2 text-sm border-t border-outline-variant/60 pt-4">
                             <div class="flex justify-between"><dt class="text-on-surface-variant">Subtotal</dt><dd class="text-on-surface" x-text="money(subtotal())"></dd></div>
+                            <div class="flex justify-between items-center gap-2">
+                                <dt class="text-on-surface-variant">Discount</dt>
+                                <dd class="flex items-center gap-2">
+                                    <div class="inline-flex p-0.5 bg-surface-container rounded-md text-xs font-bold">
+                                        <button type="button" @click="setDiscountType('fixed')" :class="discountType === 'fixed' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2 py-0.5 rounded">{{ $currency }}</button>
+                                        <button type="button" @click="setDiscountType('percent')" :class="discountType === 'percent' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2 py-0.5 rounded">%</button>
+                                    </div>
+                                    <input type="number" step="0.01" min="0" :max="discountType === 'percent' ? 100 : subtotal()" x-model="discountValue" @input="clampDiscount()" placeholder="0"
+                                           class="w-20 bg-surface-container-low border border-outline-variant rounded-lg px-2 py-1 text-sm text-right text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                                </dd>
+                            </div>
+                            <div class="flex justify-between" x-show="discountAmt() > 0" x-cloak><dt class="text-on-surface-variant" x-text="discountType === 'percent' ? `Discount (${discountValue || 0}%)` : 'Discount'"></dt><dd class="text-error" x-text="'- ' + money(discountAmt())"></dd></div>
                             <div class="flex justify-between" x-show="taxEnabled"><dt class="text-on-surface-variant">Tax (<span x-text="taxRate"></span>%)</dt><dd class="text-on-surface" x-text="money(tax())"></dd></div>
                             <div class="flex justify-between font-bold text-on-surface text-lg pt-2 border-t border-outline-variant/60"><dt>Total</dt><dd x-text="money(grand())"></dd></div>
                         </dl>
@@ -162,6 +176,7 @@
                 query: '', results: [], searching: false,
                 cart: [],
                 customerId: '', paymentMethod: 'cash', tendered: '',
+                discountType: 'fixed', discountValue: '',
                 async search() {
                     const q = this.query.trim();
                     if (!q) { this.results = []; return; }
@@ -182,8 +197,20 @@
                 remove(i) { this.cart.splice(i, 1); },
                 lineTotal(l) { return l.price * (Number(l.qty) || 0); },
                 subtotal() { return this.cart.reduce((s, l) => s + this.lineTotal(l), 0); },
-                tax() { return this.taxEnabled ? this.subtotal() * this.taxRate / 100 : 0; },
-                grand() { return this.subtotal() + this.tax(); },
+                setDiscountType(type) { this.discountType = type; this.clampDiscount(); },
+                clampDiscount() {
+                    let v = parseFloat(this.discountValue);
+                    if (isNaN(v) || v < 0) { if (v < 0) this.discountValue = '0'; return; }
+                    const cap = this.discountType === 'percent' ? 100 : this.subtotal();
+                    if (v > cap) this.discountValue = String(Math.round(cap * 100) / 100);
+                },
+                discountAmt() {
+                    const v = parseFloat(this.discountValue) || 0;
+                    if (this.discountType === 'percent') return this.subtotal() * Math.min(v, 100) / 100;
+                    return Math.min(v, this.subtotal());
+                },
+                tax() { return this.taxEnabled ? (this.subtotal() - this.discountAmt()) * this.taxRate / 100 : 0; },
+                grand() { return this.subtotal() - this.discountAmt() + this.tax(); },
                 change() { return Math.max(0, (parseFloat(this.tendered) || 0) - this.grand()); },
                 count() { return this.cart.reduce((s, l) => s + (Number(l.qty) || 0), 0); },
                 money(n) { return this.cur + ' ' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },

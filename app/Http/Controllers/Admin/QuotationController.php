@@ -189,7 +189,8 @@ class QuotationController extends Controller implements HasMiddleware
             'customer_id' => $data['customer_id'] ?? null,
             'valid_until' => $data['valid_until'] ?? null,
             'price_tier' => $data['price_tier'],
-            'discount_total' => round((float) ($data['discount_total'] ?? 0), 2),
+            'discount_type' => ($data['discount_type'] ?? 'fixed') === 'percent' ? 'percent' : 'fixed',
+            'discount_value' => round((float) ($data['discount_value'] ?? 0), 2),
             'tax_total' => round((float) ($data['tax_total'] ?? 0), 2),
             'notes' => $data['notes'] ?? null,
         ];
@@ -225,8 +226,11 @@ class QuotationController extends Controller implements HasMiddleware
     private function recalculate(Quotation $quotation): void
     {
         $subtotal = round((float) $quotation->items()->sum('line_total'), 2);
-        $grand = round($subtotal - (float) $quotation->discount_total + (float) $quotation->tax_total, 2);
-        $quotation->update(['subtotal' => $subtotal, 'grand_total' => $grand]);
+        $discount = $quotation->discount_type === 'percent'
+            ? round($subtotal * min((float) $quotation->discount_value, 100) / 100, 2)
+            : min((float) $quotation->discount_value, $subtotal);
+        $grand = round($subtotal - $discount + (float) $quotation->tax_total, 2);
+        $quotation->update(['subtotal' => $subtotal, 'discount_total' => round($discount, 2), 'grand_total' => $grand]);
     }
 
     /** @return array<int, string> */

@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -355,6 +356,8 @@ class ProductController extends Controller implements HasMiddleware
         return [
             'categoryOptions' => Category::orderBy('name')->pluck('name', 'id')->all(),
             'brandOptions' => Brand::orderBy('name')->pluck('name', 'id')->all(),
+            'unitOptions' => Unit::where('is_active', true)->orderBy('sort_order')->orderBy('name')
+                ->get()->mapWithKeys(fn (Unit $u) => [$u->id => "{$u->name} ({$u->code})"])->all(),
             'mediaItems' => $this->mediaItems(),
             'variationAttributes' => Attribute::where('is_variation', true)
                 ->with(['values' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')])

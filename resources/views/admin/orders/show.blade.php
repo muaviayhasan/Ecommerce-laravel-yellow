@@ -68,7 +68,7 @@
                     <div class="ml-auto max-w-xs space-y-2 text-sm">
                         <div class="flex justify-between text-on-surface-variant"><span>Subtotal</span><span>{{ format_money($order->subtotal) }}</span></div>
                         @if ((float) $order->discount_total > 0)
-                            <div class="flex justify-between text-on-surface-variant"><span>Discount</span><span>− {{ format_money($order->discount_total) }}</span></div>
+                            <div class="flex justify-between text-on-surface-variant"><span>Discount{{ $order->discount_type === 'percent' ? ' (' . rtrim(rtrim(number_format((float) $order->discount_value, 2), '0'), '.') . '%)' : '' }}</span><span>− {{ format_money($order->discount_total) }}</span></div>
                         @endif
                         <div class="flex justify-between text-on-surface-variant"><span>Tax</span><span>{{ format_money($order->tax_total) }}</span></div>
                         <div class="flex justify-between text-on-surface-variant"><span>Shipping</span><span>{{ format_money($order->shipping_total) }}</span></div>

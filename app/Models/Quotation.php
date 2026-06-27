@@ -14,7 +14,7 @@ class Quotation extends Model
 
     protected $fillable = [
         'quotation_number', 'customer_id', 'status', 'valid_until', 'price_tier',
-        'subtotal', 'discount_total', 'tax_total', 'grand_total',
+        'subtotal', 'discount_type', 'discount_value', 'discount_total', 'tax_total', 'grand_total',
         'notes', 'converted_order_id', 'created_by',
     ];
 
@@ -23,6 +23,7 @@ class Quotation extends Model
         return [
             'valid_until' => 'date',
             'subtotal' => 'decimal:2',
+            'discount_value' => 'decimal:2',
             'discount_total' => 'decimal:2',
             'tax_total' => 'decimal:2',
             'grand_total' => 'decimal:2',

@@ -20,7 +20,7 @@ class Order extends Model
     protected $fillable = [
         'order_number', 'channel', 'customer_id', 'user_id', 'quotation_id', 'price_tier',
         'status', 'payment_method', 'payment_status',
-        'subtotal', 'discount_total', 'tax_total', 'shipping_total', 'grand_total', 'paid_total',
+        'subtotal', 'discount_type', 'discount_value', 'discount_total', 'tax_total', 'shipping_total', 'grand_total', 'paid_total',
         'coupon_id', 'currency', 'shipping_method', 'courier', 'tracking_number',
         'estimated_delivery_date', 'delivered_at', 'customer_notes', 'internal_notes',
         'ip_address', 'created_by', 'placed_at',
@@ -30,6 +30,7 @@ class Order extends Model
     {
         return [
             'subtotal' => 'decimal:2',
+            'discount_value' => 'decimal:2',
             'discount_total' => 'decimal:2',
             'tax_total' => 'decimal:2',
             'shipping_total' => 'decimal:2',

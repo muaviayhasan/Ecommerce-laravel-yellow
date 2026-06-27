@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Purchase;
 use App\Models\StockMovement;
+use App\Models\SupplierPayment;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -53,6 +55,56 @@ class PurchaseService
 
             $purchase->update(['status' => 'received']);
             $this->ledger->post($this->ledgerLines($purchase), $purchase, "Purchase received {$purchase->purchase_number}", $purchase->purchase_date);
+        });
+    }
+
+    /**
+     * Record a payment to the supplier against a received purchase. Bumps `paid_total`
+     * and posts Accounts Payable (debit) ↔ Cash/Bank (credit) — all in one transaction.
+     *
+     * @param  array{amount: mixed, paid_on?: ?string, method?: ?string, reference?: ?string, note?: ?string}  $data
+     */
+    public function recordPayment(Purchase $purchase, array $data): SupplierPayment
+    {
+        if ($purchase->status !== 'received') {
+            throw new RuntimeException('Payments can only be recorded against a received purchase.');
+        }
+
+        $outstanding = $purchase->outstanding();
+        if ($outstanding <= 0) {
+            throw new RuntimeException('This purchase is already fully paid.');
+        }
+
+        $amount = round((float) $data['amount'], 2);
+        if ($amount <= 0) {
+            throw new RuntimeException('Enter a payment amount greater than zero.');
+        }
+        if ($amount > $outstanding) {
+            throw new RuntimeException("Payment cannot exceed the outstanding balance of {$outstanding}.");
+        }
+
+        $method = ($data['method'] ?? 'cash') === 'bank' ? 'bank' : 'cash';
+        $paidOn = ! empty($data['paid_on']) ? Carbon::parse($data['paid_on']) : now();
+
+        return DB::transaction(function () use ($purchase, $data, $amount, $method, $paidOn) {
+            $payment = $purchase->payments()->create([
+                'supplier_id' => $purchase->supplier_id,
+                'amount' => $amount,
+                'paid_on' => $paidOn->toDateString(),
+                'method' => $method,
+                'reference' => $data['reference'] ?? null,
+                'note' => $data['note'] ?? null,
+                'created_by' => auth()->id(),
+            ]);
+
+            $purchase->increment('paid_total', $amount);
+
+            $this->ledger->post([
+                ['account' => 'accounts_payable', 'debit' => $amount],
+                ['account' => $method, 'credit' => $amount],   // 'cash' or 'bank'
+            ], $payment, "Payment for {$purchase->purchase_number}", $paidOn);
+
+            return $payment;
         });
     }
 

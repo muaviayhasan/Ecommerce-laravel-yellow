@@ -13,7 +13,8 @@ class Purchase extends Model
 
     protected $fillable = [
         'purchase_number', 'supplier_id', 'status', 'reference', 'purchase_date',
-        'subtotal', 'tax_total', 'grand_total', 'paid_total', 'notes', 'created_by',
+        'subtotal', 'discount_type', 'discount_value', 'discount_total',
+        'tax_total', 'grand_total', 'paid_total', 'notes', 'created_by',
     ];
 
     protected function casts(): array
@@ -21,6 +22,8 @@ class Purchase extends Model
         return [
             'purchase_date' => 'date',
             'subtotal' => 'decimal:2',
+            'discount_value' => 'decimal:2',
+            'discount_total' => 'decimal:2',
             'tax_total' => 'decimal:2',
             'grand_total' => 'decimal:2',
             'paid_total' => 'decimal:2',
@@ -35,6 +38,17 @@ class Purchase extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SupplierPayment::class);
+    }
+
+    /** Outstanding payable = grand total minus what's been paid so far. */
+    public function outstanding(): float
+    {
+        return round((float) $this->grand_total - (float) $this->paid_total, 2);
     }
 
     public function author(): BelongsTo
