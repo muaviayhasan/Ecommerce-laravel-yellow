@@ -9,18 +9,37 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {{-- Posts --}}
                 <div class="lg:col-span-8 flex flex-col gap-10">
-                    @foreach ($posts as $post)
+                    @forelse ($posts as $post)
                         <x-storefront.blog-post-card :post="$post" />
-                    @endforeach
+                    @empty
+                        <div class="bg-white rounded-xl border border-outline-variant p-16 text-center">
+                            <span class="material-symbols-outlined text-gray-300" style="font-size:64px;">article</span>
+                            <p class="mt-4 text-xl font-light text-on-surface-variant">No blog posts published yet.</p>
+                        </div>
+                    @endforelse
 
-                    {{-- Pagination (static placeholder) --}}
-                    <div class="flex items-center gap-2 mt-2">
-                        <span class="w-10 h-10 flex items-center justify-center rounded bg-primary-container text-on-primary-container font-bold">1</span>
-                        <a href="{{ route('blog') }}" class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:bg-surface-container transition-colors">2</a>
-                        <a href="{{ route('blog') }}" class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:bg-surface-container transition-colors" aria-label="Next page">
-                            <span class="material-symbols-outlined text-[18px]">chevron_right</span>
-                        </a>
-                    </div>
+                    {{-- Pagination --}}
+                    @if ($posts->hasPages())
+                        <div class="flex items-center gap-2 mt-2">
+                            @if (! $posts->onFirstPage())
+                                <a href="{{ $posts->previousPageUrl() }}" aria-label="Previous page" class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:bg-surface-container transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                                </a>
+                            @endif
+                            @foreach ($posts->getUrlRange(max(1, $posts->currentPage() - 2), min($posts->lastPage(), $posts->currentPage() + 2)) as $page => $url)
+                                @if ($page == $posts->currentPage())
+                                    <span class="w-10 h-10 flex items-center justify-center rounded bg-primary-container text-on-primary-container font-bold">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $url }}" class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:bg-surface-container transition-colors">{{ $page }}</a>
+                                @endif
+                            @endforeach
+                            @if ($posts->hasMorePages())
+                                <a href="{{ $posts->nextPageUrl() }}" aria-label="Next page" class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:bg-surface-container transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                                </a>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Sidebar --}}

@@ -35,10 +35,13 @@
                         <a href="#comments" class="flex items-center gap-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[16px]">chat_bubble</span> Leave a comment</a>
                     </div>
 
-                    <div class="text-body-base text-on-surface-variant space-y-6 leading-relaxed">
-                        @foreach ($post['body'] as $paragraph)
-                            <p>{{ $paragraph }}</p>
-                        @endforeach
+                    @php $body = (string) ($post['body'] ?? ''); $looksHtml = (bool) preg_match('/<[a-z]/i', $body); @endphp
+                    <div class="text-body-base text-on-surface-variant space-y-6 leading-relaxed prose max-w-none">
+                        @if ($looksHtml)
+                            {!! $body !!}
+                        @else
+                            {!! nl2br(e($body)) !!}
+                        @endif
                     </div>
 
                     {{-- Author --}}
