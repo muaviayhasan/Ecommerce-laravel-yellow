@@ -57,6 +57,8 @@ Route::delete('/cart/{variant}', [CartController::class, 'remove'])->name('cart.
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
 
 // Authentication (login + register are functional)
 Route::get('/login', [AuthController::class, 'create'])->name('login');

@@ -3,38 +3,138 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Storefront\Concerns\ProvidesSampleProducts;
-use Illuminate\View\View;
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\ProductVariant;
+use App\Services\CartService;
+use App\Services\SalesService;
+use App\Support\Storefront;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Throwable;
 
 class CheckoutController extends Controller
 {
-    use ProvidesSampleProducts;
+    public function __construct(private CartService $cart) {}
 
-    /**
-     * Checkout page. Design-only: PLACEHOLDER cart lines + totals. Replace with the
-     * real cart (CartService) and SalesService::place() when the Cart/Sales modules land.
-     */
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
-        $items = collect([
-            ['name' => 'Tablet Red EliteBook Revolve 810 G2', 'qty' => 2, 'price' => 2100, 'vendor' => 'Sara Palson'],
-            ['name' => 'White Solo 2 Wireless', 'qty' => 1, 'price' => 249, 'vendor' => 'Sara Palson'],
-            ['name' => 'Smartphone 6S 32GB LTE', 'qty' => 1, 'price' => 1100, 'vendor' => 'Sara Palson'],
-        ])->map(fn (array $i): array => [...$i, 'line_total' => $i['qty'] * $i['price']]);
+        if ($this->cart->isEmpty()) {
+            return redirect()->route('cart')->with('error', 'Your cart is empty.');
+        }
 
-        $subtotal = (int) $items->sum('line_total');
-        $shipping = 50;
-
-        $pool = $this->sampleProducts();
+        $subtotal = $this->cart->subtotal();
+        $shipping = $this->shipping($subtotal);
 
         return view('storefront.checkout', [
-            'items' => $items,
+            'items' => $this->cart->items(),
             'subtotal' => $subtotal,
             'shipping' => $shipping,
             'total' => $subtotal + $shipping,
-            'featured' => $pool->take(2)->values(),
-            'topSelling' => $pool->slice(10, 2)->values(),
-            'onSale' => $pool->whereNotNull('compare')->take(2)->values(),
+            'user' => auth()->user(),
+            'featured' => Storefront::cards(Storefront::query()->featured()->take(2)->get()),
+            'topSelling' => Storefront::cards(Storefront::query()->bestseller()->take(2)->get()),
+            'onSale' => Storefront::cards(Storefront::onSaleQuery()->take(2)->get()),
         ]);
+    }
+
+    public function store(Request $request, SalesService $sales): RedirectResponse
+    {
+        if ($this->cart->isEmpty()) {
+            return redirect()->route('cart')->with('error', 'Your cart is empty.');
+        }
+
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
+            'company' => ['nullable', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:30'],
+            'line1' => ['required', 'string', 'max:255'],
+            'line2' => ['nullable', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:120'],
+            'state' => ['nullable', 'string', 'max:120'],
+            'zip' => ['nullable', 'string', 'max:20'],
+            'country' => ['required', 'string', 'max:120'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'payment_method' => ['required', 'in:cod,bank'],
+            'terms' => ['accepted'],
+        ]);
+
+        $items = $this->cart->items();
+        $variants = ProductVariant::with('product:id,name')
+            ->whereIn('id', $items->pluck('variant_id'))->get()->keyBy('id');
+
+        $lines = [];
+        foreach ($items as $item) {
+            $variant = $variants->get($item->variant_id);
+            if ($variant) {
+                $lines[] = ['variant' => $variant, 'quantity' => (float) $item->qty];
+            }
+        }
+        if ($lines === []) {
+            return redirect()->route('cart')->with('error', 'Your cart is empty.');
+        }
+
+        $name = trim($data['first_name'] . ' ' . $data['last_name']);
+        $customer = Customer::firstOrCreate(
+            ['email' => $data['email']],
+            ['name' => $name, 'phone' => $data['phone'], 'type' => 'retail', 'price_tier' => 'retail', 'is_active' => true, 'user_id' => auth()->id()],
+        );
+
+        $shipping = $this->shipping($this->cart->subtotal());
+
+        try {
+            $order = $sales->place('web', $customer, $lines, [
+                'payment_method' => $data['payment_method'],
+                'shipping_total' => $shipping,
+                'paid' => 0, // COD / bank transfer — settled later
+            ]);
+        } catch (Throwable $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        $address = [
+            'name' => $name, 'company' => $data['company'] ?? null, 'phone' => $data['phone'], 'email' => $data['email'],
+            'line1' => $data['line1'], 'line2' => $data['line2'] ?? null, 'city' => $data['city'],
+            'state' => $data['state'] ?? null, 'zip' => $data['zip'] ?? null, 'country' => $data['country'],
+        ];
+        $order->addresses()->create(['type' => 'billing'] + $address);
+        $order->addresses()->create(['type' => 'shipping'] + $address);
+
+        if (! empty($data['notes'])) {
+            $order->update(['customer_notes' => $data['notes']]);
+        }
+
+        $this->cart->clear();
+        session(['last_order_id' => $order->id]);
+
+        return redirect()->route('checkout.success');
+    }
+
+    public function success(): View|RedirectResponse
+    {
+        $orderId = session('last_order_id');
+        if (! $orderId) {
+            return redirect()->route('home');
+        }
+
+        $order = Order::with('items', 'addresses')->find($orderId);
+        if (! $order) {
+            return redirect()->route('home');
+        }
+
+        return view('storefront.checkout-success', ['order' => $order]);
+    }
+
+    private function shipping(float $subtotal): float
+    {
+        $freeOver = (float) setting('shipping', 'free_over', 0);
+        if ($freeOver > 0 && $subtotal >= $freeOver) {
+            return 0.0;
+        }
+
+        return (float) setting('shipping', 'flat_rate', 0);
     }
 }
