@@ -3,11 +3,21 @@
 @section('title', 'Page Not Found — ' . config('app.name'))
 
 @php
-    // Error views render outside the controller flow, so pull the placeholder
-    // catalog directly from the service (no view composer to depend on).
-    $catalog = app(\App\Support\SampleCatalog::class);
-    $products = $catalog->products();
-    $categories = $catalog->categories();
+    // Error views render outside the controller flow, so pull the catalog directly.
+    // Guarded so a DB hiccup during an error can't turn this 404 into a 500.
+    try {
+        $products = \App\Support\Storefront::cards(\App\Support\Storefront::query()->latest('published_at')->take(10)->get());
+        $onSale = \App\Support\Storefront::cards(\App\Support\Storefront::onSaleQuery()->take(3)->get());
+        $categories = \App\Models\Category::query()->where('is_active', true)->whereNull('parent_id')
+            ->withCount(['products' => fn ($q) => $q->webListed()])
+            ->orderBy('name')->get()
+            ->filter(fn ($c) => $c->products_count > 0)
+            ->mapWithKeys(fn ($c) => [$c->name => $c->products_count])->all();
+    } catch (\Throwable $e) {
+        $products = collect();
+        $onSale = collect();
+        $categories = [];
+    }
 @endphp
 
 @section('content')
@@ -98,7 +108,7 @@
 
     <x-storefront.product-columns :columns="[
         ['title' => 'Featured Products', 'items' => $products->take(3), 'rating' => null],
-        ['title' => 'Top Selling Products', 'items' => $products->slice(6, 3), 'rating' => null],
-        ['title' => 'On-sale Products', 'items' => $products->whereNotNull('compare')->take(3), 'rating' => 5],
+        ['title' => 'Top Selling Products', 'items' => $products->slice(6, 3)->values(), 'rating' => null],
+        ['title' => 'On-sale Products', 'items' => $onSale, 'rating' => 5],
     ]" />
 @endsection
