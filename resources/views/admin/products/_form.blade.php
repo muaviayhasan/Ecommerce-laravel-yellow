@@ -112,7 +112,7 @@
                             <label class="block text-sm font-medium text-on-surface-variant">
                                 {{ $cfg['label'] }}@if (! empty($cfg['required'])) <span class="text-error">*</span>@endif
                             </label>
-                            <input type="number" step="0.01" min="0" name="variant[{{ $key }}]"
+                            <input type="number" step="any" min="0" name="variant[{{ $key }}]"
                                 value="{{ old('variant.' . $key, $variant?->{$key}) }}" class="{{ $inputClass }}">
                             @if (! empty($cfg['help']))<p class="text-xs text-outline">{{ $cfg['help'] }}</p>@endif
                             @error('variant.' . $key)<p class="text-xs text-error flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>@enderror
@@ -156,7 +156,7 @@
                                             <span x-text="val.label" class="flex-1 text-sm text-on-surface"></span>
                                             <div x-show="opt.valueIds.includes(Number(val.id))" @click.stop class="flex items-center gap-1.5 text-xs text-on-surface-variant">
                                                 <span>price&nbsp;+</span>
-                                                <input type="number" step="0.01" x-model="adjustments[val.id]" placeholder="0"
+                                                <input type="number" step="any" x-model="adjustments[val.id]" placeholder="0"
                                                     class="w-20 bg-surface-container-lowest dark:bg-surface-container-high border border-outline-variant rounded-md px-2 py-1 text-xs text-on-surface outline-none focus:ring-1 focus:ring-primary">
                                             </div>
                                         </label>
@@ -173,7 +173,7 @@
                     <div class="flex flex-wrap items-end gap-3">
                         <div class="space-y-1">
                             <label class="block text-xs font-medium text-on-surface-variant">Base price</label>
-                            <input type="number" step="0.01" min="0" x-model="basePrice" placeholder="0.00" class="w-32 {{ $numCell }}">
+                            <input type="number" step="any" min="0" x-model="basePrice" placeholder="0.00" class="w-32 {{ $numCell }}">
                         </div>
                         <button type="button" @click="generate()"
                             class="px-5 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
@@ -224,10 +224,10 @@
                                             <input type="hidden" :name="`variants[${idx}][image_media_id]`" :value="v.image_media_id || ''">
                                         </td>
                                         <td class="px-3 py-2"><input type="text" :name="`variants[${idx}][sku]`" x-model="v.sku" placeholder="auto" class="w-28 {{ $numCell }}"></td>
-                                        <td class="px-3 py-2"><input type="number" step="0.01" min="0" :name="`variants[${idx}][retail_price]`" x-model="v.retail_price" class="{{ $numCell }}"></td>
-                                        <td class="px-3 py-2"><input type="number" step="0.01" min="0" :name="`variants[${idx}][compare_at_price]`" x-model="v.compare_at_price" class="{{ $numCell }}"></td>
-                                        <td class="px-3 py-2"><input type="number" step="0.01" min="0" :name="`variants[${idx}][cost]`" x-model="v.cost" class="{{ $numCell }}"></td>
-                                        <td class="px-3 py-2"><input type="number" step="0.001" min="0" :name="`variants[${idx}][stock_quantity]`" x-model="v.stock_quantity" class="w-20 {{ $numCell }}"></td>
+                                        <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`variants[${idx}][retail_price]`" x-model="v.retail_price" class="{{ $numCell }}"></td>
+                                        <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`variants[${idx}][compare_at_price]`" x-model="v.compare_at_price" class="{{ $numCell }}"></td>
+                                        <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`variants[${idx}][cost]`" x-model="v.cost" class="{{ $numCell }}"></td>
+                                        <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`variants[${idx}][stock_quantity]`" x-model="v.stock_quantity" class="w-20 {{ $numCell }}"></td>
                                         <td class="px-3 py-2 text-center"><input type="radio" name="variant_default" :value="idx" x-model.number="defaultIndex" class="accent-primary w-4 h-4 cursor-pointer"></td>
                                         <td class="px-3 py-2 text-center">
                                             <button type="button" @click="v.is_active = !v.is_active" :class="v.is_active ? 'text-secondary' : 'text-outline'">

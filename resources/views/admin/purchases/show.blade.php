@@ -138,7 +138,7 @@
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div class="space-y-1.5">
                                             <label class="block text-sm font-medium text-on-surface-variant">Amount <span class="text-error">*</span></label>
-                                            <input type="number" step="0.01" min="0.01" max="{{ $payable }}" name="amount" value="{{ old('amount', $payable) }}" class="{{ $cell }}">
+                                            <input type="number" step="any" min="0.01" max="{{ $payable }}" name="amount" value="{{ old('amount', $payable) }}" class="{{ $cell }}">
                                             <p class="text-xs text-outline">Outstanding: {{ format_money($payable) }}</p>
                                             @error('amount')<p class="text-xs text-error">{{ $message }}</p>@enderror
                                         </div>

@@ -110,7 +110,7 @@
                         <input type="hidden" name="mode" :value="mode">
                         <div class="space-y-1.5">
                             <label class="block text-sm font-medium text-on-surface-variant" x-text="mode === 'set' ? 'New on-hand count' : 'Change (use a minus to remove)'"></label>
-                            <input type="number" step="0.001" name="quantity" x-model="quantity" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
+                            <input type="number" step="any" name="quantity" x-model="quantity" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
                         </div>
                         <div class="space-y-1.5">
                             <label class="block text-sm font-medium text-on-surface-variant">Reason <span class="text-error">*</span></label>

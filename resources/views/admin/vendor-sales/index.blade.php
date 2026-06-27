@@ -131,7 +131,7 @@
                                         <button type="button" @click="setDiscountType('fixed')" :class="discountType === 'fixed' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2 py-0.5 rounded">{{ $currency }}</button>
                                         <button type="button" @click="setDiscountType('percent')" :class="discountType === 'percent' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2 py-0.5 rounded">%</button>
                                     </div>
-                                    <input type="number" step="0.01" min="0" :max="discountType === 'percent' ? 100 : subtotal()" x-model="discountValue" @input="clampDiscount()" placeholder="0"
+                                    <input type="number" step="any" min="0" :max="discountType === 'percent' ? 100 : subtotal()" x-model="discountValue" @input="clampDiscount()" placeholder="0"
                                            class="w-20 bg-surface-container-low border border-outline-variant rounded-lg px-2 py-1 text-sm text-right text-on-surface outline-none focus:ring-1 focus:ring-primary">
                                 </dd>
                             </div>
@@ -158,7 +158,7 @@
                                 <label class="block text-sm font-medium text-on-surface-variant">Amount paid now</label>
                                 <button type="button" @click="paid = grand().toFixed(2)" class="text-xs font-semibold text-primary hover:underline">Pay full</button>
                             </div>
-                            <input type="number" step="0.01" min="0" x-model="paid" placeholder="0.00" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                            <input type="number" step="any" min="0" x-model="paid" placeholder="0.00" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
                             <p class="text-sm flex justify-between pt-1">
                                 <span class="text-on-surface-variant">Balance (on account)</span>
                                 <span class="font-bold" :class="balance() > 0 ? 'text-error' : 'text-secondary'" x-text="money(balance())"></span>

@@ -125,7 +125,7 @@
                                         <button type="button" @click="setDiscountType('fixed')" :class="discountType === 'fixed' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2 py-0.5 rounded">{{ $currency }}</button>
                                         <button type="button" @click="setDiscountType('percent')" :class="discountType === 'percent' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2 py-0.5 rounded">%</button>
                                     </div>
-                                    <input type="number" step="0.01" min="0" :max="discountType === 'percent' ? 100 : subtotal()" x-model="discountValue" @input="clampDiscount()" placeholder="0"
+                                    <input type="number" step="any" min="0" :max="discountType === 'percent' ? 100 : subtotal()" x-model="discountValue" @input="clampDiscount()" placeholder="0"
                                            class="w-20 bg-surface-container-low border border-outline-variant rounded-lg px-2 py-1 text-sm text-right text-on-surface outline-none focus:ring-1 focus:ring-primary">
                                 </dd>
                             </div>
@@ -149,7 +149,7 @@
 
                         <div x-show="paymentMethod === 'cash'" x-cloak class="mt-4 space-y-1.5">
                             <label class="block text-sm font-medium text-on-surface-variant">Cash tendered</label>
-                            <input type="number" step="0.01" min="0" x-model="tendered" placeholder="0.00" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                            <input type="number" step="any" min="0" x-model="tendered" placeholder="0.00" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
                             <p class="text-sm text-on-surface-variant">Change: <span class="font-semibold text-on-surface" x-text="money(change())"></span></p>
                         </div>
 

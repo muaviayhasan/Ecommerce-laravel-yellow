@@ -100,7 +100,7 @@
                                         <span class="text-xs text-on-surface-variant whitespace-nowrap" x-show="variantUnit(row.product_variant_id)" x-text="variantUnit(row.product_variant_id)"></span>
                                     </div>
                                 </td>
-                                <td class="px-3 py-2"><input type="number" step="0.01" min="0" :name="`items[${i}][unit_cost]`" x-model="row.unit_cost" class="{{ $cell }}"></td>
+                                <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`items[${i}][unit_cost]`" x-model="row.unit_cost" class="{{ $cell }}"></td>
                                 <td class="px-3 py-2 text-right font-semibold text-on-surface" x-text="money(lineTotal(row))"></td>
                                 <td class="px-3 py-2 text-right">
                                     <button type="button" @click="removeItem(i)" title="Remove" class="p-1 rounded text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-[18px]">close</span></button>
@@ -128,7 +128,7 @@
                                 <button type="button" @click="setDiscountType('fixed')" :class="discountType === 'fixed' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2.5 py-1 rounded">{{ $pState['currency'] }}</button>
                                 <button type="button" @click="setDiscountType('percent')" :class="discountType === 'percent' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2.5 py-1 rounded">%</button>
                             </div>
-                            <input type="number" step="0.01" min="0" :max="discountType === 'percent' ? 100 : subtotal()"
+                            <input type="number" step="any" min="0" :max="discountType === 'percent' ? 100 : subtotal()"
                                    name="discount_value" x-model="discountValue" @input="clampDiscount()"
                                    placeholder="0" class="w-24 {{ $cell }} text-right">
                         </div>
@@ -140,12 +140,12 @@
                     </div>
                     <div class="flex justify-between items-center gap-3">
                         <span class="text-on-surface-variant">Tax</span>
-                        <input type="number" step="0.01" min="0" name="tax_total" x-model="tax" class="w-32 {{ $cell }} text-right">
+                        <input type="number" step="any" min="0" name="tax_total" x-model="tax" class="w-32 {{ $cell }} text-right">
                     </div>
                     <div class="flex justify-between items-center font-bold text-on-surface text-base pt-2 border-t border-outline-variant/60"><span>Grand total</span><span x-text="money(grand())"></span></div>
                     <div class="flex justify-between items-center gap-3">
                         <span class="text-on-surface-variant">Paid now</span>
-                        <input type="number" step="0.01" min="0" name="paid_total" x-model="paid" class="w-32 {{ $cell }} text-right">
+                        <input type="number" step="any" min="0" name="paid_total" x-model="paid" class="w-32 {{ $cell }} text-right">
                     </div>
                     <div class="flex justify-between items-center text-on-surface-variant"><span>Balance (payable)</span><span class="font-semibold" :class="balance() > 0 ? 'text-error' : 'text-secondary'" x-text="money(balance())"></span></div>
                 </div>

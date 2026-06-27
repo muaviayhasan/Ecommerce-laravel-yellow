@@ -21,7 +21,7 @@
                 </div>
                 <div class="space-y-1.5 max-w-xs">
                     <label class="block text-sm font-medium text-on-surface-variant">Quantity to produce <span class="text-error">*</span></label>
-                    <input type="number" step="0.001" min="0.001" name="quantity" x-model="quantity" class="{{ $cell }}">
+                    <input type="number" step="any" min="0.001" name="quantity" x-model="quantity" class="{{ $cell }}">
                     @error('quantity')<p class="text-xs text-error">{{ $message }}</p>@enderror
                 </div>
                 <div class="space-y-1.5">

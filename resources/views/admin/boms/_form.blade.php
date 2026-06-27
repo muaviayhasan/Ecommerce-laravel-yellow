@@ -38,17 +38,17 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5">
                 <div class="space-y-1.5">
                     <label class="block text-sm font-medium text-on-surface-variant">Output quantity <span class="text-error">*</span></label>
-                    <input type="number" step="0.001" min="0.001" name="output_quantity" x-model="output" class="{{ $cell }}">
+                    <input type="number" step="any" min="0.001" name="output_quantity" x-model="output" class="{{ $cell }}">
                     <p class="text-xs text-outline">Finished units produced per run.</p>
                     @error('output_quantity')<p class="text-xs text-error">{{ $message }}</p>@enderror
                 </div>
                 <div class="space-y-1.5">
                     <label class="block text-sm font-medium text-on-surface-variant">Labor cost</label>
-                    <input type="number" step="0.01" min="0" name="labor_cost" x-model="labor" class="{{ $cell }}">
+                    <input type="number" step="any" min="0" name="labor_cost" x-model="labor" class="{{ $cell }}">
                 </div>
                 <div class="space-y-1.5">
                     <label class="block text-sm font-medium text-on-surface-variant">Overhead cost</label>
-                    <input type="number" step="0.01" min="0" name="overhead_cost" x-model="overhead" class="{{ $cell }}">
+                    <input type="number" step="any" min="0" name="overhead_cost" x-model="overhead" class="{{ $cell }}">
                 </div>
             </div>
 
@@ -92,8 +92,8 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-3 py-2"><input type="number" step="0.001" min="0" :name="`items[${i}][quantity]`" x-model="row.quantity" class="{{ $cell }}"></td>
-                                <td class="px-3 py-2"><input type="number" step="0.01" min="0" max="100" :name="`items[${i}][waste_percent]`" x-model="row.waste_percent" class="{{ $cell }}"></td>
+                                <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`items[${i}][quantity]`" x-model="row.quantity" class="{{ $cell }}"></td>
+                                <td class="px-3 py-2"><input type="number" step="any" min="0" max="100" :name="`items[${i}][waste_percent]`" x-model="row.waste_percent" class="{{ $cell }}"></td>
                                 <td class="px-3 py-2 text-right font-semibold text-on-surface" x-text="money(lineCost(row))"></td>
                                 <td class="px-3 py-2 text-right"><button type="button" @click="removeItem(i)" class="p-1 rounded text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-[18px]">close</span></button></td>
                             </tr>
