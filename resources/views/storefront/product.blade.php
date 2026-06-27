@@ -113,7 +113,7 @@
             </section>
 
             {{-- ===================== Tabbed content ===================== --}}
-            <section class="bg-white rounded-lg border border-outline-variant mb-12 overflow-hidden" x-data="{ tab: 'description' }">
+            <section class="bg-white rounded-lg border border-outline-variant mb-12 overflow-hidden" x-data="{ tab: '{{ $errors->any() || session('review_status') ? 'reviews' : 'description' }}' }">
                 <div class="border-b border-outline-variant flex justify-start lg:justify-center gap-8 lg:gap-12 px-4 overflow-x-auto no-scrollbar font-bold text-label-sm uppercase tracking-wide">
                     @foreach (['accessories' => 'Accessories', 'description' => 'Description', 'specification' => 'Specification', 'reviews' => 'Reviews', 'more' => 'More Products'] as $key => $label)
                         <button type="button" @click="tab = '{{ $key }}'"
@@ -240,35 +240,53 @@
 
                         {{-- Form --}}
                         <div>
-                            <h2 class="text-headline-md mb-4">Be the first to review</h2>
-                            <p class="text-on-surface-variant text-label-sm mb-6">Your email address will not be published. Required fields are marked *</p>
-                            <form class="space-y-6" onsubmit="return false">
-                                <div>
-                                    <label class="block text-label-sm font-bold mb-2">Your Rating</label>
-                                    <div class="flex text-outline cursor-pointer hover:text-primary-container text-2xl">
-                                        @for ($s = 0; $s < 5; $s++)<span class="material-symbols-outlined">star</span>@endfor
-                                    </div>
+                            <h2 class="text-headline-md mb-4">{{ $userReview ? 'Update your review' : 'Write a review' }}</h2>
+
+                            @if (session('review_status'))
+                                <div class="mb-6 p-4 rounded bg-secondary-container/40 text-on-surface flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-secondary">check_circle</span> {{ session('review_status') }}
                                 </div>
-                                <div>
-                                    <label for="review-body" class="block text-label-sm font-bold mb-2">Your Review *</label>
-                                    <textarea id="review-body" rows="5" class="w-full border border-outline-variant rounded px-4 py-2 focus:ring-primary focus:border-primary"></textarea>
+                            @elseif ($userReview && ! $userReview->is_approved)
+                                <div class="mb-6 p-4 rounded bg-primary-container/20 border border-primary-container text-label-sm">
+                                    Your review is awaiting approval. You can update it below.
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @endif
+
+                            @auth
+                                <form method="POST" action="{{ route('product.reviews.store', $product['slug']) }}" class="space-y-6"
+                                    x-data="{ rating: {{ (int) old('rating', $userReview->rating ?? 0) }} }">
+                                    @csrf
                                     <div>
-                                        <label for="review-name" class="block text-label-sm font-bold mb-2">Name *</label>
-                                        <input id="review-name" type="text" class="w-full border border-outline-variant rounded px-4 py-2 focus:ring-primary focus:border-primary">
+                                        <label class="block text-label-sm font-bold mb-2">Your Rating *</label>
+                                        <input type="hidden" name="rating" :value="rating">
+                                        <div class="flex text-2xl">
+                                            @for ($s = 1; $s <= 5; $s++)
+                                                <button type="button" @click="rating = {{ $s }}" aria-label="Rate {{ $s }}"
+                                                    class="cursor-pointer" :class="rating >= {{ $s }} ? 'text-primary-container' : 'text-outline'">
+                                                    <span class="material-symbols-outlined" :style="rating >= {{ $s }} ? `font-variation-settings: 'FILL' 1` : ''">star</span>
+                                                </button>
+                                            @endfor
+                                        </div>
+                                        @error('rating')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
                                     </div>
                                     <div>
-                                        <label for="review-email" class="block text-label-sm font-bold mb-2">Email *</label>
-                                        <input id="review-email" type="email" class="w-full border border-outline-variant rounded px-4 py-2 focus:ring-primary focus:border-primary">
+                                        <label for="review-title" class="block text-label-sm font-bold mb-2">Title</label>
+                                        <input id="review-title" name="title" type="text" maxlength="255" value="{{ old('title', $userReview->title ?? '') }}"
+                                            class="w-full border border-outline-variant rounded px-4 py-2 focus:ring-primary focus:border-primary">
                                     </div>
-                                </div>
-                                <label class="flex items-start gap-2 text-label-sm text-on-surface-variant">
-                                    <input type="checkbox" class="mt-0.5 rounded border-outline-variant accent-primary-container">
-                                    Save my name and email in this browser for the next time I comment.
-                                </label>
-                                <button type="submit" class="bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded-full hover:brightness-95 transition-all">Add Review</button>
-                            </form>
+                                    <div>
+                                        <label for="review-body" class="block text-label-sm font-bold mb-2">Your Review *</label>
+                                        <textarea id="review-body" name="body" rows="5"
+                                            class="w-full border border-outline-variant rounded px-4 py-2 focus:ring-primary focus:border-primary">{{ old('body', $userReview->body ?? '') }}</textarea>
+                                        @error('body')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
+                                    </div>
+                                    <button type="submit" class="bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded-full hover:brightness-95 transition-all">
+                                        {{ $userReview ? 'Update review' : 'Submit review' }}
+                                    </button>
+                                </form>
+                            @else
+                                <p class="text-on-surface-variant">Please <a href="{{ route('login') }}" class="text-primary font-bold hover:underline">log in</a> to write a review.</p>
+                            @endauth
                         </div>
                     </div>
                 </div>

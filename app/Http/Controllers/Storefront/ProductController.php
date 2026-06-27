@@ -77,9 +77,14 @@ class ProductController extends Controller
             $related = $latestOthers->take(5)->values();
         }
 
+        $userReview = auth()->check()
+            ? \App\Models\Review::where('product_id', $product->id)->where('user_id', auth()->id())->first()
+            : null;
+
         return view('storefront.product', [
             'product' => $card,
             'reviews' => $reviews,
+            'userReview' => $userReview,
             'accessories' => $latestOthers->take(4)->values(),
             'related' => $related,
             'moreProducts' => $latestOthers->reverse()->take(4)->values(),
