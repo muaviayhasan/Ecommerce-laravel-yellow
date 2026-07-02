@@ -134,6 +134,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Quotations — draft sales; "convert" turns an accepted quote into a credit order.
     Route::post('quotations/{quotation}/status', [QuotationController::class, 'status'])->name('quotations.status');
     Route::post('quotations/{quotation}/convert', [QuotationController::class, 'convert'])->name('quotations.convert');
+    Route::get('quotations/{quotation}/print', [QuotationController::class, 'print'])->name('quotations.print');
     Route::resource('quotations', QuotationController::class);
 
     // Vendor / wholesale credit sale — POS-style on the vendor channel (deferred payment → AR).
@@ -145,6 +146,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}/print', [OrderController::class, 'print'])->name('orders.print');
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+    Route::patch('orders/{order}/delivery', [OrderController::class, 'updateDelivery'])->name('orders.delivery');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     // Procurement — suppliers + purchasing (receive posts stock + moving-avg cost + ledger).
@@ -152,6 +154,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
     Route::post('purchases/{purchase}/cancel', [PurchaseController::class, 'cancel'])->name('purchases.cancel');
     Route::post('purchases/{purchase}/payments', [PurchaseController::class, 'payment'])->name('purchases.payment');
+    Route::get('purchases/{purchase}/print', [PurchaseController::class, 'print'])->name('purchases.print');
     Route::resource('purchases', PurchaseController::class);
 
     // Manufacturing — BOMs (recipes) + production runs (complete consumes/produces + ledger).

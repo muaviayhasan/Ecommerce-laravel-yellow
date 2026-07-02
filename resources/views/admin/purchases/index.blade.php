@@ -87,9 +87,12 @@
                             <td class="px-6 py-3 text-right {{ $payable > 0 ? 'text-error font-semibold' : 'text-outline' }}">{{ $payable > 0 ? format_money($payable) : '—' }}</td>
                             <td class="px-6 py-3"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize {{ $statusTone[$purchase->status] ?? '' }}">{{ $purchase->status }}</span></td>
                             <td class="px-6 py-3">
-                                <div class="flex items-center justify-end">
-                                    <a href="{{ route('admin.purchases.show', $purchase) }}" title="View" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{{ route('admin.purchases.print', $purchase) }}" target="_blank" title="Print bill" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[20px] leading-none">print</span>
+                                    </a>
+                                    <a href="{{ route('admin.purchases.show', $purchase) }}" title="View" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[20px] leading-none">visibility</span>
                                     </a>
                                 </div>
                             </td>

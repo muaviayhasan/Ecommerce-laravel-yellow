@@ -27,6 +27,7 @@
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
+            <x-admin.print-menu :base="route('admin.purchases.print', $purchase)" label="Print" />
             @if ($purchase->status === 'draft')
                 @can('purchases.edit')
                     <a href="{{ route('admin.purchases.edit', $purchase) }}" class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2">
@@ -102,6 +103,9 @@
                             </div>
                         @endif
                         <div class="flex justify-between text-on-surface-variant"><span>Tax</span><span>{{ format_money($purchase->tax_total) }}</span></div>
+                        @if ((float) $purchase->delivery_charge > 0)
+                            <div class="flex justify-between text-on-surface-variant"><span>Delivery</span><span>{{ format_money($purchase->delivery_charge) }}</span></div>
+                        @endif
                         <div class="flex justify-between font-bold text-on-surface text-base pt-2 border-t border-outline-variant/60"><span>Grand total</span><span>{{ format_money($purchase->grand_total) }}</span></div>
                         <div class="flex justify-between text-on-surface-variant"><span>Paid</span><span>{{ format_money($purchase->paid_total) }}</span></div>
                         <div class="flex justify-between"><span class="text-on-surface-variant">Payable</span><span class="font-semibold {{ $payable > 0 ? 'text-error' : 'text-secondary' }}">{{ format_money($payable) }}</span></div>
@@ -214,6 +218,8 @@
         </div>
 
         <div class="col-span-12 lg:col-span-4 space-y-6">
+            <x-admin.delivery-summary :method="$purchase->delivery_method" :agent="$purchase->delivery_agent" :contact="$purchase->delivery_contact" :charge="$purchase->delivery_charge" />
+
             <x-admin.panel title="Summary">
                 <dl class="space-y-2.5 text-sm">
                     <div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Supplier</dt><dd class="text-on-surface font-medium text-right">{{ $purchase->supplier?->name ?? '—' }}</dd></div>

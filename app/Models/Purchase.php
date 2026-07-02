@@ -13,6 +13,7 @@ class Purchase extends Model
 
     protected $fillable = [
         'purchase_number', 'supplier_id', 'status', 'reference', 'purchase_date',
+        'delivery_method', 'delivery_agent', 'delivery_contact', 'delivery_charge',
         'subtotal', 'discount_type', 'discount_value', 'discount_total',
         'tax_total', 'grand_total', 'paid_total', 'notes', 'created_by',
     ];
@@ -24,6 +25,7 @@ class Purchase extends Model
             'subtotal' => 'decimal:2',
             'discount_value' => 'decimal:2',
             'discount_total' => 'decimal:2',
+            'delivery_charge' => 'decimal:2',
             'tax_total' => 'decimal:2',
             'grand_total' => 'decimal:2',
             'paid_total' => 'decimal:2',

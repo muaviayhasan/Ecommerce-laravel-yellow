@@ -3,7 +3,7 @@
     'viewAll' => null,   // href for an optional "View all" link
 ])
 
-<div {{ $attributes->merge(['class' => 'bg-surface-container-lowest dark:bg-surface-container p-6 rounded-xl border border-outline-variant']) }}>
+<div {{ $attributes->merge(['class' => 'bg-surface-container-lowest dark:bg-surface-container p-6 rounded-xl shadow-sm']) }}>
     @if ($title || isset($actions))
         <div class="flex items-center justify-between mb-6 gap-4">
             <h3 class="text-lg font-bold text-on-surface">{{ $title }}</h3>

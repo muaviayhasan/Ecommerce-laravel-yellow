@@ -412,6 +412,9 @@
     .material-symbols-outlined {
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         user-select: none;
+        /* Center the glyph in its box so icon-only buttons pad evenly top/bottom. */
+        line-height: 1;
+        vertical-align: middle;
     }
 
     /* Subtle Ken Burns zoom for hero slide images. */

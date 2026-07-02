@@ -20,7 +20,7 @@ class OrderController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('can:orders.view', only: ['index', 'show', 'print']),
-            new Middleware('can:orders.edit', only: ['updateStatus']),
+            new Middleware('can:orders.edit', only: ['updateStatus', 'updateDelivery']),
         ];
     }
 
@@ -68,14 +68,14 @@ class OrderController extends Controller implements HasMiddleware
         ]);
     }
 
-    /** Printable bill — A4 invoice or 80mm thermal receipt, per the store setting. */
-    public function print(Order $order): View
+    /** Printable bill — A4 invoice or 80mm thermal receipt (?format= overrides the store default). */
+    public function print(Request $request, Order $order): View
     {
         $order->load(['customer', 'items.variant.product', 'addresses', 'payments']);
 
         return view('admin.orders.print', [
             'order' => $order,
-            'billType' => setting('store', 'bill_type', 'a4') === 'thermal' ? 'thermal' : 'a4',
+            'billType' => bill_format($request->query('format')),
         ]);
     }
 
@@ -113,5 +113,23 @@ class OrderController extends Controller implements HasMiddleware
         }
 
         return back()->with('status', 'Order updated.');
+    }
+
+    /** Update delivery details (method / handler / contact). No financial change. */
+    public function updateDelivery(Request $request, Order $order): RedirectResponse
+    {
+        $data = $request->validate([
+            'shipping_method' => ['nullable', Rule::in(['pickup', 'own_rider', 'courier', 'other'])],
+            'courier' => ['nullable', 'string', 'max:255'],
+            'tracking_number' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $order->update([
+            'shipping_method' => $data['shipping_method'] ?? null,
+            'courier' => $data['courier'] ?? null,
+            'tracking_number' => $data['tracking_number'] ?? null,
+        ]);
+
+        return back()->with('status', 'Delivery details updated.');
     }
 }

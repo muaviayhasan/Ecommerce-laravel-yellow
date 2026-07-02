@@ -24,7 +24,7 @@ class QuotationController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('can:quotations.view', only: ['index', 'show']),
+            new Middleware('can:quotations.view', only: ['index', 'show', 'print']),
             new Middleware('can:quotations.create', only: ['create', 'store']),
             new Middleware('can:quotations.edit', only: ['edit', 'update', 'status']),
             new Middleware('can:quotations.delete', only: ['destroy']),
@@ -101,6 +101,17 @@ class QuotationController extends Controller implements HasMiddleware
         return view('admin.quotations.show', [
             'quotation' => $quotation,
             'statuses' => self::STATUSES,
+        ]);
+    }
+
+    /** Printable quote — A4 sheet or 80mm thermal (?format= overrides the store default). */
+    public function print(Request $request, Quotation $quotation): View
+    {
+        $quotation->load('items.variant.product:id,name', 'customer', 'creator:id,name');
+
+        return view('admin.quotations.print', [
+            'quotation' => $quotation,
+            'billType' => bill_format($request->query('format')),
         ]);
     }
 

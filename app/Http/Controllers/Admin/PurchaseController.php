@@ -24,7 +24,7 @@ class PurchaseController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('can:purchases.view', only: ['index', 'show']),
+            new Middleware('can:purchases.view', only: ['index', 'show', 'print']),
             new Middleware('can:purchases.create', only: ['create', 'store']),
             new Middleware('can:purchases.edit', only: ['edit', 'update']),
             new Middleware('can:purchases.delete', only: ['destroy']),
@@ -84,6 +84,10 @@ class PurchaseController extends Controller implements HasMiddleware
             'status' => 'draft',
             'reference' => $data['reference'] ?? null,
             'purchase_date' => $data['purchase_date'],
+            'delivery_method' => $data['delivery_method'] ?? null,
+            'delivery_agent' => $data['delivery_agent'] ?? null,
+            'delivery_contact' => $data['delivery_contact'] ?? null,
+            'delivery_charge' => $t['delivery'],
             'subtotal' => $t['subtotal'],
             'discount_type' => $t['discount_type'],
             'discount_value' => $t['discount_value'],
@@ -108,6 +112,17 @@ class PurchaseController extends Controller implements HasMiddleware
         ]);
 
         return view('admin.purchases.show', ['purchase' => $purchase]);
+    }
+
+    /** Printable purchase order — A4 sheet or 80mm thermal (?format= overrides the store default). */
+    public function print(Request $request, Purchase $purchase): View
+    {
+        $purchase->load('supplier', 'items.variant.product:id,name');
+
+        return view('admin.purchases.print', [
+            'purchase' => $purchase,
+            'billType' => bill_format($request->query('format')),
+        ]);
     }
 
     public function edit(Purchase $purchase): View|RedirectResponse
@@ -142,6 +157,10 @@ class PurchaseController extends Controller implements HasMiddleware
             'supplier_id' => $data['supplier_id'],
             'reference' => $data['reference'] ?? null,
             'purchase_date' => $data['purchase_date'],
+            'delivery_method' => $data['delivery_method'] ?? null,
+            'delivery_agent' => $data['delivery_agent'] ?? null,
+            'delivery_contact' => $data['delivery_contact'] ?? null,
+            'delivery_charge' => $t['delivery'],
             'subtotal' => $t['subtotal'],
             'discount_type' => $t['discount_type'],
             'discount_value' => $t['discount_value'],
@@ -239,7 +258,8 @@ class PurchaseController extends Controller implements HasMiddleware
             ? round($subtotal * min($value, 100) / 100, 2)
             : min($value, $subtotal);
         $tax = round((float) ($data['tax_total'] ?? 0), 2);
-        $grand = round($subtotal - $discount + $tax, 2);
+        $delivery = round((float) ($data['delivery_charge'] ?? 0), 2);
+        $grand = round($subtotal - $discount + $tax + $delivery, 2);
 
         return [
             'rows' => $rows,
@@ -248,6 +268,7 @@ class PurchaseController extends Controller implements HasMiddleware
             'discount_value' => $value,
             'discount' => round($discount, 2),
             'tax' => $tax,
+            'delivery' => $delivery,
             'grand' => $grand,
         ];
     }

@@ -10,6 +10,7 @@
             taxRate: @js($taxRate),
             customers: @js($customers),
             defaultCustomerId: @js($defaultCustomerId),
+            allowNegative: @js($allowNegative),
         })">
 
         <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -48,9 +49,13 @@
                         <div x-show="open" x-cloak @scroll.passive="onScroll($event)" class="absolute left-4 right-4 z-20 mt-1 bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-xl shadow-2xl max-h-80 overflow-y-auto">
                             <template x-for="p in results" :key="p.id">
                                 <button type="button" @click="add(p)" class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-surface-container-high transition-colors border-b border-outline-variant/40 last:border-0">
-                                    <div class="min-w-0">
-                                        <p class="text-sm font-medium text-on-surface truncate" x-text="p.name"></p>
-                                        <p class="text-[11px] text-outline font-mono" x-text="p.sku"></p>
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <template x-if="p.image"><img :src="p.image" alt="" loading="lazy" class="w-9 h-9 rounded-md object-cover bg-surface-container-high shrink-0"></template>
+                                        <template x-if="!p.image"><div class="w-9 h-9 rounded-md bg-surface-container-high grid place-items-center shrink-0"><span class="material-symbols-outlined text-[18px] text-outline">image</span></div></template>
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium text-on-surface truncate" x-text="p.name"></p>
+                                            <p class="text-[11px] text-outline font-mono" x-text="p.sku"></p>
+                                        </div>
                                     </div>
                                     <div class="text-right shrink-0">
                                         <p class="text-sm font-semibold text-on-surface" x-text="money(p.price)"></p>
@@ -67,7 +72,13 @@
                 <x-admin.panel class="!p-0 overflow-hidden">
                     <div class="px-6 py-4 border-b border-outline-variant/60 flex items-center justify-between">
                         <h3 class="text-lg font-bold text-on-surface">Cart <span class="text-xs font-normal text-outline">· wholesale</span></h3>
-                        <span class="text-xs text-outline" x-text="count() + ' item(s)'"></span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-outline" x-text="count() + ' item(s)'"></span>
+                            <button type="button" x-show="cart.length" @click="clearCart()" class="text-xs font-semibold text-error hover:opacity-70 transition-opacity flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">delete_sweep</span> Clear</button>
+                        </div>
+                    </div>
+                    <div x-show="stockNote" x-cloak class="px-6 py-2 bg-error-container/40 text-error text-xs font-medium border-b border-outline-variant/60 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[16px]">inventory_2</span><span x-text="stockNote"></span>
                     </div>
                     <template x-if="!cart.length">
                         <div class="px-6 py-16 text-center text-on-surface-variant">
@@ -77,18 +88,24 @@
                     </template>
                     <div class="divide-y divide-outline-variant/40">
                         <template x-for="(l, i) in cart" :key="l.id">
-                            <div class="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 px-4 sm:px-6 py-3">
+                            <div class="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 px-4 sm:px-6 py-3 hover:bg-surface-container-low/40 transition-colors">
                                 <div class="flex-1 min-w-0 basis-full sm:basis-auto">
                                     <p class="font-medium text-on-surface truncate" x-text="l.name"></p>
-                                    <p class="text-[11px] text-outline" x-text="l.sku + ' · ' + money(l.price)"></p>
+                                    <p class="text-[11px] text-outline" x-text="l.sku + ' · ' + money(l.price) + ' each'"></p>
                                 </div>
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" @click="dec(l)" class="w-8 h-8 grid place-items-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high"><span class="material-symbols-outlined text-[18px]">remove</span></button>
-                                    <input type="number" min="1" step="1" x-model.number="l.qty" class="w-12 text-center bg-surface-container-low border border-outline-variant rounded-lg py-1.5 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
-                                    <button type="button" @click="inc(l)" class="w-8 h-8 grid place-items-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high"><span class="material-symbols-outlined text-[18px]">add</span></button>
+                                <div class="shrink-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <button type="button" @click="dec(l)" class="w-8 h-8 grid place-items-center rounded-full bg-primary text-on-primary hover:brightness-110 active:scale-95 transition"><span class="material-symbols-outlined text-[18px]">remove</span></button>
+                                        <input type="number" min="1" step="1" :max="maxQty(l)" x-model.number="l.qty" @input="clampQty(l)" class="w-12 text-center bg-surface-container-low border border-outline-variant rounded-lg py-1.5 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                                        <button type="button" @click="inc(l)" :disabled="atMax(l)" :class="atMax(l) ? 'opacity-40 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'" class="w-8 h-8 grid place-items-center rounded-full bg-primary text-on-primary transition"><span class="material-symbols-outlined text-[18px]">add</span></button>
+                                    </div>
+                                    <p x-show="atMax(l)" x-cloak class="text-[10px] text-error text-center mt-0.5" x-text="'Max ' + num(l.stock)"></p>
                                 </div>
-                                <div class="w-24 text-right font-semibold text-on-surface shrink-0 ml-auto sm:ml-0" x-text="money(lineTotal(l))"></div>
-                                <button type="button" @click="remove(i)" class="p-1 rounded text-on-surface-variant hover:text-error shrink-0"><span class="material-symbols-outlined text-[20px]">close</span></button>
+                                <div class="text-right shrink-0 ml-auto sm:ml-5">
+                                    <p class="w-24 font-semibold text-on-surface" x-text="money(lineTotal(l))"></p>
+                                    <p x-show="l.qty > 1" x-cloak class="text-[10px] text-outline" x-text="l.qty + ' × ' + money(l.price)"></p>
+                                </div>
+                                <button type="button" @click="remove(i)" title="Remove" class="shrink-0 w-7 h-7 ml-3 mr-1 grid place-items-center rounded-lg bg-error-container text-error hover:bg-error hover:text-on-error transition-colors"><span class="material-symbols-outlined text-[16px] leading-none">delete</span></button>
                             </div>
                         </template>
                     </div>
@@ -96,13 +113,17 @@
             </div>
 
             {{-- Checkout --}}
-            <div class="col-span-12 lg:col-span-5">
+            <div class="col-span-12 lg:col-span-5 lg:sticky lg:top-6 lg:self-start">
                 <form method="POST" action="{{ route('admin.vendor-sales.store') }}" @submit="if (!cart.length || !customerId) $event.preventDefault()">
                     @csrf
                     <input type="hidden" name="payment_method" :value="paymentMethod">
                     <input type="hidden" name="paid" :value="paid || 0">
                     <input type="hidden" name="discount_type" :value="discountType">
                     <input type="hidden" name="discount_value" :value="discountValue || 0">
+                    <input type="hidden" name="shipping_method" :value="deliveryMethod">
+                    <input type="hidden" name="courier" :value="courier">
+                    <input type="hidden" name="tracking_number" :value="tracking">
+                    <input type="hidden" name="shipping_total" :value="shippingCharge || 0">
                     <template x-for="(l, i) in cart" :key="l.id">
                         <span>
                             <input type="hidden" :name="`items[${i}][variant_id]`" :value="l.id">
@@ -139,8 +160,32 @@
                             </div>
                             <div class="flex justify-between" x-show="discountAmt() > 0" x-cloak><dt class="text-on-surface-variant" x-text="discountType === 'percent' ? `Discount (${discountValue || 0}%)` : 'Discount'"></dt><dd class="text-error" x-text="'- ' + money(discountAmt())"></dd></div>
                             <div class="flex justify-between" x-show="taxEnabled"><dt class="text-on-surface-variant">Tax (<span x-text="taxRate"></span>%)</dt><dd class="text-on-surface" x-text="money(tax())"></dd></div>
+                            <div class="flex justify-between" x-show="(parseFloat(shippingCharge) || 0) > 0" x-cloak><dt class="text-on-surface-variant">Delivery</dt><dd class="text-on-surface" x-text="money(parseFloat(shippingCharge) || 0)"></dd></div>
                             <div class="flex justify-between font-bold text-on-surface text-lg pt-2 border-t border-outline-variant/60"><dt>Total</dt><dd x-text="money(grand())"></dd></div>
                         </dl>
+
+                        {{-- Delivery (optional) --}}
+                        <div class="mt-5 border-t border-outline-variant/60 pt-4">
+                            <button type="button" @click="deliveryOpen = !deliveryOpen" class="flex items-center justify-between w-full text-sm font-semibold text-on-surface-variant">
+                                <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">local_shipping</span> Delivery <span class="text-outline font-normal">(optional)</span></span>
+                                <span class="material-symbols-outlined text-[18px]" x-text="deliveryOpen ? 'expand_less' : 'expand_more'"></span>
+                            </button>
+                            <div x-show="deliveryOpen" x-cloak class="mt-3 space-y-3">
+                                <select x-model="deliveryMethod" data-no-select2 class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+                                    <option value="pickup">Store pickup (collected)</option>
+                                    <option value="own_rider">Own rider</option>
+                                    <option value="courier">Third-party courier</option>
+                                    <option value="other">Other person</option>
+                                </select>
+                                <template x-if="deliveryMethod !== 'pickup'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="courier" maxlength="255" placeholder="Handled by (rider / courier / person)" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                                        <input type="text" x-model="tracking" maxlength="255" placeholder="Contact phone or tracking #" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                                    </div>
+                                </template>
+                                <input type="number" step="any" min="0" x-model="shippingCharge" placeholder="Delivery charge (added to total)" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                            </div>
+                        </div>
 
                         <div class="mt-5">
                             <label class="block text-sm font-medium text-on-surface-variant mb-2">Payment method</label>
@@ -187,12 +232,16 @@
                 taxRate: Number(cfg.taxRate) || 0,
                 customers: (cfg.customers || []).map(c => ({ id: String(c.id), name: c.name, wholesale: !!c.wholesale })),
                 searchUrl: cfg.searchUrl,
+                allowNegative: !!cfg.allowNegative,
                 query: '', results: [],
                 open: false, offset: 0, limit: 15, hasMore: true, loading: false,
                 cart: [],
+                stockNote: '', _noteT: null,
                 customerId: cfg.defaultCustomerId ? String(cfg.defaultCustomerId) : '',
                 paymentMethod: 'cash', paid: '',
                 discountType: 'fixed', discountValue: '',
+                deliveryOpen: false, deliveryMethod: 'pickup', courier: '', tracking: '', shippingCharge: '',
+                init() { this.$nextTick(() => this.openList()); },
                 openList() { this.open = true; if (!this.results.length && !this.loading) this.reload(); },
                 search() { this.reload(); },
                 async reload() {
@@ -216,13 +265,38 @@
                     const el = e.target;
                     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 48) this.loadMore();
                 },
-                add(p) {
-                    const line = this.cart.find(l => l.id === p.id);
-                    if (line) { line.qty++; } else { this.cart.push({ id: p.id, name: p.name, sku: p.sku, price: p.price, stock: p.stock, qty: 1 }); }
+                // Available cap for a line/product: on-hand stock for tracked items
+                // (unless the store allows negative stock), otherwise unlimited.
+                capFor(item) { return (item.tracked && !this.allowNegative) ? Number(item.stock) || 0 : Infinity; },
+                maxQty(l) { const c = this.capFor(l); return c === Infinity ? undefined : c; },
+                atMax(l) { return this.capFor(l) !== Infinity && (Number(l.qty) || 0) >= this.capFor(l); },
+                noteStock(name, cap) {
+                    this.stockNote = cap <= 0 ? `${name} is out of stock.` : `Only ${this.num(cap)} of ${name} in stock.`;
+                    clearTimeout(this._noteT);
+                    this._noteT = setTimeout(() => { this.stockNote = ''; }, 3500);
                 },
-                inc(l) { l.qty++; },
-                dec(l) { l.qty = Math.max(1, l.qty - 1); },
+                clampQty(l) {
+                    let v = Math.floor(Number(l.qty) || 0);
+                    if (v < 1) v = 1;
+                    const cap = this.capFor(l);
+                    if (v > cap) { v = cap; this.noteStock(l.name, cap); }
+                    l.qty = v;
+                },
+                add(p) {
+                    const cap = this.capFor(p);
+                    const line = this.cart.find(l => l.id === p.id);
+                    const current = line ? (Number(line.qty) || 0) : 0;
+                    if (current + 1 > cap) { this.noteStock(p.name, cap); if (line) line.qty = cap; return; }
+                    if (line) { line.qty = current + 1; }
+                    else { this.cart.push({ id: p.id, name: p.name, sku: p.sku, price: p.price, stock: p.stock, tracked: p.tracked, qty: 1 }); }
+                },
+                inc(l) {
+                    if (this.atMax(l)) { this.noteStock(l.name, this.capFor(l)); return; }
+                    l.qty = (Number(l.qty) || 0) + 1;
+                },
+                dec(l) { l.qty = Math.max(1, (Number(l.qty) || 0) - 1); },
                 remove(i) { this.cart.splice(i, 1); },
+                clearCart() { this.cart = []; this.stockNote = ''; },
                 lineTotal(l) { return l.price * (Number(l.qty) || 0); },
                 subtotal() { return this.cart.reduce((s, l) => s + this.lineTotal(l), 0); },
                 setDiscountType(type) { this.discountType = type; this.clampDiscount(); },
@@ -238,7 +312,7 @@
                     return Math.min(v, this.subtotal());
                 },
                 tax() { return this.taxEnabled ? (this.subtotal() - this.discountAmt()) * this.taxRate / 100 : 0; },
-                grand() { return this.subtotal() - this.discountAmt() + this.tax(); },
+                grand() { return this.subtotal() - this.discountAmt() + this.tax() + (parseFloat(this.shippingCharge) || 0); },
                 balance() { return Math.max(0, this.grand() - (parseFloat(this.paid) || 0)); },
                 count() { return this.cart.reduce((s, l) => s + (Number(l.qty) || 0), 0); },
                 money(n) { return this.cur + ' ' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },

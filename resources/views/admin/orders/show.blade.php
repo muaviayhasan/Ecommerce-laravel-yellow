@@ -21,10 +21,9 @@
             </p>
         </div>
 
-        <a href="{{ route('admin.orders.print', $order) }}" target="_blank"
-            class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2 shrink-0">
-            <span class="material-symbols-outlined text-[20px]">print</span> Print bill
-        </a>
+        <div class="shrink-0">
+            <x-admin.print-menu :base="route('admin.orders.print', $order)" label="Print bill" />
+        </div>
     </div>
 
     <div class="grid grid-cols-12 gap-6 items-start">
@@ -202,6 +201,52 @@
                     </div>
                 @endif
             </x-admin.panel>
+
+            {{-- Delivery --}}
+            @php
+                $deliveryLabel = delivery_method_label($order->shipping_method);
+                $cellD = 'w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary';
+            @endphp
+            <div x-data="{ edit: false }">
+                <x-admin.panel title="Delivery">
+                    @can('orders.edit')
+                        <x-slot:actions>
+                            <button type="button" @click="edit = !edit" class="text-xs font-semibold text-primary" x-text="edit ? 'Cancel' : 'Edit'">Edit</button>
+                        </x-slot:actions>
+                    @endcan
+
+                    <div x-show="!edit">
+                        @if ($deliveryLabel || $order->courier || $order->tracking_number || (float) $order->shipping_total > 0)
+                            <dl class="space-y-2.5 text-sm">
+                                @if ($deliveryLabel)<div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Method</dt><dd class="text-on-surface font-medium text-right">{{ $deliveryLabel }}</dd></div>@endif
+                                @if ($order->courier)<div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Handled by</dt><dd class="text-on-surface font-medium text-right">{{ $order->courier }}</dd></div>@endif
+                                @if ($order->tracking_number)<div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Contact / tracking</dt><dd class="text-on-surface font-medium text-right">{{ $order->tracking_number }}</dd></div>@endif
+                                @if ((float) $order->shipping_total > 0)<div class="flex justify-between gap-4"><dt class="text-on-surface-variant">Delivery charge</dt><dd class="text-on-surface font-medium text-right">{{ format_money($order->shipping_total) }}</dd></div>@endif
+                            </dl>
+                        @else
+                            <p class="text-sm text-on-surface-variant">No delivery recorded.</p>
+                        @endif
+                    </div>
+
+                    @can('orders.edit')
+                        <form x-show="edit" x-cloak method="POST" action="{{ route('admin.orders.delivery', $order) }}" class="space-y-3">
+                            @csrf @method('PATCH')
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-medium text-on-surface-variant">Method</label>
+                                <select name="shipping_method" data-no-select2 class="{{ $cellD }} cursor-pointer">
+                                    <option value="pickup" @selected($order->shipping_method === 'pickup' || ! $order->shipping_method)>Store pickup (collected)</option>
+                                    <option value="own_rider" @selected($order->shipping_method === 'own_rider')>Own rider</option>
+                                    <option value="courier" @selected($order->shipping_method === 'courier')>Third-party courier</option>
+                                    <option value="other" @selected($order->shipping_method === 'other')>Other person</option>
+                                </select>
+                            </div>
+                            <input type="text" name="courier" value="{{ $order->courier }}" maxlength="255" placeholder="Handled by (rider / courier / person)" class="{{ $cellD }}">
+                            <input type="text" name="tracking_number" value="{{ $order->tracking_number }}" maxlength="255" placeholder="Contact phone or tracking #" class="{{ $cellD }}">
+                            <button type="submit" class="w-full px-4 py-2 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all">Save delivery</button>
+                        </form>
+                    @endcan
+                </x-admin.panel>
+            </div>
         </div>
     </div>
 @endsection

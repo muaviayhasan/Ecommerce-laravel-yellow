@@ -155,7 +155,7 @@ class SettingsController extends Controller implements HasMiddleware
                         'title' => 'Invoice & receipt',
                         'description' => 'How a printed order bill is formatted.',
                         'fields' => [
-                            'bill_type' => ['input' => 'select', 'label' => 'Bill format', 'default' => 'a4', 'rules' => ['required', 'in:a4,thermal'], 'options' => ['a4' => 'A4 — full-page invoice', 'thermal' => 'Thermal — 80mm receipt'], 'help' => 'Used when printing an order from its detail page.'],
+                            'bill_type' => ['input' => 'select', 'label' => 'Default bill format', 'default' => 'a4', 'rules' => ['required', 'in:a4,thermal'], 'options' => ['a4' => 'A4 — full-page invoice', 'thermal' => 'Thermal — 80mm receipt'], 'help' => 'Default when printing any bill (orders, quotations, purchases). Each print screen still lets you pick A4 or thermal.'],
                             'invoice_footer' => ['input' => 'textarea', 'label' => 'Footer note', 'rows' => 2, 'max' => 500, 'rules' => ['nullable', 'string', 'max:500'], 'help' => 'Printed at the bottom of every bill (e.g. return policy or a thank-you).'],
                         ],
                     ],

@@ -73,10 +73,14 @@
                             <td class="px-6 py-3"><x-admin.order-badge :status="$order->payment_status" type="payment" /></td>
                             <td class="px-6 py-3"><x-admin.order-badge :status="$order->status" /></td>
                             <td class="px-6 py-3">
-                                <div class="flex items-center justify-end">
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{{ route('admin.orders.print', $order) }}" target="_blank" title="Print bill"
+                                        class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[20px] leading-none">print</span>
+                                    </a>
                                     <a href="{{ route('admin.orders.show', $order) }}" title="View order"
-                                        class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                        class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[20px] leading-none">visibility</span>
                                     </a>
                                 </div>
                             </td>

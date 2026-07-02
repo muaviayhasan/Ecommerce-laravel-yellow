@@ -33,6 +33,11 @@ class VendorSaleRequest extends FormRequest
             'paid' => ['numeric', 'min:0'],
             'discount_type' => ['required', Rule::in(['fixed', 'percent'])],
             'discount_value' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            // Delivery (optional)
+            'shipping_method' => ['nullable', Rule::in(['pickup', 'own_rider', 'courier', 'other'])],
+            'courier' => ['nullable', 'string', 'max:255'],
+            'tracking_number' => ['nullable', 'string', 'max:255'],
+            'shipping_total' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.variant_id' => ['required', Rule::exists('product_variants', 'id')],
             'items.*.quantity' => ['required', 'numeric', 'gt:0', 'max:9999999.999'],

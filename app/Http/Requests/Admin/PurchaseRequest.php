@@ -24,6 +24,11 @@ class PurchaseRequest extends FormRequest
             'reference' => ['nullable', 'string', 'max:100'],
             'discount_type' => ['nullable', Rule::in(['fixed', 'percent'])],
             'discount_value' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            // Delivery (optional)
+            'delivery_method' => ['nullable', Rule::in(['pickup', 'own_rider', 'courier', 'other'])],
+            'delivery_agent' => ['nullable', 'string', 'max:255'],
+            'delivery_contact' => ['nullable', 'string', 'max:255'],
+            'delivery_charge' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'tax_total' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'paid_total' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'notes' => ['nullable', 'string', 'max:2000'],

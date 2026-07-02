@@ -101,7 +101,7 @@
                             <td class="px-6 py-3">
                                 <div class="flex items-center justify-end gap-1">
                                     <a href="{{ route('admin.categories.edit', $category) }}" title="Edit"
-                                        class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                        class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
                                         <span class="material-symbols-outlined text-[20px]">edit</span>
                                     </a>
                                     <form method="POST" action="{{ route('admin.categories.destroy', $category) }}"
@@ -109,7 +109,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Delete"
-                                            class="p-2 rounded-lg text-on-surface-variant hover:bg-error-container/50 hover:text-error transition-colors">
+                                            class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-error-container/50 hover:text-error transition-colors">
                                             <span class="material-symbols-outlined text-[20px]">delete</span>
                                         </button>
                                     </form>

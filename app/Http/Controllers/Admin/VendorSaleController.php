@@ -36,6 +36,7 @@ class VendorSaleController extends Controller implements HasMiddleware
                 ->get(['id', 'name', 'price_tier'])
                 ->map(fn (Customer $c) => ['id' => $c->id, 'name' => $c->name, 'wholesale' => $c->price_tier === 'wholesale']),
             'defaultCustomerId' => $this->defaultCustomerId(),
+            'allowNegative' => (bool) setting('inventory', 'allow_negative_stock', false),
             'taxEnabled' => (bool) setting('tax', 'enabled', false),
             'taxRate' => (float) setting('tax', 'rate', 0),
             'currency' => setting('general', 'currency_symbol', 'Rs'),
@@ -55,7 +56,7 @@ class VendorSaleController extends Controller implements HasMiddleware
         $query = ProductVariant::query()
             ->where('product_variants.is_active', true)
             ->whereHas('product', fn ($q) => $q->where('is_sellable', true)->where('is_active', true))
-            ->with('product:id,name');
+            ->with(['product:id,name,is_stock_tracked', 'product.media', 'image']);
 
         if ($term !== '') {
             $like = '%' . $term . '%';
@@ -67,7 +68,7 @@ class VendorSaleController extends Controller implements HasMiddleware
 
         $variants = $query->orderByDesc('id')
             ->skip($offset)->take($limit)
-            ->get(['id', 'product_id', 'sku', 'retail_price', 'wholesale_price', 'stock_quantity']);
+            ->get(['id', 'product_id', 'sku', 'retail_price', 'wholesale_price', 'stock_quantity', 'image_media_id']);
 
         return response()->json($variants->map(fn (ProductVariant $v) => [
             'id' => $v->id,
@@ -76,6 +77,8 @@ class VendorSaleController extends Controller implements HasMiddleware
             'price' => (float) ($v->wholesale_price ?? $v->retail_price),
             'retail' => (float) $v->retail_price,
             'stock' => (float) $v->stock_quantity,
+            'tracked' => (bool) $v->product?->is_stock_tracked,
+            'image' => $this->variantImage($v),
         ]));
     }
 
@@ -84,6 +87,18 @@ class VendorSaleController extends Controller implements HasMiddleware
     {
         return (int) setting('pos', 'default_customer', 0)
             ?: Customer::where('is_active', true)->where('name', 'like', 'Walk-in%')->value('id');
+    }
+
+    /** Thumbnail URL for a variant: its own image, else the product's primary image. */
+    private function variantImage(ProductVariant $variant): ?string
+    {
+        if ($variant->image) {
+            return $variant->image->url;
+        }
+
+        $media = $variant->product?->media;
+
+        return ($media?->firstWhere('pivot.is_primary', true) ?? $media?->first())?->url;
     }
 
     public function store(VendorSaleRequest $request, SalesService $sales): RedirectResponse
@@ -116,6 +131,10 @@ class VendorSaleController extends Controller implements HasMiddleware
                 'tax_rate' => $taxRate,
                 'discount_type' => $data['discount_type'],
                 'discount_value' => (float) ($data['discount_value'] ?? 0),
+                'shipping_method' => $data['shipping_method'] ?? null,
+                'courier' => $data['courier'] ?? null,
+                'tracking_number' => $data['tracking_number'] ?? null,
+                'shipping_total' => (float) ($data['shipping_total'] ?? 0),
                 'paid' => (float) $data['paid'],
             ]);
         } catch (Throwable $e) {

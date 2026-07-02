@@ -30,6 +30,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            <x-admin.print-menu :base="route('admin.quotations.print', $quotation)" label="Print" />
             @if (! $locked)
                 @can('quotations.edit')
                     <a href="{{ route('admin.quotations.edit', $quotation) }}" class="px-4 py-2 text-sm font-semibold text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-high flex items-center gap-2">

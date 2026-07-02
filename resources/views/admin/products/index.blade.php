@@ -127,18 +127,18 @@
                             </td>
                             <td class="px-6 py-3">
                                 <div class="flex items-center justify-end gap-1">
-                                    <a href="{{ route('admin.products.show', $product) }}" title="View" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                    <a href="{{ route('admin.products.show', $product) }}" title="View" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
                                         <span class="material-symbols-outlined text-[20px]">visibility</span>
                                     </a>
                                     @can('products.edit')
-                                        <a href="{{ route('admin.products.edit', $product) }}" title="Edit" class="p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                        <a href="{{ route('admin.products.edit', $product) }}" title="Edit" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
                                             <span class="material-symbols-outlined text-[20px]">edit</span>
                                         </a>
                                     @endcan
                                     @can('products.delete')
                                         <form method="POST" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return confirm('Delete “{{ $product->name }}”? It will be archived (soft-deleted).');">
                                             @csrf @method('DELETE')
-                                            <button type="submit" title="Delete" class="p-2 rounded-lg text-on-surface-variant hover:bg-error-container hover:text-error transition-colors">
+                                            <button type="submit" title="Delete" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-error-container hover:text-error transition-colors">
                                                 <span class="material-symbols-outlined text-[20px]">delete</span>
                                             </button>
                                         </form>

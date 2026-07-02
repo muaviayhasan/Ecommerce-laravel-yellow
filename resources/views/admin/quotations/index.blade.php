@@ -81,7 +81,10 @@
                             <td class="px-6 py-3 text-on-surface-variant">{{ $quotation->valid_until?->format('d M Y') ?? '—' }}</td>
                             <td class="px-6 py-3"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize {{ $statusStyles[$quotation->status] ?? '' }}">{{ $quotation->status }}</span></td>
                             <td class="px-6 py-3 text-right">
-                                <a href="{{ route('admin.quotations.show', $quotation) }}" title="View" class="inline-flex p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">visibility</span></a>
+                                <div class="flex items-center justify-end gap-1">
+                                    <a href="{{ route('admin.quotations.print', $quotation) }}" target="_blank" title="Print" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px] leading-none">print</span></a>
+                                    <a href="{{ route('admin.quotations.show', $quotation) }}" title="View" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px] leading-none">visibility</span></a>
+                                </div>
                             </td>
                         </tr>
                     @empty

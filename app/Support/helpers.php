@@ -146,3 +146,35 @@ if (! function_exists('format_datetime')) {
         return Carbon::parse($date)->timezone($tz)->format("{$dateFormat} {$timeFormat}");
     }
 }
+
+if (! function_exists('delivery_method_label')) {
+    /**
+     * Human label for a delivery-method code (used on sales orders & purchases).
+     * 'pickup' (collected in store) is treated as "no delivery" → null, so it never
+     * clutters displays; only real deliveries get a label.
+     */
+    function delivery_method_label(?string $code): ?string
+    {
+        return match ($code) {
+            'own_rider' => 'Own rider',
+            'courier' => 'Third-party courier',
+            'other' => 'Other person',
+            default => null,
+        };
+    }
+}
+
+if (! function_exists('bill_format')) {
+    /**
+     * Resolve the print/bill format ('a4' | 'thermal'). A per-request `?format=`
+     * choice wins; otherwise fall back to the store default (settings → Store).
+     */
+    function bill_format(?string $requested = null): string
+    {
+        if (in_array($requested, ['a4', 'thermal'], true)) {
+            return $requested;
+        }
+
+        return setting('store', 'bill_type', 'a4') === 'thermal' ? 'thermal' : 'a4';
+    }
+}

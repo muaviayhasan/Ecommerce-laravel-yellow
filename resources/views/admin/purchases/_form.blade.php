@@ -12,6 +12,14 @@
         'tax' => (string) old('tax_total', $purchase->tax_total ?? ''),
         'paid' => (string) old('paid_total', $purchase->paid_total ?? ''),
         'currency' => setting('general', 'currency_symbol', 'Rs'),
+        'deliveryMethod' => old('delivery_method', $purchase->delivery_method ?? 'pickup'),
+        'deliveryAgent' => (string) old('delivery_agent', $purchase->delivery_agent ?? ''),
+        'deliveryContact' => (string) old('delivery_contact', $purchase->delivery_contact ?? ''),
+        'deliveryCharge' => (string) old('delivery_charge', $purchase->delivery_charge && (float) $purchase->delivery_charge > 0
+            ? rtrim(rtrim(number_format((float) $purchase->delivery_charge, 2, '.', ''), '0'), '.') : ''),
+        'deliveryOpen' => (bool) (old('delivery_agent', $purchase->delivery_agent ?? '')
+            || old('delivery_charge', $purchase->delivery_charge ?? 0) > 0
+            || ! in_array(old('delivery_method', $purchase->delivery_method ?? 'pickup'), ['pickup', '', null], true)),
     ];
 @endphp
 
@@ -117,6 +125,37 @@
             @error('items.*.product_variant_id')<p class="text-xs text-error">{{ $message }}</p>@enderror
             @error('items.*.quantity')<p class="text-xs text-error">{{ $message }}</p>@enderror
 
+            {{-- Delivery (optional) --}}
+            <div class="border border-outline-variant/60 rounded-lg p-4">
+                <button type="button" @click="deliveryOpen = !deliveryOpen" class="flex items-center justify-between w-full text-sm font-semibold text-on-surface-variant">
+                    <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">local_shipping</span> Delivery <span class="text-outline font-normal">(optional — how goods arrived)</span></span>
+                    <span class="material-symbols-outlined text-[18px]" x-text="deliveryOpen ? 'expand_less' : 'expand_more'"></span>
+                </button>
+                <div x-show="deliveryOpen" x-cloak class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="block text-sm font-medium text-on-surface-variant">Method</label>
+                        <select name="delivery_method" x-model="deliveryMethod" data-no-select2 class="{{ $cell }} cursor-pointer">
+                            <option value="pickup">Store pickup (collected)</option>
+                            <option value="own_rider">Own rider</option>
+                            <option value="courier">Third-party courier</option>
+                            <option value="other">Other person</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-sm font-medium text-on-surface-variant">Delivery charge <span class="text-outline font-normal">(freight)</span></label>
+                        <input type="number" step="any" min="0" name="delivery_charge" x-model="deliveryCharge" placeholder="0" class="{{ $cell }}">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-sm font-medium text-on-surface-variant">Handled by</label>
+                        <input type="text" name="delivery_agent" x-model="deliveryAgent" maxlength="255" placeholder="Rider / courier / person" class="{{ $cell }}">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-sm font-medium text-on-surface-variant">Contact / tracking</label>
+                        <input type="text" name="delivery_contact" x-model="deliveryContact" maxlength="255" placeholder="Phone or tracking #" class="{{ $cell }}">
+                    </div>
+                </div>
+            </div>
+
             {{-- Totals --}}
             <div class="flex justify-end pt-2">
                 <div class="w-full max-w-sm space-y-2 text-sm">
@@ -142,6 +181,7 @@
                         <span class="text-on-surface-variant">Tax</span>
                         <input type="number" step="any" min="0" name="tax_total" x-model="tax" class="w-32 {{ $cell }} text-right">
                     </div>
+                    <div x-show="(parseFloat(deliveryCharge) || 0) > 0" x-cloak class="flex justify-between items-center text-on-surface-variant"><span>Delivery</span><span x-text="money(parseFloat(deliveryCharge) || 0)"></span></div>
                     <div class="flex justify-between items-center font-bold text-on-surface text-base pt-2 border-t border-outline-variant/60"><span>Grand total</span><span x-text="money(grand())"></span></div>
                     <div class="flex justify-between items-center gap-3">
                         <span class="text-on-surface-variant">Paid now</span>
@@ -222,6 +262,11 @@
                 paid: state.paid ?? '',
                 discountType: state.discountType || 'fixed',
                 discountValue: state.discountValue ?? '',
+                deliveryOpen: !!state.deliveryOpen,
+                deliveryMethod: state.deliveryMethod || 'pickup',
+                deliveryAgent: state.deliveryAgent ?? '',
+                deliveryContact: state.deliveryContact ?? '',
+                deliveryCharge: state.deliveryCharge ?? '',
                 init() {
                     if (!this.items.length) this.addItem();
                     // The picker dropdown is position:fixed (so no table overflow can clip it);
@@ -295,7 +340,7 @@
                     if (this.discountType === 'percent') return this.subtotal() * Math.min(v, 100) / 100;
                     return Math.min(v, this.subtotal());
                 },
-                grand() { return this.subtotal() - this.discount() + (parseFloat(this.tax) || 0); },
+                grand() { return this.subtotal() - this.discount() + (parseFloat(this.tax) || 0) + (parseFloat(this.deliveryCharge) || 0); },
                 balance() { return this.grand() - (parseFloat(this.paid) || 0); },
                 money(n) { return this.cur + ' ' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
             }));
