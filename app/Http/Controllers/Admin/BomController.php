@@ -171,11 +171,12 @@ class BomController extends Controller implements HasMiddleware
             ->where('is_active', true)
             ->with('product:id,name')
             ->orderBy('id')
-            ->get(['id', 'product_id', 'sku', 'cost'])
+            ->get(['id', 'product_id', 'sku', 'cost', 'stock_quantity'])
             ->map(fn (ProductVariant $v) => [
                 'id' => $v->id,
                 'label' => ($v->product?->name ?? 'Variant') . ' · ' . $v->sku,
                 'cost' => rtrim(rtrim(number_format((float) $v->cost, 2, '.', ''), '0'), '.') ?: '0',
+                'stock' => (float) $v->stock_quantity,
             ]);
     }
 }

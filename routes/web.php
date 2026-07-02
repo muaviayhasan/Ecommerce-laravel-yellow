@@ -175,6 +175,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Blog — posts (+ many-to-many categories/tags) and the taxonomies they draw from.
     Route::prefix('blog')->name('blog.')->group(function () {
         Route::resource('posts', BlogPostController::class)->except('show');
+        Route::post('categories/reorder', [BlogCategoryController::class, 'reorder'])->name('categories.reorder');
         Route::resource('categories', BlogCategoryController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
         Route::resource('tags', BlogTagController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
     });

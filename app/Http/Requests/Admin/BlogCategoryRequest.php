@@ -17,8 +17,10 @@ class BlogCategoryRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $sort = $this->input('sort_order');
         $this->merge([
-            'sort_order' => (int) $this->input('sort_order', 0),
+            // Blank → next available number; an explicit value (incl. 0) is kept.
+            'sort_order' => is_numeric($sort) ? (int) $sort : (int) BlogCategory::max('sort_order') + 1,
             'parent_id' => $this->filled('parent_id') ? $this->input('parent_id') : null,
         ]);
 

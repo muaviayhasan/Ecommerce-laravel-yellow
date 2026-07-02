@@ -92,10 +92,13 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`items[${i}][quantity]`" x-model="row.quantity" class="{{ $cell }}"></td>
+                                <td class="px-3 py-2">
+                                    <input type="number" step="any" min="0" :max="maxQty(row)" :name="`items[${i}][quantity]`" x-model="row.quantity" @input="clampQty(row)" class="{{ $cell }}">
+                                    <p x-show="row.component_variant_id && atMax(row)" x-cloak class="text-[10px] text-error mt-0.5" x-text="'Max ' + componentStock(row) + ' in stock'"></p>
+                                </td>
                                 <td class="px-3 py-2"><input type="number" step="any" min="0" max="100" :name="`items[${i}][waste_percent]`" x-model="row.waste_percent" class="{{ $cell }}"></td>
                                 <td class="px-3 py-2 text-right font-semibold text-on-surface" x-text="money(lineCost(row))"></td>
-                                <td class="px-3 py-2 text-right"><button type="button" @click="removeItem(i)" class="p-1 rounded text-on-surface-variant hover:text-error"><span class="material-symbols-outlined text-[18px]">close</span></button></td>
+                                <td class="px-3 py-2 text-right"><button type="button" @click="removeItem(i)" title="Remove" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-error-container text-error hover:bg-error hover:text-on-error transition-colors"><span class="material-symbols-outlined text-[18px] leading-none">delete</span></button></td>
                             </tr>
                         </template>
                     </tbody>
@@ -122,7 +125,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('bomItems', (state, variants) => ({
-                variants: (variants || []).map(v => ({ id: String(v.id), label: v.label, cost: v.cost })),
+                variants: (variants || []).map(v => ({ id: String(v.id), label: v.label, cost: v.cost, stock: Number(v.stock) || 0 })),
                 cur: state.currency || 'Rs',
                 _seq: (state.items || []).length,
                 items: (state.items || []).map((r, idx) => ({
@@ -175,8 +178,31 @@
                     row._w = Math.round(r.width);
                     row._maxh = Math.min(288, Math.max(160, Math.round(window.innerHeight - r.bottom - 12)));
                 },
-                pick(row, v) { row.component_variant_id = v.id; row._open = false; },
+                pick(row, v) {
+                    row._open = false;
+                    // If another row already holds this component, merge into it (add this row's
+                    // quantity, default 1) and drop this row — no duplicate components.
+                    const existing = this.items.find(r => r._uid !== row._uid && r.component_variant_id === String(v.id));
+                    if (existing) {
+                        const add = parseFloat(row.quantity) || 1;
+                        existing.quantity = String((parseFloat(existing.quantity) || 0) + add);
+                        this.clampQty(existing);
+                        this.removeItem(this.items.indexOf(row));
+                        return;
+                    }
+                    row.component_variant_id = v.id;
+                    this.clampQty(row);
+                },
                 varCost(row) { const v = this.variants.find(x => x.id === String(row.component_variant_id)); return v ? (parseFloat(v.cost) || 0) : 0; },
+                componentStock(row) { const v = this.variants.find(x => x.id === String(row.component_variant_id)); return v ? v.stock : Infinity; },
+                maxQty(row) { const s = this.componentStock(row); return s === Infinity ? undefined : s; },
+                atMax(row) { const s = this.componentStock(row); return s !== Infinity && (parseFloat(row.quantity) || 0) >= s; },
+                clampQty(row) {
+                    const cap = this.componentStock(row);
+                    const q = parseFloat(row.quantity);
+                    if (isNaN(q) || q < 0) return;
+                    if (cap !== Infinity && q > cap) row.quantity = String(cap);
+                },
                 lineCost(row) { return this.varCost(row) * (parseFloat(row.quantity) || 0) * (1 + (parseFloat(row.waste_percent) || 0) / 100); },
                 componentTotal() { return this.items.reduce((s, r) => s + this.lineCost(r), 0); },
                 unitCost() { const out = Math.max(parseFloat(this.output) || 1, 0.001); return (this.componentTotal() + (parseFloat(this.labor) || 0) + (parseFloat(this.overhead) || 0)) / out; },
