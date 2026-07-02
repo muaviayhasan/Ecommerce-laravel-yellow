@@ -77,14 +77,40 @@
             </div>
 
             {{-- Search --}}
+            @once
+                {{-- Strip Select2's box so the category picker blends into the search pill
+                     while staying searchable. Scoped to .cat-select2 to affect only this one. --}}
+                <style>
+                    .cat-select2 .select2-container { width: auto !important; min-width: 8.5rem; }
+                    .cat-select2 .select2-container--default .select2-selection--single {
+                        background: transparent;
+                        border: 0;
+                        border-radius: 0;
+                        height: auto;
+                        display: flex;
+                        align-items: center;
+                        outline: none;
+                    }
+                    .cat-select2 .select2-container--default .select2-selection--single .select2-selection__rendered {
+                        color: inherit;
+                        padding: 0 1.75rem 0 0;
+                        line-height: 1.4;
+                        font-size: 0.8125rem;
+                    }
+                    .cat-select2 .select2-container--default .select2-selection--single .select2-selection__arrow {
+                        height: 100%;
+                        right: 0.25rem;
+                    }
+                </style>
+            @endonce
             <form action="{{ route('shop') }}" method="GET" role="search" class="hidden md:flex flex-1 max-w-2xl">
                 <div class="flex w-full border-2 border-primary-container rounded-full overflow-hidden focus-within:shadow-md transition-shadow">
                     <input name="q" value="{{ request('q') }}" type="search" aria-label="Search for products"
                         placeholder="Search for Products"
                         class="flex-1 px-6 py-2 outline-none border-none text-body-base bg-surface-bright">
-                    <div class="flex items-center px-4 border-l border-outline-variant bg-surface-bright">
+                    <div class="cat-select2 flex items-center pl-4 border-l border-outline-variant bg-surface-bright">
                         <select name="category" aria-label="Category"
-                            class="bg-transparent border-none outline-none text-label-sm pr-4">
+                            class="bg-transparent border-none outline-none text-label-sm cursor-pointer">
                             <option value="">All Categories</option>
                             @foreach ($allCategories as $category)
                                 <option value="{{ \Illuminate\Support\Str::slug($category['name']) }}">{{ $category['name'] }}</option>

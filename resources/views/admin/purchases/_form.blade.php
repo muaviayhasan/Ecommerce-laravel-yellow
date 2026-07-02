@@ -180,14 +180,14 @@
                         if (res.status === 422) {
                             const data = await res.json();
                             this.errors = data.errors || {};
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            this.scrollToErrors();
                         } else if (res.ok) {
                             const data = await res.json().catch(() => ({}));
                             window.location.href = data.redirect || window.location.href;
                             return;
                         } else {
                             this.errors = { _form: ['Something went wrong (' + res.status + '). Please try again.'] };
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            this.scrollToErrors();
                         }
                     } catch (e) {
                         this.errors = { _form: ['Network error — please check your connection and try again.'] };
@@ -198,6 +198,11 @@
                 },
                 hasErrors() { return Object.keys(this.errors).length > 0; },
                 get errorMessages() { return Object.values(this.errors).flat(); },
+                // The admin layout scrolls an inner <main>, not the window — scroll that to the top.
+                scrollToErrors() {
+                    const c = this.$root.closest('main') || document.querySelector('main');
+                    (c || window).scrollTo({ top: 0, behavior: 'smooth' });
+                },
             }));
 
             Alpine.data('purchaseItems', (state, variants) => ({

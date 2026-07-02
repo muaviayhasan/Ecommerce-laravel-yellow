@@ -31,30 +31,38 @@ class PosController extends Controller implements HasMiddleware
             'customers' => Customer::where('is_active', true)->orderBy('name')
                 ->get(['id', 'name', 'price_tier'])
                 ->map(fn (Customer $c) => ['id' => $c->id, 'name' => $c->name, 'wholesale' => $c->price_tier === 'wholesale']),
+            'defaultCustomerId' => $this->defaultCustomerId(),
             'taxEnabled' => (bool) setting('tax', 'enabled', false),
             'taxRate' => (float) setting('tax', 'rate', 0),
             'currency' => setting('general', 'currency_symbol', 'Rs'),
         ]);
     }
 
-    /** Live product search (JSON) — sellable variants by name / SKU / barcode. */
+    /**
+     * Live product search (JSON) — sellable variants by name / SKU / barcode.
+     * With no query it returns the latest products; `offset` drives infinite scroll.
+     */
     public function search(Request $request): JsonResponse
     {
         $term = trim((string) $request->string('q'));
-        if ($term === '') {
-            return response()->json([]);
-        }
+        $offset = max(0, $request->integer('offset'));
+        $limit = 15;
 
-        $like = '%' . $term . '%';
-        $variants = ProductVariant::query()
+        $query = ProductVariant::query()
             ->where('product_variants.is_active', true)
             ->whereHas('product', fn ($q) => $q->where('is_sellable', true)->where('is_active', true))
-            ->where(fn ($q) => $q
+            ->with('product:id,name');
+
+        if ($term !== '') {
+            $like = '%' . $term . '%';
+            $query->where(fn ($q) => $q
                 ->where('sku', 'like', $like)
                 ->orWhere('barcode', $term)
-                ->orWhereHas('product', fn ($p) => $p->where('name', 'like', $like)))
-            ->with('product:id,name')
-            ->limit(20)
+                ->orWhereHas('product', fn ($p) => $p->where('name', 'like', $like)));
+        }
+
+        $variants = $query->orderByDesc('id')
+            ->skip($offset)->take($limit)
             ->get(['id', 'product_id', 'sku', 'retail_price', 'stock_quantity']);
 
         return response()->json($variants->map(fn (ProductVariant $v) => [
@@ -64,6 +72,13 @@ class PosController extends Controller implements HasMiddleware
             'price' => (float) $v->retail_price,
             'stock' => (float) $v->stock_quantity,
         ]));
+    }
+
+    /** Default "Walk-in" customer: the configured POS customer, else the walk-in record. */
+    private function defaultCustomerId(): ?int
+    {
+        return (int) setting('pos', 'default_customer', 0)
+            ?: Customer::where('is_active', true)->where('name', 'like', 'Walk-in%')->value('id');
     }
 
     public function store(PosSaleRequest $request, SalesService $sales): RedirectResponse

@@ -9,6 +9,7 @@
             taxEnabled: @js($taxEnabled),
             taxRate: @js($taxRate),
             customers: @js($customers),
+            defaultCustomerId: @js($defaultCustomerId),
         })">
 
         <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -36,15 +37,15 @@
             {{-- Search + cart --}}
             <div class="col-span-12 lg:col-span-7 space-y-6">
                 <x-admin.panel class="!p-0 overflow-visible">
-                    <div class="p-4 relative">
+                    <div class="p-4 relative" @click.outside="open = false">
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-                            <input type="text" x-model="query" @input.debounce.250ms="search()" @keydown.escape="results = []" autofocus
+                            <input type="text" x-model="query" @focus="openList()" @input.debounce.250ms="search()" @keydown.escape="open = false" autofocus
                                 placeholder="Search products by name, SKU or barcode…" maxlength="255"
                                 class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-11 pr-3 py-2.5 text-sm text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary outline-none">
                         </div>
 
-                        <div x-show="results.length || (query && !searching)" x-cloak class="absolute left-4 right-4 z-20 mt-1 bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-xl shadow-2xl max-h-80 overflow-y-auto">
+                        <div x-show="open" x-cloak @scroll.passive="onScroll($event)" class="absolute left-4 right-4 z-20 mt-1 bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-xl shadow-2xl max-h-80 overflow-y-auto">
                             <template x-for="p in results" :key="p.id">
                                 <button type="button" @click="add(p)" class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-surface-container-high transition-colors border-b border-outline-variant/40 last:border-0">
                                     <div class="min-w-0">
@@ -57,7 +58,8 @@
                                     </div>
                                 </button>
                             </template>
-                            <p x-show="query && !results.length && !searching" class="px-4 py-3 text-sm text-on-surface-variant">No matches.</p>
+                            <p x-show="loading" class="px-4 py-3 text-sm text-on-surface-variant flex items-center gap-2"><span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span> Loading…</p>
+                            <p x-show="!loading && !results.length" class="px-4 py-3 text-sm text-on-surface-variant" x-text="query ? 'No matches.' : 'No products found.'"></p>
                         </div>
                     </div>
                 </x-admin.panel>
@@ -75,8 +77,8 @@
                     </template>
                     <div class="divide-y divide-outline-variant/40">
                         <template x-for="(l, i) in cart" :key="l.id">
-                            <div class="flex items-center gap-4 px-6 py-3">
-                                <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 px-4 sm:px-6 py-3">
+                                <div class="flex-1 min-w-0 basis-full sm:basis-auto">
                                     <p class="font-medium text-on-surface truncate" x-text="l.name"></p>
                                     <p class="text-[11px] text-outline" x-text="l.sku + ' · ' + money(l.price)"></p>
                                 </div>
@@ -85,7 +87,7 @@
                                     <input type="number" min="1" step="1" x-model.number="l.qty" class="w-12 text-center bg-surface-container-low border border-outline-variant rounded-lg py-1.5 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
                                     <button type="button" @click="inc(l)" class="w-8 h-8 grid place-items-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high"><span class="material-symbols-outlined text-[18px]">add</span></button>
                                 </div>
-                                <div class="w-24 text-right font-semibold text-on-surface shrink-0" x-text="money(lineTotal(l))"></div>
+                                <div class="w-24 text-right font-semibold text-on-surface shrink-0 ml-auto sm:ml-0" x-text="money(lineTotal(l))"></div>
                                 <button type="button" @click="remove(i)" class="p-1 rounded text-on-surface-variant hover:text-error shrink-0"><span class="material-symbols-outlined text-[20px]">close</span></button>
                             </div>
                         </template>
@@ -116,7 +118,7 @@
                                 class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
                                 <option value="">Choose customer…</option>
                                 @foreach ($customers as $c)
-                                    <option value="{{ $c['id'] }}">{{ $c['name'] }}@if ($c['wholesale']) · wholesale @endif</option>
+                                    <option value="{{ $c['id'] }}" @selected((string) $defaultCustomerId === (string) $c['id'])>{{ $c['name'] }}@if ($c['wholesale']) · wholesale @endif</option>
                                 @endforeach
                             </select>
                             @error('customer_id')<p class="text-xs text-error">{{ $message }}</p>@enderror
@@ -142,7 +144,7 @@
 
                         <div class="mt-5">
                             <label class="block text-sm font-medium text-on-surface-variant mb-2">Payment method</label>
-                            <div class="grid grid-cols-4 gap-2">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 @foreach (['cash' => 'payments', 'card' => 'credit_card', 'bank' => 'account_balance', 'credit' => 'schedule'] as $m => $icon)
                                     <button type="button" @click="paymentMethod = '{{ $m }}'"
                                         :class="paymentMethod === '{{ $m }}' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'"
@@ -185,24 +187,38 @@
                 taxRate: Number(cfg.taxRate) || 0,
                 customers: (cfg.customers || []).map(c => ({ id: String(c.id), name: c.name, wholesale: !!c.wholesale })),
                 searchUrl: cfg.searchUrl,
-                query: '', results: [], searching: false,
+                query: '', results: [],
+                open: false, offset: 0, limit: 15, hasMore: true, loading: false,
                 cart: [],
-                customerId: '', paymentMethod: 'cash', paid: '',
+                customerId: cfg.defaultCustomerId ? String(cfg.defaultCustomerId) : '',
+                paymentMethod: 'cash', paid: '',
                 discountType: 'fixed', discountValue: '',
-                async search() {
-                    const q = this.query.trim();
-                    if (!q) { this.results = []; return; }
-                    this.searching = true;
+                openList() { this.open = true; if (!this.results.length && !this.loading) this.reload(); },
+                search() { this.reload(); },
+                async reload() {
+                    this.offset = 0; this.results = []; this.hasMore = true; this.open = true;
+                    await this.loadMore();
+                },
+                async loadMore() {
+                    if (this.loading || !this.hasMore) return;
+                    this.loading = true;
+                    const url = this.searchUrl + '?q=' + encodeURIComponent(this.query.trim()) + '&offset=' + this.offset;
                     try {
-                        const r = await fetch(this.searchUrl + '?q=' + encodeURIComponent(q), { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
-                        this.results = r.ok ? await r.json() : [];
-                    } catch (e) { this.results = []; }
-                    this.searching = false;
+                        const r = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                        const rows = r.ok ? await r.json() : [];
+                        this.results.push(...rows);
+                        this.offset += rows.length;
+                        this.hasMore = rows.length === this.limit;
+                    } catch (e) { this.hasMore = false; }
+                    this.loading = false;
+                },
+                onScroll(e) {
+                    const el = e.target;
+                    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 48) this.loadMore();
                 },
                 add(p) {
                     const line = this.cart.find(l => l.id === p.id);
                     if (line) { line.qty++; } else { this.cart.push({ id: p.id, name: p.name, sku: p.sku, price: p.price, stock: p.stock, qty: 1 }); }
-                    this.query = ''; this.results = [];
                 },
                 inc(l) { l.qty++; },
                 dec(l) { l.qty = Math.max(1, l.qty - 1); },
