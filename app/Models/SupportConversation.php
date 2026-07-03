@@ -11,13 +11,14 @@ use Illuminate\Support\Str;
 class SupportConversation extends Model
 {
     protected $fillable = [
-        'user_id', 'name', 'email', 'token', 'status', 'last_message_at',
+        'user_id', 'name', 'email', 'token', 'status', 'last_message_at', 'blocked_at',
     ];
 
     protected function casts(): array
     {
         return [
             'last_message_at' => 'datetime',
+            'blocked_at' => 'datetime',
         ];
     }
 
@@ -40,6 +41,12 @@ class SupportConversation extends Model
     public function isVerified(): bool
     {
         return $this->user_id !== null && $this->user?->email_verified_at !== null;
+    }
+
+    /** A blocked customer can still read the thread but can no longer send messages. */
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null;
     }
 
     /** The (unguessable) token used as the public broadcast channel name; created on demand. */

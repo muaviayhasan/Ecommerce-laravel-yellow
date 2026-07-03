@@ -43,6 +43,9 @@
                                         <template x-if="c.verified">
                                             <span class="material-symbols-outlined text-primary text-[16px]" style="font-variation-settings:'FILL' 1;" title="Verified customer">verified</span>
                                         </template>
+                                        <template x-if="c.blocked">
+                                            <span class="material-symbols-outlined text-error text-[15px]" title="Blocked">block</span>
+                                        </template>
                                     </p>
                                     <span class="text-[10px] text-outline shrink-0" x-text="c.time"></span>
                                 </div>
@@ -70,6 +73,8 @@
                             messages: @js($messages),
                             pollUrl: @js(route('admin.support.messages', $active)),
                             replyUrl: @js(route('admin.support.reply', $active)),
+                            blockUrl: @js(route('admin.support.block', $active)),
+                            blocked: {{ $active->isBlocked() ? 'true' : 'false' }},
                         })" class="flex flex-col min-h-0 h-full">
 
                         {{-- Header --}}
@@ -82,6 +87,9 @@
                                     @if ($active->isVerified())
                                         <span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings:'FILL' 1;" title="Verified customer">verified</span>
                                     @endif
+                                    <span x-show="blocked" x-cloak class="inline-flex items-center gap-0.5 text-error text-[11px] font-semibold bg-error/10 px-1.5 py-0.5 rounded">
+                                        <span class="material-symbols-outlined text-[13px] leading-none">block</span> Blocked
+                                    </span>
                                 </p>
                                 <p class="text-xs text-outline">
                                     @if ($active->user_id)
@@ -91,6 +99,15 @@
                                     @endif
                                 </p>
                             </div>
+                            @can('support.reply')
+                                <button type="button" @click="toggleBlock()" :disabled="blockBusy"
+                                    class="ml-auto shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                                    :class="blocked ? 'bg-error/10 text-error hover:bg-error/20' : 'text-on-surface-variant hover:bg-surface-container-high'"
+                                    :title="blocked ? 'Allow this customer to message again' : 'Block this customer from sending messages'">
+                                    <span class="material-symbols-outlined text-[18px]" x-text="blocked ? 'lock_open' : 'block'"></span>
+                                    <span x-text="blocked ? 'Unblock' : 'Block'"></span>
+                                </button>
+                            @endcan
                         </div>
 
                         {{-- Messages --}}
@@ -166,6 +183,8 @@
                     messages: cfg.messages || [],
                     body: '',
                     sending: false,
+                    blocked: !!cfg.blocked,
+                    blockBusy: false,
                     emojiOpen: false,
                     emojis: ['👋','🙂','😊','😀','😁','😉','😎','🤝','👍','👏','🙏','💪','✅','⭐','🔥','🎉','🎁','💯','❤️','🙌','😅','🤔','😍','😢','💬','📦','🚚','🛒','💳','🧾','⏰','📞','📧','❌'],
                     addEmoji(e) { this.body += e; },
@@ -249,6 +268,22 @@
                         this.sending = false;
                     },
                     scrollDown() { const el = this.$refs.scroll; if (el) el.scrollTop = el.scrollHeight; },
+                    async toggleBlock() {
+                        if (this.blockBusy) return;
+                        this.blockBusy = true;
+                        try {
+                            const r = await fetch(cfg.blockUrl, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': this.token(), Accept: 'application/json' },
+                                credentials: 'same-origin',
+                            });
+                            const d = await r.json().catch(() => ({}));
+                            if (typeof d.blocked === 'boolean') this.blocked = d.blocked;
+                            // Nudge the contact list to refresh its blocked indicator.
+                            window.dispatchEvent(new CustomEvent('support:receipt', { detail: {} }));
+                        } catch (e) {}
+                        this.blockBusy = false;
+                    },
                 }));
 
                 // The contact list (left pane): re-fetches its feed whenever a realtime

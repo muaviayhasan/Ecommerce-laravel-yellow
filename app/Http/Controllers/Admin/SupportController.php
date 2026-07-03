@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\SupportBlocked;
 use App\Events\SupportMessageSent;
 use App\Events\SupportReceipt;
 use App\Http\Controllers\Controller;
@@ -21,7 +22,7 @@ class SupportController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('can:support.view', only: ['index', 'messages', 'delivered', 'conversations']),
-            new Middleware('can:support.reply', only: ['reply']),
+            new Middleware('can:support.reply', only: ['reply', 'block']),
         ];
     }
 
@@ -91,6 +92,21 @@ class SupportController extends Controller implements HasMiddleware
         return response()->json(['ok' => true]);
     }
 
+    /** Toggle whether this customer is blocked from sending further messages. */
+    public function block(SupportConversation $conversation): JsonResponse
+    {
+        $conversation->update(['blocked_at' => $conversation->blocked_at ? null : now()]);
+        $blocked = $conversation->blocked_at !== null;
+
+        try {
+            broadcast(new SupportBlocked($conversation->channelToken(), $conversation->id, $blocked));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return response()->json(['blocked' => $blocked]);
+    }
+
     public function reply(Request $request, SupportConversation $conversation): JsonResponse
     {
         $data = $request->validate(['body' => ['required', 'string', 'max:1000']]);
@@ -134,6 +150,7 @@ class SupportController extends Controller implements HasMiddleware
             'from_admin' => (bool) $c->lastMessage?->from_admin,
             'time' => $c->last_message_at?->diffForHumans(null, true),
             'unread' => (int) $c->unread,
+            'blocked' => $c->isBlocked(),
         ];
     }
 

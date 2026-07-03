@@ -59,7 +59,13 @@
                         </div>
                     </template>
                 </div>
-                <form @submit.prevent="send()" class="p-3 border-t border-outline-variant/60 flex items-end gap-2 shrink-0 bg-white">
+                <div x-show="blocked" x-cloak class="p-4 border-t border-outline-variant/60 bg-error/5 text-center shrink-0">
+                    <p class="text-xs text-error font-medium flex items-center justify-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]">block</span>
+                        You can no longer send messages here.
+                    </p>
+                </div>
+                <form x-show="!blocked" @submit.prevent="send()" class="p-3 border-t border-outline-variant/60 flex items-end gap-2 shrink-0 bg-white">
                     <div class="relative flex-1">
                         <textarea x-model="body" @keydown.enter.prevent="send()" rows="1" maxlength="1000" placeholder="Write a message…"
                             class="w-full resize-none border border-outline-variant rounded-lg px-3 py-2 pr-14 text-sm outline-none focus:ring-1 focus:ring-[#2563eb] focus:border-[#2563eb] max-h-24"></textarea>
@@ -94,6 +100,7 @@
                     body: '',
                     unread: 0,
                     sending: false,
+                    blocked: false,
                     _poll: null,
                     _lastId: 0,
                     _primed: false,
@@ -120,7 +127,8 @@
                         this._channel = token;
                         window.Echo.channel('support.conversation.' + token)
                             .listen('.message.sent', (m) => this.onEcho(m))
-                            .listen('.receipt', (e) => this.onReceipt(e));
+                            .listen('.receipt', (e) => this.onReceipt(e))
+                            .listen('.blocked', (e) => { if (e) this.blocked = !!e.blocked; });
                     },
                     // Staff delivered/read our messages → advance our own ticks (double, then blue).
                     onReceipt(e) {
@@ -167,6 +175,7 @@
                             const msgs = Array.isArray(d.messages) ? d.messages : [];
                             this.started = d.started;
                             this.authed = d.authenticated;
+                            this.blocked = !!d.blocked;
                             const maxId = msgs.reduce((m, x) => Math.max(m, x.id), 0);
                             if (this._primed) {
                                 const fresh = msgs.filter(x => x.id > this._lastId && x.from_admin);
@@ -189,13 +198,15 @@
                     },
                     async send() {
                         const body = this.body.trim();
-                        if (!body || this.sending) return;
+                        if (!body || this.sending || this.blocked) return;
                         this.sending = true;
                         // Optimistic bubble with a single "sending" tick; the server response replaces it.
-                        this.messages.push({ id: -Date.now(), body, from_admin: false, at: '', status: 'sending' });
+                        const tempId = -Date.now();
+                        this.messages.push({ id: tempId, body, from_admin: false, at: '', status: 'sending' });
                         this.body = '';
                         this.$nextTick(() => this.scrollDown());
-                        await this.post(cfg.sendUrl, { body, name: this.guestName });
+                        const ok = await this.post(cfg.sendUrl, { body, name: this.guestName });
+                        if (!ok) this.messages = this.messages.filter(m => m.id !== tempId);   // blocked/failed → drop the bubble
                         this.started = true;
                         this.sending = false;
                         this.startPolling();
@@ -211,8 +222,10 @@
                             });
                             const d = await r.json().catch(() => ({}));
                             if (d.token) this.subscribe(d.token);
+                            if (typeof d.blocked === 'boolean') this.blocked = d.blocked;
                             if (Array.isArray(d.messages)) { this.messages = d.messages; this._lastId = d.messages.reduce((m, x) => Math.max(m, x.id), this._lastId); }
-                        } catch (e) {}
+                            return r.ok;
+                        } catch (e) { return false; }
                     },
                     scrollDown() { const el = this.$refs.scroll; if (el) el.scrollTop = el.scrollHeight; },
                 }));

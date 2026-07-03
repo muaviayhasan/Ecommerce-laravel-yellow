@@ -38,6 +38,7 @@ class SupportChatController extends Controller
             'authenticated' => Auth::check(),
             'name' => $conv?->name ?? Auth::user()?->name,
             'token' => $conv?->channelToken(),
+            'blocked' => $conv?->isBlocked() ?? false,
             'unread' => $conv ? $conv->messages()->where('from_admin', true)->whereNull('read_at')->count() : 0,
             'messages' => $conv ? $this->format($conv) : [],
         ]);
@@ -71,6 +72,9 @@ class SupportChatController extends Controller
         $conv = $this->resolve(create: true, name: $data['name'] ?? null);
         if (! $conv) {
             return response()->json(['message' => 'Please enter your name first.'], 422);
+        }
+        if ($conv->isBlocked()) {
+            return response()->json(['blocked' => true, 'message' => 'You can no longer send messages in this chat.'], 403);
         }
 
         $message = $conv->messages()->create([

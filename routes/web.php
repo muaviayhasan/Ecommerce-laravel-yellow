@@ -161,6 +161,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('support/{conversation}/messages', [SupportController::class, 'messages'])->name('support.messages');
     Route::post('support/{conversation}/reply', [SupportController::class, 'reply'])->name('support.reply');
     Route::post('support/{conversation}/delivered', [SupportController::class, 'delivered'])->name('support.delivered');
+    Route::post('support/{conversation}/block', [SupportController::class, 'block'])->name('support.block');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     // Procurement — suppliers + purchasing (receive posts stock + moving-avg cost + ledger).
