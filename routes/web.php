@@ -30,6 +30,8 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Support\SocialLogin;
 use App\Http\Controllers\Storefront\BlogController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
@@ -85,15 +87,21 @@ Route::get('/register', [RegisterController::class, 'create'])->name('register')
 Route::post('/register', [RegisterController::class, 'store']);
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
+// Storefront social sign-in (customers) — Google/Facebook enabled from admin settings.
+Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect'])
+    ->whereIn('provider', SocialLogin::PROVIDERS)->name('social.redirect');
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->whereIn('provider', SocialLogin::PROVIDERS)->name('social.callback');
+
 // Admin authentication — staff-only sign-in, separate from the storefront customer login.
 Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
 Route::post('/admin/login', [AdminAuthController::class, 'store'])->name('admin.login.store');
 Route::post('/admin/logout', [AdminAuthController::class, 'destroy'])->middleware('auth')->name('admin.logout');
 // Social SSO for staff — providers are enabled/configured from the admin "Social login" settings.
 Route::get('/admin/auth/{provider}', [AdminAuthController::class, 'redirect'])
-    ->whereIn('provider', AdminAuthController::PROVIDERS)->name('admin.auth.redirect');
+    ->whereIn('provider', SocialLogin::PROVIDERS)->name('admin.auth.redirect');
 Route::get('/admin/auth/{provider}/callback', [AdminAuthController::class, 'callback'])
-    ->whereIn('provider', AdminAuthController::PROVIDERS)->name('admin.auth.callback');
+    ->whereIn('provider', SocialLogin::PROVIDERS)->name('admin.auth.callback');
 
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.

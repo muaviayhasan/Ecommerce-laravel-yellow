@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\SocialLogin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,7 +12,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Laravel\Socialite\Facades\Socialite;
 
 /**
  * Staff-only sign-in for the admin panel. Same credential flow as the storefront
@@ -90,26 +90,19 @@ class AdminAuthController extends Controller
 
     // ---- Social SSO (staff only, admin-configured) --------------------------
 
-    /** OAuth providers wired to the "Social login" settings group. */
-    public const PROVIDERS = ['google', 'facebook'];
-
     public function redirect(string $provider): RedirectResponse
     {
-        abort_unless($this->providerEnabled($provider), 404);
+        abort_unless(SocialLogin::enabled($provider), 404);
 
-        $this->configureProvider($provider);
-
-        return Socialite::driver($provider)->redirect();
+        return SocialLogin::driver($provider, route('admin.auth.callback', $provider))->redirect();
     }
 
     public function callback(string $provider, Request $request): RedirectResponse
     {
-        abort_unless($this->providerEnabled($provider), 404);
-
-        $this->configureProvider($provider);
+        abort_unless(SocialLogin::enabled($provider), 404);
 
         try {
-            $oauth = Socialite::driver($provider)->user();
+            $oauth = SocialLogin::driver($provider, route('admin.auth.callback', $provider))->user();
         } catch (\Throwable $e) {
             report($e);
 
@@ -138,45 +131,6 @@ class AdminAuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->intended(route('admin.dashboard'));
-    }
-
-    /** A provider is usable only when enabled in settings AND its client id is filled. */
-    private function providerEnabled(string $provider): bool
-    {
-        if (! in_array($provider, self::PROVIDERS, true)) {
-            return false;
-        }
-
-        return (bool) setting('social_login', "{$provider}_enabled", false)
-            && filled($this->providerCredentials($provider)['client_id']);
-    }
-
-    /**
-     * Credentials for a provider. The admin "Social login" settings win when filled;
-     * otherwise we fall back to the .env / services config (services.{provider}.*).
-     */
-    private function providerCredentials(string $provider): array
-    {
-        [$idKey, $secretKey] = $provider === 'facebook'
-            ? ['facebook_app_id', 'facebook_app_secret']
-            : ['google_client_id', 'google_client_secret'];
-
-        return [
-            'client_id' => setting('social_login', $idKey) ?: config("services.{$provider}.client_id"),
-            'client_secret' => setting('social_login', $secretKey) ?: config("services.{$provider}.client_secret"),
-        ];
-    }
-
-    /** Push the admin-configured credentials into Socialite's config for this request. */
-    private function configureProvider(string $provider): void
-    {
-        $creds = $this->providerCredentials($provider);
-
-        config([
-            "services.{$provider}.client_id" => $creds['client_id'],
-            "services.{$provider}.client_secret" => $creds['client_secret'],
-            "services.{$provider}.redirect" => route('admin.auth.callback', $provider),
-        ]);
     }
 
     // ---- helpers ------------------------------------------------------------
