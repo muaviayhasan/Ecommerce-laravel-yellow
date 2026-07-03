@@ -151,20 +151,20 @@ class AdminAuthController extends Controller
             && filled($this->providerCredentials($provider)['client_id']);
     }
 
-    /** Credentials for a provider, read from the admin "Social login" settings. */
+    /**
+     * Credentials for a provider. The admin "Social login" settings win when filled;
+     * otherwise we fall back to the .env / services config (services.{provider}.*).
+     */
     private function providerCredentials(string $provider): array
     {
-        return match ($provider) {
-            'google' => [
-                'client_id' => setting('social_login', 'google_client_id'),
-                'client_secret' => setting('social_login', 'google_client_secret'),
-            ],
-            'facebook' => [
-                'client_id' => setting('social_login', 'facebook_app_id'),
-                'client_secret' => setting('social_login', 'facebook_app_secret'),
-            ],
-            default => ['client_id' => null, 'client_secret' => null],
-        };
+        [$idKey, $secretKey] = $provider === 'facebook'
+            ? ['facebook_app_id', 'facebook_app_secret']
+            : ['google_client_id', 'google_client_secret'];
+
+        return [
+            'client_id' => setting('social_login', $idKey) ?: config("services.{$provider}.client_id"),
+            'client_secret' => setting('social_login', $secretKey) ?: config("services.{$provider}.client_secret"),
+        ];
     }
 
     /** Push the admin-configured credentials into Socialite's config for this request. */
