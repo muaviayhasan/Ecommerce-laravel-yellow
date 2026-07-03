@@ -49,6 +49,14 @@ return [
             'permission' => 'orders.create',
         ],
         [
+            'label' => 'Support',
+            'icon' => 'support_agent',
+            'route' => 'admin.support.index',
+            'active' => 'admin.support.*',
+            'permission' => 'support.view',
+            'badge' => 'support',
+        ],
+        [
             'label' => 'Ecommerce',
             'icon' => 'shopping_cart',
             'children' => [

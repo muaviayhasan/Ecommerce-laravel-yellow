@@ -37,7 +37,7 @@
     <main class="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto">
         <x-admin.header />
 
-        <div class="p-6 lg:p-8 space-y-6 flex-1">
+        <div class="p-6 lg:p-8 flex flex-col gap-6 flex-1">
             <x-admin.flash />
             @yield('content')
 

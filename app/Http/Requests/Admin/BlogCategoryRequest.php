@@ -36,11 +36,16 @@ class BlogCategoryRequest extends FormRequest
     {
         $id = $this->route('category')?->id;
 
+        // A new category can sit at positions 1..(current highest + 1); an edit can
+        // reach the current highest. Keeps the Sort value meaningful, not arbitrary.
+        $maxSort = (int) BlogCategory::max('sort_order');
+        $sortCeiling = $id ? max(1, $maxSort) : $maxSort + 1;
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('blog_categories', 'slug')->ignore($id)],
             'parent_id' => ['nullable', Rule::exists('blog_categories', 'id')->whereNot('id', $id)],
-            'sort_order' => ['integer', 'min:0'],
+            'sort_order' => ['integer', 'min:1', 'max:' . $sortCeiling],
         ];
     }
 

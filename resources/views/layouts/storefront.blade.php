@@ -39,6 +39,8 @@
     @endif
     <x-storefront.footer />
 
+    <x-storefront.support-chat />
+
     @livewireScripts
     @stack('scripts')
 </body>

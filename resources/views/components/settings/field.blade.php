@@ -22,7 +22,7 @@
 
         @switch($input)
             @case('select')
-                <x-settings.select :id="$id" :name="$name" :options="$meta['options'] ?? []" :selected="$current" :select2="$meta['select2'] ?? false" />
+                <x-settings.select :id="$id" :name="$name" :options="$meta['options'] ?? []" :selected="$current" :select2="$meta['select2'] ?? true" />
                 @break
 
             @case('textarea')

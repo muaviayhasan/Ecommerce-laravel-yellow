@@ -10,6 +10,12 @@
     $isActive = fn (array $item): bool => ! empty($item['active']) && request()->routeIs($item['active']);
 
     $items = config('navigation.admin', []);
+
+    /** Unread customer messages, for the Support nav badge (only queried if the user can see it). */
+    $canSupport = auth()->check() && auth()->user()->can('support.view');
+    $supportUnread = $canSupport
+        ? \App\Models\SupportMessage::where('from_admin', false)->whereNull('read_at')->count()
+        : 0;
 @endphp
 
 {{-- Shared off-canvas state for mobile (toggled from the header hamburger). --}}
@@ -86,8 +92,52 @@
                             : 'text-on-surface-variant hover:bg-surface-container-high' }}">
                     <span class="material-symbols-outlined">{{ $item['icon'] ?? 'chevron_right' }}</span>
                     <span>{{ $item['label'] }}</span>
+                    @if (($item['badge'] ?? null) === 'support')
+                        <span x-cloak x-show="$store.supportBadge.count > 0"
+                            class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-error text-white text-[11px] font-bold grid place-items-center"
+                            x-text="$store.supportBadge.count"></span>
+                    @endif
                 </a>
             @endif
         @endforeach
     </nav>
 </aside>
+
+@can('support.view')
+    @push('scripts')
+        <script>
+            // Live unread badge for the Support nav item (server value on load, ++ in realtime).
+            document.addEventListener('alpine:init', () => {
+                Alpine.store('supportBadge', { count: {{ (int) $supportUnread }} });
+            });
+
+            // Staff firehose (runs on every admin page): ring on new customer messages, bump the
+            // sidebar badge, ack delivery so the customer's tick turns double, and fan messages/
+            // receipts out to the open conversation (if any).
+            document.addEventListener('DOMContentLoaded', () => {
+                if (!window.Echo) return;
+                const base = @js(route('admin.support.index'));
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+                window.Echo.private('support.admin')
+                    .listen('.message.sent', (e) => {
+                        // A new customer message outside the thread we're viewing.
+                        if (e && !e.from_admin && e.conversation_id !== window.__activeSupportConversation) {
+                            try { const a = new Audio('/assets/bells/admin_notif.mp3'); a.volume = 0.5; a.play().catch(() => {}); } catch (_) {}
+                            const badge = window.Alpine?.store('supportBadge');
+                            if (badge) badge.count++;
+                            // Acknowledge delivery (double tick for the customer) even with no thread open.
+                            fetch(`${base}/${e.conversation_id}/delivered`, {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' },
+                                credentials: 'same-origin',
+                            }).catch(() => {});
+                        }
+                        window.dispatchEvent(new CustomEvent('support:message', { detail: e }));
+                    })
+                    .listen('.receipt', (e) => {
+                        window.dispatchEvent(new CustomEvent('support:receipt', { detail: e }));
+                    });
+            });
+        </script>
+    @endpush
+@endcan

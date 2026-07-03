@@ -40,8 +40,10 @@
                             </div>
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-medium text-on-surface-variant">Sort</label>
-                                <input type="number" name="sort_order" value="{{ old('sort_order', $nextSort) }}" min="0" step="1" class="{{ $cell }}">
-                                <p class="text-xs text-outline">Lower shows first — auto-filled with the next number.</p>
+                                <input type="number" name="sort_order" value="{{ old('sort_order', $nextSort) }}" min="1" max="{{ $nextSort }}" step="1"
+                                    oninput="if(this.value!==''){this.value=Math.min({{ $nextSort }},Math.max(1,parseInt(this.value)||1));}"
+                                    class="{{ $cell }}">
+                                <p class="text-xs text-outline">Lower shows first — between 1 and {{ $nextSort }}.</p>
                             </div>
                         </div>
                         <button type="submit" class="w-full px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all">Add category</button>

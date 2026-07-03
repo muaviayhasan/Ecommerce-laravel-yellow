@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VendorSaleController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\ReviewController as StorefrontReviewController;
 use App\Http\Controllers\Storefront\ShopController;
+use App\Http\Controllers\Storefront\SupportChatController;
 use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -95,6 +97,11 @@ foreach ($placeholders as $uri => $title) {
 
 Route::get('/track-order', fn () => app(HomeController::class)->placeholder('Track Your Order'))->name('track.order');
 
+// Support chat widget (public — works for guests and logged-in customers).
+Route::get('/support/messages', [SupportChatController::class, 'state'])->name('support.state');
+Route::post('/support/start', [SupportChatController::class, 'start'])->name('support.start');
+Route::post('/support/messages', [SupportChatController::class, 'send'])->name('support.send');
+
 /*
 |--------------------------------------------------------------------------
 | Admin panel (CONVENTIONS §8) — auth + per-action RBAC
@@ -147,6 +154,13 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('orders/{order}/print', [OrderController::class, 'print'])->name('orders.print');
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::patch('orders/{order}/delivery', [OrderController::class, 'updateDelivery'])->name('orders.delivery');
+
+    // Support inbox — staff side of the customer chat widget.
+    Route::get('support', [SupportController::class, 'index'])->name('support.index');
+    Route::get('support/conversations', [SupportController::class, 'conversations'])->name('support.conversations');
+    Route::get('support/{conversation}/messages', [SupportController::class, 'messages'])->name('support.messages');
+    Route::post('support/{conversation}/reply', [SupportController::class, 'reply'])->name('support.reply');
+    Route::post('support/{conversation}/delivered', [SupportController::class, 'delivered'])->name('support.delivered');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     // Procurement — suppliers + purchasing (receive posts stock + moving-avg cost + ledger).

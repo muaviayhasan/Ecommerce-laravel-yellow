@@ -105,6 +105,13 @@ class SettingsController extends Controller implements HasMiddleware
     {
         $timezones = collect(timezone_identifiers_list())->mapWithKeys(fn ($t) => [$t => $t])->all();
 
+        // Date/time format choices — label each with a live example of today's date/time.
+        $now = now();
+        $dateOptions = collect(['d M Y', 'd/m/Y', 'm/d/Y', 'Y-m-d', 'D, d M Y', 'jS F Y', 'd.m.Y'])
+            ->mapWithKeys(fn ($f) => [$f => $now->format($f) . '  ·  ' . $f])->all();
+        $timeOptions = collect(['h:i A', 'g:i A', 'H:i', 'h:i:s A', 'H:i:s'])
+            ->mapWithKeys(fn ($f) => [$f => $now->format($f) . '  ·  ' . $f])->all();
+
         return [
             'general' => [
                 'label' => 'General',
@@ -129,8 +136,8 @@ class SettingsController extends Controller implements HasMiddleware
                             'decimal_separator' => ['input' => 'text', 'label' => 'Decimal separator', 'max' => 1, 'rules' => ['required', 'string', 'max:1']],
                             'timezone' => ['input' => 'select', 'label' => 'Timezone', 'options' => $timezones, 'rules' => ['required', 'timezone']],
                             'locale' => ['input' => 'select', 'label' => 'Locale', 'options' => ['en' => 'English', 'ur' => 'Urdu'], 'rules' => ['required', 'string', 'max:5']],
-                            'date_format' => ['input' => 'text', 'label' => 'Date format', 'max' => 20, 'rules' => ['required', 'string', 'max:20'], 'help' => 'PHP date() tokens, e.g. d M Y'],
-                            'time_format' => ['input' => 'text', 'label' => 'Time format', 'max' => 20, 'rules' => ['required', 'string', 'max:20'], 'help' => 'e.g. h:i A'],
+                            'date_format' => ['input' => 'select', 'label' => 'Date format', 'options' => $dateOptions, 'rules' => ['required', 'in:' . implode(',', array_keys($dateOptions))], 'help' => 'How dates display across the store & admin.'],
+                            'time_format' => ['input' => 'select', 'label' => 'Time format', 'options' => $timeOptions, 'rules' => ['required', 'in:' . implode(',', array_keys($timeOptions))], 'help' => 'How times display.'],
                             'items_per_page' => ['type' => 'int', 'input' => 'number', 'label' => 'Items per page', 'rules' => ['required', 'integer', 'min:1', 'max:100']],
                         ],
                     ],

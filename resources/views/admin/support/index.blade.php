@@ -1,0 +1,291 @@
+@extends('layouts.admin')
+
+@section('title', 'Support')
+
+@section('content')
+    <div class="mb-2">
+        <div class="flex items-center gap-2 text-label-sm mb-1">
+            <a href="{{ route('admin.dashboard') }}" class="text-primary font-semibold hover:underline">Dashboard</a>
+            <span class="material-symbols-outlined text-outline text-[16px]">chevron_right</span>
+            <span class="text-on-surface-variant font-semibold">Support</span>
+        </div>
+        <h2 class="text-2xl font-bold text-on-surface">Support messages</h2>
+    </div>
+
+    <x-admin.panel class="!p-0 overflow-hidden">
+        <div class="grid grid-cols-12 h-[72vh] min-h-[30rem]">
+            {{-- Conversations --}}
+            <div x-data="supportList({
+                    seed: @js($conversationsData),
+                    activeId: {{ $active?->id ?? 'null' }},
+                    url: @js(route('admin.support.conversations')),
+                    indexUrl: @js(route('admin.support.index')),
+                    search: @js($filters['search'] ?? ''),
+                })"
+                class="col-span-12 md:col-span-4 xl:col-span-3 border-r border-outline-variant/60 flex flex-col min-h-0 {{ $active ? 'hidden md:flex' : '' }}">
+                <div class="p-4 border-b border-outline-variant/60">
+                    <form method="GET" class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+                        <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search contacts…"
+                            class="w-full pl-10 pr-3 py-2.5 bg-surface-container-low border border-outline-variant rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                    </form>
+                </div>
+                <div class="flex-1 overflow-y-auto divide-y divide-outline-variant/40">
+                    <template x-for="c in conversations" :key="c.id">
+                        <a :href="link(c.id)"
+                            class="flex items-center gap-3 px-4 py-3.5 transition-colors"
+                            :class="c.id === activeId ? 'bg-surface-container-high' : 'hover:bg-surface-container-low'">
+                            <div class="w-11 h-11 rounded-full bg-primary/10 text-primary grid place-items-center font-bold shrink-0" x-text="c.initial"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="font-semibold text-on-surface truncate flex items-center gap-1">
+                                        <span x-text="c.name"></span>
+                                        <template x-if="c.verified">
+                                            <span class="material-symbols-outlined text-primary text-[16px]" style="font-variation-settings:'FILL' 1;" title="Verified customer">verified</span>
+                                        </template>
+                                    </p>
+                                    <span class="text-[10px] text-outline shrink-0" x-text="c.time"></span>
+                                </div>
+                                <div class="flex items-center justify-between gap-2 mt-0.5">
+                                    <p class="text-xs text-outline truncate"><span x-show="c.from_admin">You: </span><span x-text="c.preview"></span></p>
+                                    <template x-if="c.unread">
+                                        <span class="min-w-5 h-5 px-1.5 rounded-full bg-primary text-on-primary text-[11px] font-bold grid place-items-center shrink-0" x-text="c.unread"></span>
+                                    </template>
+                                </div>
+                            </div>
+                        </a>
+                    </template>
+                    <div x-show="!conversations.length" class="px-6 py-16 text-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-outline" style="font-size:44px;">forum</span>
+                        <p class="mt-2 text-sm">No conversations yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Chat --}}
+            <div class="col-span-12 md:col-span-8 xl:col-span-9 flex flex-col min-h-0 bg-surface-container-low/30">
+                @if ($active)
+                    <div x-data="supportInbox({
+                            conversationId: {{ $active->id }},
+                            messages: @js($messages),
+                            pollUrl: @js(route('admin.support.messages', $active)),
+                            replyUrl: @js(route('admin.support.reply', $active)),
+                        })" class="flex flex-col min-h-0 h-full">
+
+                        {{-- Header --}}
+                        <div class="px-5 py-3.5 border-b border-outline-variant/60 bg-surface-container-lowest flex items-center gap-3">
+                            <a href="{{ route('admin.support.index') }}" class="md:hidden -ml-1 p-1 text-on-surface-variant"><span class="material-symbols-outlined">arrow_back</span></a>
+                            <div class="w-10 h-10 rounded-full bg-primary/10 text-primary grid place-items-center font-bold">{{ strtoupper(mb_substr($active->name, 0, 1)) }}</div>
+                            <div class="min-w-0">
+                                <p class="font-bold text-on-surface flex items-center gap-1.5">
+                                    {{ $active->name }}
+                                    @if ($active->isVerified())
+                                        <span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings:'FILL' 1;" title="Verified customer">verified</span>
+                                    @endif
+                                </p>
+                                <p class="text-xs text-outline">
+                                    @if ($active->user_id)
+                                        {{ $active->email ?? $active->user?->email }} · {{ $active->isVerified() ? 'Verified account' : 'Unverified account' }}
+                                    @else
+                                        Guest visitor
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Messages --}}
+                        <div x-ref="scroll" class="flex-1 overflow-y-auto p-5 space-y-3">
+                            <template x-for="m in messages" :key="m.id">
+                                <div :class="m.from_admin ? 'justify-end' : 'justify-start'" class="flex">
+                                    <div :class="m.from_admin ? 'bg-primary text-on-primary rounded-tr-none' : 'bg-surface-container-highest text-on-surface rounded-tl-none'"
+                                        class="max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm">
+                                        <p class="whitespace-pre-wrap break-words" x-text="m.body"></p>
+                                        <p :class="m.from_admin ? 'text-on-primary/70' : 'text-outline'" class="text-[10px] mt-1 flex items-center justify-end gap-0.5">
+                                            <span x-text="m.at"></span>
+                                            <template x-if="m.from_admin">
+                                                <span class="material-symbols-outlined text-[14px] leading-none"
+                                                    :class="m.status === 'read' ? 'text-cyan-300' : 'text-on-primary/60'"
+                                                    x-text="(m.status === 'sending' || m.status === 'sent') ? 'check' : 'done_all'"></span>
+                                            </template>
+                                        </p>
+                                    </div>
+                                </div>
+                            </template>
+                            <p x-show="!messages.length" class="text-center text-sm text-on-surface-variant py-10">No messages yet.</p>
+                        </div>
+
+                        {{-- Reply --}}
+                        @can('support.reply')
+                            <form @submit.prevent="send()" class="p-4 border-t border-outline-variant/60 bg-surface-container-lowest flex items-end gap-2">
+                                {{-- Emoji picker (staff side only) --}}
+                                <div class="relative shrink-0" @click.outside="emojiOpen = false">
+                                    <button type="button" @click="emojiOpen = !emojiOpen" title="Emoji"
+                                        class="w-10 h-10 grid place-items-center rounded-lg text-on-surface-variant hover:bg-surface-container-high transition"
+                                        :class="emojiOpen && 'bg-surface-container-high text-primary'">
+                                        <span class="material-symbols-outlined">mood</span>
+                                    </button>
+                                    <div x-show="emojiOpen" x-cloak x-transition.origin.bottom.left
+                                        class="absolute bottom-full left-0 mb-2 w-64 max-h-52 overflow-y-auto p-2 grid grid-cols-7 gap-0.5 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-10">
+                                        <template x-for="e in emojis" :key="e">
+                                            <button type="button" @click="addEmoji(e)" x-text="e"
+                                                class="w-8 h-8 grid place-items-center rounded-lg hover:bg-surface-container-high text-xl leading-none"></button>
+                                        </template>
+                                    </div>
+                                </div>
+                                <textarea x-model="body" @keydown.enter.prevent="send()" rows="1" maxlength="5000" placeholder="Type a reply…"
+                                    class="flex-1 resize-none bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary max-h-32"></textarea>
+                                <button type="submit" :disabled="!body.trim() || sending"
+                                    class="px-6 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg flex items-center gap-2 hover:brightness-110 active:scale-95 transition disabled:opacity-50">
+                                    <span class="material-symbols-outlined text-[20px]">send</span> Send
+                                </button>
+                            </form>
+                        @endcan
+                    </div>
+                @else
+                    <div class="flex-1 grid place-items-center text-center text-on-surface-variant p-8">
+                        <div>
+                            <span class="material-symbols-outlined text-outline" style="font-size:56px;">chat</span>
+                            <p class="mt-3 font-medium">Select a conversation</p>
+                            <p class="text-sm">Pick a customer on the left to read and reply.</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </x-admin.panel>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('supportInbox', (cfg) => ({
+                    messages: cfg.messages || [],
+                    body: '',
+                    sending: false,
+                    emojiOpen: false,
+                    emojis: ['👋','🙂','😊','😀','😁','😉','😎','🤝','👍','👏','🙏','💪','✅','⭐','🔥','🎉','🎁','💯','❤️','🙌','😅','🤔','😍','😢','💬','📦','🚚','🛒','💳','🧾','⏰','📞','📧','❌'],
+                    addEmoji(e) { this.body += e; },
+                    _poll: null,
+                    _lastId: 0,
+                    token() { return document.querySelector('meta[name="csrf-token"]')?.content; },
+                    ping() { try { const a = new Audio('/assets/bells/admin_notif.mp3'); a.volume = 0.5; a.play().catch(() => {}); } catch (e) {} },
+                    init() {
+                        this._lastId = this.messages.reduce((m, x) => Math.max(m, x.id), 0);
+                        this.$nextTick(() => this.scrollDown());
+                        // Let the global staff subscription know which thread is open (it skips the
+                        // bell / badge / delivered-ack for this one — we mark it read instead).
+                        window.__activeSupportConversation = cfg.conversationId;
+                        // Realtime: the global staff channel dispatches every message; append the ones for this thread.
+                        this._onMsg = (ev) => { const m = ev.detail; if (m && m.conversation_id === cfg.conversationId) this.onEcho(m); };
+                        this._onReceipt = (ev) => { const e = ev.detail; if (e && e.by === 'customer' && e.conversation_id === cfg.conversationId) this.onReceipt(e); };
+                        window.addEventListener('support:message', this._onMsg);
+                        window.addEventListener('support:receipt', this._onReceipt);
+                        // Slow poll as a self-healing fallback if the socket drops.
+                        this._poll = setInterval(() => this.refresh(), 15000);
+                    },
+                    destroy() {
+                        if (this._poll) clearInterval(this._poll);
+                        if (window.__activeSupportConversation === cfg.conversationId) window.__activeSupportConversation = null;
+                        window.removeEventListener('support:message', this._onMsg);
+                        window.removeEventListener('support:receipt', this._onReceipt);
+                    },
+                    onEcho(m) {
+                        if (this.messages.some(x => x.id === m.id)) return;
+                        this.messages.push(m);
+                        this._lastId = Math.max(this._lastId, m.id);
+                        this.$nextTick(() => this.scrollDown());
+                        // A customer message landed in the open thread → mark it read (blue tick for them).
+                        if (!m.from_admin) this.refresh();
+                    },
+                    // Customer delivered/read our replies → advance our own ticks (double, then blue).
+                    onReceipt(e) {
+                        this.messages.forEach(m => {
+                            if (!m.from_admin) return;
+                            if (e.type === 'read') m.status = 'read';
+                            else if (e.type === 'delivered' && m.status !== 'read') m.status = 'delivered';
+                        });
+                    },
+                    async refresh() {
+                        try {
+                            const r = await fetch(cfg.pollUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                            if (!r.ok) return;
+                            const d = await r.json();
+                            const msgs = Array.isArray(d.messages) ? d.messages : [];
+                            const fresh = msgs.filter(x => x.id > this._lastId);
+                            if (fresh.some(x => !x.from_admin)) this.ping();   // a new customer message arrived
+                            if (fresh.length) {
+                                this._lastId = msgs.reduce((m, x) => Math.max(m, x.id), this._lastId);
+                                this.messages = msgs;
+                                this.$nextTick(() => this.scrollDown());
+                            }
+                        } catch (e) {}
+                    },
+                    async send() {
+                        const body = this.body.trim();
+                        if (!body || this.sending) return;
+                        this.sending = true;
+                        this.messages.push({ id: -Date.now(), body, from_admin: true, at: '', status: 'sending' });
+                        this.body = '';
+                        this.$nextTick(() => this.scrollDown());
+                        try {
+                            const r = await fetch(cfg.replyUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': this.token() },
+                                credentials: 'same-origin',
+                                body: JSON.stringify({ body }),
+                            });
+                            const d = await r.json().catch(() => ({}));
+                            if (Array.isArray(d.messages)) { this.messages = d.messages; this._lastId = d.messages.reduce((m, x) => Math.max(m, x.id), this._lastId); }
+                            this.$nextTick(() => this.scrollDown());
+                        } catch (e) {}
+                        this.sending = false;
+                    },
+                    scrollDown() { const el = this.$refs.scroll; if (el) el.scrollTop = el.scrollHeight; },
+                }));
+
+                // The contact list (left pane): re-fetches its feed whenever a realtime
+                // message/receipt fires, so previews, order, timestamps and unread badges stay live.
+                Alpine.data('supportList', (cfg) => ({
+                    conversations: cfg.seed || [],
+                    activeId: cfg.activeId,
+                    search: cfg.search || '',
+                    _poll: null,
+                    _t: null,
+                    init() {
+                        this._onEvt = () => this.schedule();
+                        window.addEventListener('support:message', this._onEvt);
+                        window.addEventListener('support:receipt', this._onEvt);
+                        this._poll = setInterval(() => this.refresh(), 15000); // self-healing fallback
+                    },
+                    destroy() {
+                        if (this._poll) clearInterval(this._poll);
+                        if (this._t) clearTimeout(this._t);
+                        window.removeEventListener('support:message', this._onEvt);
+                        window.removeEventListener('support:receipt', this._onEvt);
+                    },
+                    // Coalesce a burst of events into one fetch.
+                    schedule() { if (this._t) clearTimeout(this._t); this._t = setTimeout(() => this.refresh(), 300); },
+                    async refresh() {
+                        try {
+                            const url = cfg.url + (this.search ? ('?search=' + encodeURIComponent(this.search)) : '');
+                            const r = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                            if (!r.ok) return;
+                            const d = await r.json();
+                            const list = Array.isArray(d.conversations) ? d.conversations : [];
+                            // The thread we're viewing is already read — keep its badge clear.
+                            list.forEach(c => { if (c.id === this.activeId) c.unread = 0; });
+                            this.conversations = list;
+                            const badge = window.Alpine?.store('supportBadge');
+                            if (badge && typeof d.total_unread === 'number') badge.count = d.total_unread;
+                        } catch (e) {}
+                    },
+                    link(id) {
+                        const p = new URLSearchParams();
+                        if (this.search) p.set('search', this.search);
+                        p.set('conversation', id);
+                        return cfg.indexUrl + '?' + p.toString();
+                    },
+                }));
+            });
+        </script>
+    @endpush
+@endsection
