@@ -111,6 +111,23 @@
                 Alpine.store('supportBadge', { count: {{ (int) $supportUnread }} });
             });
 
+            // Notification bell: one reusable audio element, unlocked on the first user gesture so
+            // later programmatic plays (from sockets/timers) aren't blocked by the autoplay policy.
+            window.__supportBell = (function () {
+                let audio = null;
+                const make = () => { audio = new Audio('/assets/bells/admin_notif.mp3'); audio.volume = 0.5; };
+                const unlock = () => {
+                    if (!audio) make();
+                    const v = audio.volume; audio.volume = 0;
+                    audio.play().then(() => { audio.pause(); audio.currentTime = 0; audio.volume = v; }).catch(() => { audio.volume = v; });
+                    window.removeEventListener('pointerdown', unlock, true);
+                    window.removeEventListener('keydown', unlock, true);
+                };
+                window.addEventListener('pointerdown', unlock, true);
+                window.addEventListener('keydown', unlock, true);
+                return () => { if (!audio) make(); try { audio.currentTime = 0; audio.play().catch(() => {}); } catch (e) {} };
+            })();
+
             // Staff firehose (runs on every admin page): ring on new customer messages, bump the
             // sidebar badge, ack delivery so the customer's tick turns double, and fan messages/
             // receipts out to the open conversation (if any).
@@ -122,7 +139,7 @@
                     .listen('.message.sent', (e) => {
                         // A new customer message outside the thread we're viewing.
                         if (e && !e.from_admin && e.conversation_id !== window.__activeSupportConversation) {
-                            try { const a = new Audio('/assets/bells/admin_notif.mp3'); a.volume = 0.5; a.play().catch(() => {}); } catch (_) {}
+                            window.__supportBell();
                             const badge = window.Alpine?.store('supportBadge');
                             if (badge) badge.count++;
                             // Acknowledge delivery (double tick for the customer) even with no thread open.

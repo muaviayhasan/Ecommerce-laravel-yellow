@@ -44,6 +44,7 @@ class SupportMessageSent implements ShouldBroadcastNow
             'body' => $this->message->body,
             'from_admin' => (bool) $this->message->from_admin,
             'at' => $this->message->created_at?->format('H:i'),
+            'status' => $this->message->read_at ? 'read' : ($this->message->delivered_at ? 'delivered' : 'sent'),
         ];
     }
 }

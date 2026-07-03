@@ -64,7 +64,7 @@ class SupportChatController extends Controller
     public function send(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
+            'body' => ['required', 'string', 'max:1000'],
             'name' => ['nullable', 'string', 'max:80'],
         ]);
 

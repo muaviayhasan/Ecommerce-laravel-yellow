@@ -132,8 +132,13 @@
                                         </template>
                                     </div>
                                 </div>
-                                <textarea x-model="body" @keydown.enter.prevent="send()" rows="1" maxlength="5000" placeholder="Type a reply…"
-                                    class="flex-1 resize-none bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary max-h-32"></textarea>
+                                <div class="relative flex-1">
+                                    <textarea x-model="body" @keydown.enter.prevent="send()" rows="1" maxlength="1000" placeholder="Type a reply…"
+                                        class="w-full resize-none bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 pr-16 text-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary max-h-32"></textarea>
+                                    <span class="absolute bottom-2 right-2.5 text-[10px] tabular-nums pointer-events-none select-none"
+                                        :class="body.length >= 1000 ? 'text-error' : (body.length >= 900 ? 'text-amber-500' : 'text-outline')"
+                                        x-text="body.length + '/1000'"></span>
+                                </div>
                                 <button type="submit" :disabled="!body.trim() || sending"
                                     class="px-6 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg flex items-center gap-2 hover:brightness-110 active:scale-95 transition disabled:opacity-50">
                                     <span class="material-symbols-outlined text-[20px]">send</span> Send
@@ -167,7 +172,7 @@
                     _poll: null,
                     _lastId: 0,
                     token() { return document.querySelector('meta[name="csrf-token"]')?.content; },
-                    ping() { try { const a = new Audio('/assets/bells/admin_notif.mp3'); a.volume = 0.5; a.play().catch(() => {}); } catch (e) {} },
+                    ping() { if (window.__supportBell) window.__supportBell(); },
                     init() {
                         this._lastId = this.messages.reduce((m, x) => Math.max(m, x.id), 0);
                         this.$nextTick(() => this.scrollDown());
@@ -179,6 +184,9 @@
                         this._onReceipt = (ev) => { const e = ev.detail; if (e && e.by === 'customer' && e.conversation_id === cfg.conversationId) this.onReceipt(e); };
                         window.addEventListener('support:message', this._onMsg);
                         window.addEventListener('support:receipt', this._onReceipt);
+                        // "Read" requires focus — re-mark when staff returns to this tab.
+                        this._onFocus = () => this.refresh();
+                        window.addEventListener('focus', this._onFocus);
                         // Slow poll as a self-healing fallback if the socket drops.
                         this._poll = setInterval(() => this.refresh(), 15000);
                     },
@@ -187,14 +195,17 @@
                         if (window.__activeSupportConversation === cfg.conversationId) window.__activeSupportConversation = null;
                         window.removeEventListener('support:message', this._onMsg);
                         window.removeEventListener('support:receipt', this._onReceipt);
+                        window.removeEventListener('focus', this._onFocus);
                     },
+                    // The customer's messages are only "seen" while this tab is actually focused.
+                    viewing() { return document.hasFocus(); },
                     onEcho(m) {
                         if (this.messages.some(x => x.id === m.id)) return;
                         this.messages.push(m);
                         this._lastId = Math.max(this._lastId, m.id);
                         this.$nextTick(() => this.scrollDown());
-                        // A customer message landed in the open thread → mark it read (blue tick for them).
-                        if (!m.from_admin) this.refresh();
+                        // A customer message landed in the open thread → ring, then mark it read.
+                        if (!m.from_admin) { this.ping(); this.refresh(); }
                     },
                     // Customer delivered/read our replies → advance our own ticks (double, then blue).
                     onReceipt(e) {
@@ -206,17 +217,15 @@
                     },
                     async refresh() {
                         try {
-                            const r = await fetch(cfg.pollUrl, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                            const r = await fetch(cfg.pollUrl + '?viewing=' + (this.viewing() ? 1 : 0), { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
                             if (!r.ok) return;
                             const d = await r.json();
                             const msgs = Array.isArray(d.messages) ? d.messages : [];
                             const fresh = msgs.filter(x => x.id > this._lastId);
                             if (fresh.some(x => !x.from_admin)) this.ping();   // a new customer message arrived
-                            if (fresh.length) {
-                                this._lastId = msgs.reduce((m, x) => Math.max(m, x.id), this._lastId);
-                                this.messages = msgs;
-                                this.$nextTick(() => this.scrollDown());
-                            }
+                            this._lastId = msgs.reduce((m, x) => Math.max(m, x.id), this._lastId);
+                            if (!this.sending) this.messages = msgs;   // always apply so tick/status changes show, even with no new message
+                            if (fresh.length) this.$nextTick(() => this.scrollDown());
                         } catch (e) {}
                     },
                     async send() {

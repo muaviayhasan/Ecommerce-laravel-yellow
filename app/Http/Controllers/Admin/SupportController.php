@@ -72,10 +72,13 @@ class SupportController extends Controller implements HasMiddleware
         ]);
     }
 
-    /** Poll endpoint — messages for one conversation; marks customer messages read (blue tick). */
-    public function messages(SupportConversation $conversation): JsonResponse
+    /** Poll endpoint — messages for one conversation; marks customer messages read only while
+     *  the staff tab is actually focused (so "seen" doesn't fire for a backgrounded window). */
+    public function messages(SupportConversation $conversation, Request $request): JsonResponse
     {
-        $this->markRead($conversation);
+        if ($request->boolean('viewing', true)) {
+            $this->markRead($conversation);
+        }
 
         return response()->json(['messages' => $this->format($conversation)]);
     }
@@ -90,7 +93,7 @@ class SupportController extends Controller implements HasMiddleware
 
     public function reply(Request $request, SupportConversation $conversation): JsonResponse
     {
-        $data = $request->validate(['body' => ['required', 'string', 'max:5000']]);
+        $data = $request->validate(['body' => ['required', 'string', 'max:1000']]);
 
         $message = $conversation->messages()->create([
             'from_admin' => true,
