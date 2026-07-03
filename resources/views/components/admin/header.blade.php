@@ -68,7 +68,7 @@
                     <span class="material-symbols-outlined text-base">person</span> Profile
                 </a>
                 <div class="my-1 border-t border-outline-variant/50"></div>
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('admin.logout') }}">
                     @csrf
                     <button type="submit"
                         class="w-full flex items-center gap-3 px-4 py-2 text-sm text-error hover:bg-error-container/40">

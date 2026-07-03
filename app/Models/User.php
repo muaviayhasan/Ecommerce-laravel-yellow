@@ -62,6 +62,14 @@ class User extends Authenticatable
         ];
     }
 
+    // Authorisation -----------------------------------------------------------
+
+    /** Staff may sign in to the admin panel — anyone holding a role other than the storefront customer. */
+    public function isStaff(): bool
+    {
+        return $this->roles()->where('name', '!=', 'customer')->exists();
+    }
+
     // Relations ----------------------------------------------------------------
 
     public function customer(): HasOne

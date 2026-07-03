@@ -19,12 +19,16 @@ use Illuminate\Support\Str;
  */
 class SupportChatController extends Controller
 {
+    /** Messages loaded per page (initial view + each scroll-up fetch). */
+    private const PER_PAGE = 20;
+
     /** Current state: whether a chat exists, the display name, and its messages. */
     public function state(Request $request): JsonResponse
     {
         $conv = $this->resolve(create: false);
 
         if ($conv) {
+            $this->touchSeen($conv); // presence heartbeat → drives the "online" dot
             // The widget is loaded → staff replies have reached this device (double tick).
             $this->markDelivered($conv, staffMessages: true, by: 'customer');
             // Panel open → the customer is actually reading them (blue tick).
@@ -33,6 +37,8 @@ class SupportChatController extends Controller
             }
         }
 
+        $messages = $conv ? $this->recent($conv) : [];
+
         return response()->json([
             'started' => (bool) $conv,
             'authenticated' => Auth::check(),
@@ -40,7 +46,26 @@ class SupportChatController extends Controller
             'token' => $conv?->channelToken(),
             'blocked' => $conv?->isBlocked() ?? false,
             'unread' => $conv ? $conv->messages()->where('from_admin', true)->whereNull('read_at')->count() : 0,
-            'messages' => $conv ? $this->format($conv) : [],
+            'messages' => $messages,
+            'has_more' => $conv ? $this->hasOlder($conv, $messages[0]['id'] ?? null) : false,
+        ]);
+    }
+
+    /** Older messages (before an id) for the widget's scroll-up lazy loading. */
+    public function history(Request $request): JsonResponse
+    {
+        $conv = $this->resolve(create: false);
+        $before = $request->integer('before');
+        if (! $conv || ! $before) {
+            return response()->json(['messages' => [], 'has_more' => false]);
+        }
+
+        $models = $conv->messages()->where('id', '<', $before)
+            ->orderByDesc('id')->limit(self::PER_PAGE)->get()->sortBy('id')->values();
+
+        return response()->json([
+            'messages' => $models->map(fn (SupportMessage $m) => $this->row($m))->all(),
+            'has_more' => $this->hasOlder($conv, $models->first()?->id),
         ]);
     }
 
@@ -52,12 +77,13 @@ class SupportChatController extends Controller
         }
 
         $conv = $this->resolve(create: true, name: $request->string('name')->toString());
+        $this->touchSeen($conv);
 
         return response()->json([
             'started' => true,
             'name' => $conv->name,
             'token' => $conv->channelToken(),
-            'messages' => $this->format($conv),
+            'messages' => $this->recent($conv),
         ]);
     }
 
@@ -76,6 +102,7 @@ class SupportChatController extends Controller
         if ($conv->isBlocked()) {
             return response()->json(['blocked' => true, 'message' => 'You can no longer send messages in this chat.'], 403);
         }
+        $this->touchSeen($conv);
 
         $message = $conv->messages()->create([
             'from_admin' => false,
@@ -85,7 +112,7 @@ class SupportChatController extends Controller
         $conv->update(['last_message_at' => now(), 'status' => 'open']);
         $this->broadcastMessage($message, $conv);
 
-        return response()->json(['token' => $conv->channelToken(), 'messages' => $this->format($conv)]);
+        return response()->json(['token' => $conv->channelToken(), 'messages' => $this->recent($conv)]);
     }
 
     /** Best-effort realtime push (Reverb). Never fails the request if the socket server is down. */
@@ -99,6 +126,12 @@ class SupportChatController extends Controller
     }
 
     // ---- helpers -------------------------------------------------------------
+
+    /** Presence heartbeat — records that the widget is currently live (drives the online dot). */
+    private function touchSeen(SupportConversation $conv): void
+    {
+        $conv->updateQuietly(['last_seen_at' => now()]);
+    }
 
     /** Find (or create) the visitor's conversation: by account if logged in, else by session. */
     private function resolve(bool $create, ?string $name = null): ?SupportConversation
@@ -161,15 +194,28 @@ class SupportChatController extends Controller
         }
     }
 
-    /** @return array<int, array<string, mixed>> */
-    private function format(SupportConversation $conv): array
+    /** The latest page of messages, oldest-first (initial view + polling). @return array<int, array<string, mixed>> */
+    private function recent(SupportConversation $conv): array
     {
-        return $conv->messages()->orderBy('id')->get()->map(fn (SupportMessage $m) => [
+        return $conv->messages()->orderByDesc('id')->limit(self::PER_PAGE)->get()
+            ->sortBy('id')->values()->map(fn (SupportMessage $m) => $this->row($m))->all();
+    }
+
+    /** Whether any messages exist older than $beforeId (drives the "load more" affordance). */
+    private function hasOlder(SupportConversation $conv, ?int $beforeId): bool
+    {
+        return $beforeId ? $conv->messages()->where('id', '<', $beforeId)->exists() : false;
+    }
+
+    /** @return array<string, mixed> */
+    private function row(SupportMessage $m): array
+    {
+        return [
             'id' => $m->id,
             'body' => $m->body,
             'from_admin' => $m->from_admin,
             'at' => $m->created_at?->format('H:i'),
             'status' => $m->read_at ? 'read' : ($m->delivered_at ? 'delivered' : 'sent'),
-        ])->all();
+        ];
     }
 }

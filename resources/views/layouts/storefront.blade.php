@@ -39,6 +39,14 @@
     @endif
     <x-storefront.footer />
 
+    {{-- Compare shortlist: floating bar + store shared with the chat widget (so it lifts clear). --}}
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('compareBar', { visible: {{ app(\App\Services\CompareService::class)->count() > 0 ? 'true' : 'false' }} });
+        });
+    </script>
+    <x-storefront.compare-tray />
+
     <x-storefront.support-chat />
 
     @livewireScripts

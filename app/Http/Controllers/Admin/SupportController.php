@@ -18,10 +18,13 @@ use Illuminate\View\View;
 /** Staff support inbox — the admin side of the customer chat widget. */
 class SupportController extends Controller implements HasMiddleware
 {
+    /** Messages loaded per page (initial view + each scroll-up fetch). */
+    private const PER_PAGE = 20;
+
     public static function middleware(): array
     {
         return [
-            new Middleware('can:support.view', only: ['index', 'messages', 'delivered', 'conversations']),
+            new Middleware('can:support.view', only: ['index', 'messages', 'delivered', 'conversations', 'history']),
             new Middleware('can:support.reply', only: ['reply', 'block']),
         ];
     }
@@ -39,14 +42,20 @@ class SupportController extends Controller implements HasMiddleware
             $active->loadMissing('user');
         }
 
+        // A thread is "open" only when staff explicitly picked one. The first conversation is
+        // still auto-selected for the desktop two-pane view, but on mobile the contact list is
+        // the landing screen — so auto-selecting must not hide the list or mark that thread read.
+        $explicit = $active !== null && $request->filled('conversation');
+
         // Opening the inbox delivers every visible customer message to staff (double tick);
-        // the thread staff is actually looking at is marked fully read (blue tick) instead.
+        // the thread staff explicitly opened is marked fully read (blue tick) instead.
         $this->markDeliveredForList($conversations, exceptId: $active?->id);
-        if ($active) {
+        if ($explicit) {
             $this->markRead($active);
         }
 
-        $activeId = $active?->id;
+        $activeId = $explicit ? $active->id : null;
+        $messages = $active ? $this->recent($active) : [];
 
         return view('admin.support.index', [
             'conversationsData' => $conversations->map(function (SupportConversation $c) use ($activeId) {
@@ -58,8 +67,23 @@ class SupportController extends Controller implements HasMiddleware
                 return $row;
             })->values(),
             'active' => $active,
-            'messages' => $active ? $this->format($active) : collect(),
+            'explicit' => $explicit,
+            'messages' => $messages,
+            'hasMore' => $active ? $this->hasOlder($active, $messages[0]['id'] ?? null) : false,
             'filters' => $request->only('search'),
+        ]);
+    }
+
+    /** Older messages (before an id), for scroll-up lazy loading. */
+    public function history(SupportConversation $conversation, Request $request): JsonResponse
+    {
+        $before = $request->integer('before');
+        $models = $conversation->messages()->where('id', '<', $before)
+            ->orderByDesc('id')->limit(self::PER_PAGE)->get()->sortBy('id')->values();
+
+        return response()->json([
+            'messages' => $models->map(fn (SupportMessage $m) => $this->row($m))->all(),
+            'has_more' => $this->hasOlder($conversation, $models->first()?->id),
         ]);
     }
 
@@ -81,7 +105,10 @@ class SupportController extends Controller implements HasMiddleware
             $this->markRead($conversation);
         }
 
-        return response()->json(['messages' => $this->format($conversation)]);
+        return response()->json([
+            'messages' => $this->recent($conversation),
+            'online' => $conversation->isOnline(),
+        ]);
     }
 
     /** Realtime delivery ack — the staff browser received a customer message (double tick). */
@@ -124,7 +151,7 @@ class SupportController extends Controller implements HasMiddleware
             report($e);
         }
 
-        return response()->json(['messages' => $this->format($conversation)]);
+        return response()->json(['messages' => $this->recent($conversation)]);
     }
 
     /** Base query for the inbox contact list (honours the search filter). */
@@ -151,6 +178,7 @@ class SupportController extends Controller implements HasMiddleware
             'time' => $c->last_message_at?->diffForHumans(null, true),
             'unread' => (int) $c->unread,
             'blocked' => $c->isBlocked(),
+            'online' => $c->isOnline(),
         ];
     }
 
@@ -206,15 +234,28 @@ class SupportController extends Controller implements HasMiddleware
         }
     }
 
-    /** @return \Illuminate\Support\Collection<int, array<string, mixed>> */
-    private function format(SupportConversation $conversation)
+    /** The latest page of messages, oldest-first (initial view + polling). @return array<int, array<string, mixed>> */
+    private function recent(SupportConversation $conversation): array
     {
-        return $conversation->messages()->orderBy('id')->get()->map(fn (SupportMessage $m) => [
+        return $conversation->messages()->orderByDesc('id')->limit(self::PER_PAGE)->get()
+            ->sortBy('id')->values()->map(fn (SupportMessage $m) => $this->row($m))->all();
+    }
+
+    /** Whether any messages exist older than $beforeId (drives the "load more" affordance). */
+    private function hasOlder(SupportConversation $conversation, ?int $beforeId): bool
+    {
+        return $beforeId ? $conversation->messages()->where('id', '<', $beforeId)->exists() : false;
+    }
+
+    /** @return array<string, mixed> */
+    private function row(SupportMessage $m): array
+    {
+        return [
             'id' => $m->id,
             'body' => $m->body,
             'from_admin' => $m->from_admin,
             'at' => $m->created_at?->format('d M, H:i'),
             'status' => $m->read_at ? 'read' : ($m->delivered_at ? 'delivered' : 'sent'),
-        ]);
+        ];
     }
 }

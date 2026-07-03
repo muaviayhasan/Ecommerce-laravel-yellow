@@ -3,55 +3,61 @@
         stateUrl: @js(route('support.state')),
         startUrl: @js(route('support.start')),
         sendUrl: @js(route('support.send')),
+        historyUrl: @js(route('support.history')),
         authed: @js(auth()->check()),
         authName: @js(auth()->user()?->name),
-    })" class="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3 print:hidden">
+    })"
+    :class="($store.compareBar && $store.compareBar.visible) ? 'bottom-28' : 'bottom-5'"
+    class="fixed right-5 z-[60] flex flex-col items-end gap-3 print:hidden transition-all duration-200">
 
     {{-- Panel --}}
     <div x-show="open" x-cloak x-transition.origin.bottom.right
         class="w-[22rem] max-w-[calc(100vw-2.5rem)] h-[30rem] max-h-[calc(100vh-7rem)] bg-white rounded-2xl shadow-2xl border border-outline-variant/60 flex flex-col overflow-hidden">
 
         {{-- Header --}}
-        <div class="bg-[#2563eb] text-white px-5 py-4 flex items-center justify-between shrink-0">
+        <div class="bg-primary-container text-on-primary-container px-5 py-4 flex items-center justify-between shrink-0">
             <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-full bg-white/20 grid place-items-center"><span class="material-symbols-outlined">support_agent</span></span>
+                <span class="w-10 h-10 rounded-full bg-black/10 grid place-items-center"><span class="material-symbols-outlined">support_agent</span></span>
                 <div>
                     <p class="font-semibold leading-tight">Support</p>
                     <p class="text-xs opacity-80">Typically replies in a few minutes</p>
                 </div>
             </div>
-            <button type="button" @click="open = false" class="w-8 h-8 grid place-items-center rounded-full hover:bg-white/20 transition"><span class="material-symbols-outlined text-[20px]">close</span></button>
+            <button type="button" @click="open = false" class="w-8 h-8 grid place-items-center rounded-full hover:bg-black/10 transition"><span class="material-symbols-outlined text-[20px]">close</span></button>
         </div>
 
         {{-- Guest name step --}}
         <template x-if="!authed && !started">
             <form @submit.prevent="startChat()" class="flex-1 flex flex-col justify-center gap-4 p-6 text-center">
-                <span class="material-symbols-outlined text-[#2563eb] mx-auto" style="font-size:44px;">chat</span>
+                <span class="material-symbols-outlined text-primary mx-auto" style="font-size:44px;">chat</span>
                 <div>
                     <p class="font-semibold text-on-surface">Hi there 👋</p>
                     <p class="text-sm text-on-surface-variant mt-1">Enter your name to start chatting with us.</p>
                 </div>
                 <input type="text" x-model="guestName" maxlength="80" placeholder="Your name"
-                    class="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#2563eb] focus:border-[#2563eb]">
-                <button type="submit" :disabled="!guestName.trim()" class="bg-[#2563eb] text-white rounded-lg px-4 py-2.5 text-sm font-semibold disabled:opacity-50 hover:brightness-110 transition">Start chat</button>
+                    class="w-full border border-outline-variant rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary-container focus:border-primary-container">
+                <button type="submit" :disabled="!guestName.trim()" class="bg-primary-container text-on-primary-container rounded-lg px-4 py-2.5 text-sm font-semibold disabled:opacity-50 hover:brightness-110 transition">Start chat</button>
             </form>
         </template>
 
         {{-- Conversation --}}
         <template x-if="authed || started">
             <div class="flex-1 flex flex-col min-h-0">
-                <div x-ref="scroll" class="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-low/40">
-                    <p x-show="!messages.length" class="text-center text-sm text-on-surface-variant py-6">Send a message and we'll get right back to you.</p>
+                <div x-ref="scroll" @scroll.passive="onScroll($event)" class="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-low/40">
+                    <div x-show="loadingMore" class="flex justify-center py-1">
+                        <span class="material-symbols-outlined animate-spin text-outline text-[18px]">progress_activity</span>
+                    </div>
+                    <p x-show="!messages.length && !loadingMore" class="text-center text-sm text-on-surface-variant py-6">Send a message and we'll get right back to you.</p>
                     <template x-for="m in messages" :key="m.id">
                         <div :class="m.from_admin ? 'justify-start' : 'justify-end'" class="flex">
-                            <div :class="m.from_admin ? 'bg-white text-on-surface rounded-tl-none' : 'bg-[#2563eb] text-white rounded-tr-none'"
+                            <div :class="m.from_admin ? 'bg-white text-on-surface rounded-tl-none' : 'bg-primary-container text-on-primary-container rounded-tr-none'"
                                 class="max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-sm">
                                 <p class="whitespace-pre-wrap break-words" x-text="m.body"></p>
-                                <p :class="m.from_admin ? 'text-outline' : 'text-white/70'" class="text-[10px] mt-0.5 flex items-center justify-end gap-0.5">
+                                <p :class="m.from_admin ? 'text-outline' : 'text-on-primary-container/70'" class="text-[10px] mt-0.5 flex items-center justify-end gap-0.5">
                                     <span x-text="m.at"></span>
                                     <template x-if="!m.from_admin">
                                         <span class="material-symbols-outlined text-[14px] leading-none"
-                                            :class="m.status === 'read' ? 'text-cyan-300' : 'text-white/60'"
+                                            :class="m.status === 'read' ? 'text-blue-700' : 'text-on-primary-container/50'"
                                             x-text="(m.status === 'sending' || m.status === 'sent') ? 'check' : 'done_all'"></span>
                                     </template>
                                 </p>
@@ -68,12 +74,12 @@
                 <form x-show="!blocked" @submit.prevent="send()" class="p-3 border-t border-outline-variant/60 flex items-end gap-2 shrink-0 bg-white">
                     <div class="relative flex-1">
                         <textarea x-model="body" @keydown.enter.prevent="send()" rows="1" maxlength="1000" placeholder="Write a message…"
-                            class="w-full resize-none border border-outline-variant rounded-lg px-3 py-2 pr-14 text-sm outline-none focus:ring-1 focus:ring-[#2563eb] focus:border-[#2563eb] max-h-24"></textarea>
+                            class="w-full resize-none border border-outline-variant rounded-lg px-3 py-2 pr-14 text-sm outline-none focus:ring-1 focus:ring-primary-container focus:border-primary-container max-h-24"></textarea>
                         <span class="absolute bottom-1.5 right-2 text-[10px] tabular-nums pointer-events-none select-none"
                             :class="body.length >= 1000 ? 'text-error' : (body.length >= 900 ? 'text-amber-500' : 'text-outline')"
                             x-text="body.length + '/1000'"></span>
                     </div>
-                    <button type="submit" :disabled="!body.trim() || sending" class="w-10 h-10 grid place-items-center rounded-lg bg-[#2563eb] text-white disabled:opacity-50 hover:brightness-110 transition shrink-0"><span class="material-symbols-outlined text-[20px]">send</span></button>
+                    <button type="submit" :disabled="!body.trim() || sending" class="w-10 h-10 grid place-items-center rounded-lg bg-primary-container text-on-primary-container disabled:opacity-50 hover:brightness-110 transition shrink-0"><span class="material-symbols-outlined text-[20px]">send</span></button>
                 </form>
             </div>
         </template>
@@ -81,7 +87,7 @@
 
     {{-- Toggle button --}}
     <button type="button" @click="toggle()"
-        class="w-14 h-14 rounded-full bg-[#2563eb] text-white shadow-xl grid place-items-center hover:brightness-110 active:scale-95 transition relative">
+        class="w-14 h-14 rounded-full bg-primary-container text-on-primary-container shadow-xl grid place-items-center hover:brightness-110 active:scale-95 transition relative">
         <span class="material-symbols-outlined" x-text="open ? 'close' : 'chat_bubble'"></span>
         <span x-show="!open && unread" x-cloak class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[11px] font-bold grid place-items-center" x-text="unread"></span>
     </button>
@@ -101,8 +107,11 @@
                     unread: 0,
                     sending: false,
                     blocked: false,
+                    hasMore: false,
+                    loadingMore: false,
                     _poll: null,
                     _lastId: 0,
+                    _minId: 0,
                     _primed: false,
                     _channel: null,
                     _bell: null,
@@ -176,18 +185,61 @@
                             this.started = d.started;
                             this.authed = d.authenticated;
                             this.blocked = !!d.blocked;
-                            const maxId = msgs.reduce((m, x) => Math.max(m, x.id), 0);
                             if (this._primed) {
-                                const fresh = msgs.filter(x => x.id > this._lastId && x.from_admin);
-                                if (fresh.length && !this.open) this.ping();
+                                if (msgs.some(x => x.id > this._lastId && x.from_admin) && !this.open) this.ping();
+                                this.applyServerRecent(msgs);
+                            } else {
+                                this.seed(msgs, d.has_more);
+                                this._primed = true;
                             }
-                            this._lastId = Math.max(this._lastId, maxId);
-                            this._primed = true;
-                            this.messages = msgs;
                             // Server is authoritative for the badge (unread staff replies); zero while open.
                             this.unread = this.open ? 0 : (d.unread || 0);
                             if (this.open) this.$nextTick(() => this.scrollDown());
                         } catch (e) {}
+                    },
+                    // Initial fill: newest page, oldest-first.
+                    seed(list, hasMore) {
+                        this.messages = Array.isArray(list) ? list.slice() : [];
+                        this._lastId = this.messages.reduce((mx, m) => Math.max(mx, m.id), 0);
+                        this._minId = this.messages.reduce((mn, m) => (m.id > 0 && (mn === 0 || m.id < mn)) ? m.id : mn, 0);
+                        this.hasMore = !!hasMore;
+                    },
+                    // Merge the latest page: update statuses in place, append new messages.
+                    applyServerRecent(list) {
+                        if (!Array.isArray(list)) return false;
+                        const byId = new Map(this.messages.map(m => [m.id, m]));
+                        let appended = false;
+                        list.forEach(sm => {
+                            const ex = byId.get(sm.id);
+                            if (ex) { ex.status = sm.status; ex.at = sm.at; }
+                            else if (sm.id > this._lastId) { this.messages.push(sm); byId.set(sm.id, sm); appended = true; }
+                        });
+                        list.forEach(sm => { if (sm.id > this._lastId) this._lastId = sm.id; });
+                        if (!this._minId) this._minId = this.messages.reduce((mn, m) => (m.id > 0 && (mn === 0 || m.id < mn)) ? m.id : mn, 0);
+                        return appended;
+                    },
+                    onScroll(e) {
+                        if (e.target.scrollTop < 48 && this.hasMore && !this.loadingMore) this.loadMore();
+                    },
+                    async loadMore() {
+                        if (this.loadingMore || !this.hasMore || this._minId <= 0) return;
+                        this.loadingMore = true;
+                        const el = this.$refs.scroll;
+                        const prev = el ? el.scrollHeight : 0;
+                        try {
+                            const r = await fetch(cfg.historyUrl + '?before=' + this._minId, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                            if (r.ok) {
+                                const d = await r.json();
+                                const older = Array.isArray(d.messages) ? d.messages : [];
+                                if (older.length) {
+                                    this.messages = [...older, ...this.messages];
+                                    this._minId = older[0].id;
+                                    this.hasMore = !!d.has_more;
+                                    this.$nextTick(() => { if (el) el.scrollTop = el.scrollHeight - prev; });
+                                } else { this.hasMore = false; }
+                            }
+                        } catch (e) {}
+                        this.loadingMore = false;
                     },
                     async startChat() {
                         if (!this.authed && !this.guestName.trim()) return;
@@ -205,8 +257,8 @@
                         this.messages.push({ id: tempId, body, from_admin: false, at: '', status: 'sending' });
                         this.body = '';
                         this.$nextTick(() => this.scrollDown());
-                        const ok = await this.post(cfg.sendUrl, { body, name: this.guestName });
-                        if (!ok) this.messages = this.messages.filter(m => m.id !== tempId);   // blocked/failed → drop the bubble
+                        await this.post(cfg.sendUrl, { body, name: this.guestName });
+                        this.messages = this.messages.filter(m => m.id !== tempId);   // real one merged on success; dropped on block/fail
                         this.started = true;
                         this.sending = false;
                         this.startPolling();
@@ -223,7 +275,7 @@
                             const d = await r.json().catch(() => ({}));
                             if (d.token) this.subscribe(d.token);
                             if (typeof d.blocked === 'boolean') this.blocked = d.blocked;
-                            if (Array.isArray(d.messages)) { this.messages = d.messages; this._lastId = d.messages.reduce((m, x) => Math.max(m, x.id), this._lastId); }
+                            this.applyServerRecent(d.messages || []);
                             return r.ok;
                         } catch (e) { return false; }
                     },

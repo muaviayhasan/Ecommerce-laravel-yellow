@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VendorSaleController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Storefront\BlogController;
@@ -84,6 +85,13 @@ Route::get('/register', [RegisterController::class, 'create'])->name('register')
 Route::post('/register', [RegisterController::class, 'store']);
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
+// Admin authentication — staff-only sign-in, separate from the storefront customer login.
+Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
+Route::post('/admin/login', [AdminAuthController::class, 'store'])->name('admin.login.store');
+Route::post('/admin/logout', [AdminAuthController::class, 'destroy'])->middleware('auth')->name('admin.logout');
+Route::get('/admin/auth/microsoft', [AdminAuthController::class, 'redirectToMicrosoft'])->name('admin.auth.microsoft');
+Route::get('/auth/microsoft/callback', [AdminAuthController::class, 'microsoftCallback'])->name('admin.auth.microsoft.callback');
+
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.
 $placeholders = [
@@ -99,6 +107,7 @@ Route::get('/track-order', fn () => app(HomeController::class)->placeholder('Tra
 
 // Support chat widget (public — works for guests and logged-in customers).
 Route::get('/support/messages', [SupportChatController::class, 'state'])->name('support.state');
+Route::get('/support/history', [SupportChatController::class, 'history'])->name('support.history');
 Route::post('/support/start', [SupportChatController::class, 'start'])->name('support.start');
 Route::post('/support/messages', [SupportChatController::class, 'send'])->name('support.send');
 
@@ -159,6 +168,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('support', [SupportController::class, 'index'])->name('support.index');
     Route::get('support/conversations', [SupportController::class, 'conversations'])->name('support.conversations');
     Route::get('support/{conversation}/messages', [SupportController::class, 'messages'])->name('support.messages');
+    Route::get('support/{conversation}/history', [SupportController::class, 'history'])->name('support.history');
     Route::post('support/{conversation}/reply', [SupportController::class, 'reply'])->name('support.reply');
     Route::post('support/{conversation}/delivered', [SupportController::class, 'delivered'])->name('support.delivered');
     Route::post('support/{conversation}/block', [SupportController::class, 'block'])->name('support.block');
