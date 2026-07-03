@@ -88,36 +88,47 @@ class AdminAuthController extends Controller
         return redirect()->route('admin.login');
     }
 
-    // ---- Microsoft SSO (staff only) -----------------------------------------
+    // ---- Social SSO (staff only, admin-configured) --------------------------
 
-    public function redirectToMicrosoft(): RedirectResponse
+    /** OAuth providers wired to the "Social login" settings group. */
+    public const PROVIDERS = ['google', 'facebook'];
+
+    public function redirect(string $provider): RedirectResponse
     {
-        return Socialite::driver('microsoft')->redirect();
+        abort_unless($this->providerEnabled($provider), 404);
+
+        $this->configureProvider($provider);
+
+        return Socialite::driver($provider)->redirect();
     }
 
-    public function microsoftCallback(Request $request): RedirectResponse
+    public function callback(string $provider, Request $request): RedirectResponse
     {
+        abort_unless($this->providerEnabled($provider), 404);
+
+        $this->configureProvider($provider);
+
         try {
-            $oauth = Socialite::driver('microsoft')->user();
+            $oauth = Socialite::driver($provider)->user();
         } catch (\Throwable $e) {
             report($e);
 
             return redirect()->route('admin.login')
-                ->withErrors(['auth' => 'Microsoft sign-in failed. Please try again.']);
+                ->withErrors(['auth' => 'Social sign-in failed. Please try again.']);
         }
 
         // Only authenticate an EXISTING active staff account — never create one here,
-        // otherwise anyone with a Microsoft account could get in.
-        $user = User::where('provider', 'microsoft')->where('provider_id', $oauth->getId())->first()
-            ?? User::where('email', $oauth->getEmail())->first();
+        // otherwise anyone with a social account could get into the admin panel.
+        $user = User::where('provider', $provider)->where('provider_id', $oauth->getId())->first()
+            ?? ($oauth->getEmail() ? User::where('email', $oauth->getEmail())->first() : null);
 
         if (! $user || ! $user->is_active || ! $user->isStaff()) {
             return redirect()->route('admin.login')
-                ->withErrors(['auth' => 'This Microsoft account is not authorised for admin access.']);
+                ->withErrors(['auth' => 'This account is not authorised for admin access.']);
         }
 
         $user->forceFill([
-            'provider' => 'microsoft',
+            'provider' => $provider,
             'provider_id' => $oauth->getId(),
             'avatar' => $user->avatar ?: $oauth->getAvatar(),
             'last_login_at' => now(),
@@ -127,6 +138,45 @@ class AdminAuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->intended(route('admin.dashboard'));
+    }
+
+    /** A provider is usable only when enabled in settings AND its client id is filled. */
+    private function providerEnabled(string $provider): bool
+    {
+        if (! in_array($provider, self::PROVIDERS, true)) {
+            return false;
+        }
+
+        return (bool) setting('social_login', "{$provider}_enabled", false)
+            && filled($this->providerCredentials($provider)['client_id']);
+    }
+
+    /** Credentials for a provider, read from the admin "Social login" settings. */
+    private function providerCredentials(string $provider): array
+    {
+        return match ($provider) {
+            'google' => [
+                'client_id' => setting('social_login', 'google_client_id'),
+                'client_secret' => setting('social_login', 'google_client_secret'),
+            ],
+            'facebook' => [
+                'client_id' => setting('social_login', 'facebook_app_id'),
+                'client_secret' => setting('social_login', 'facebook_app_secret'),
+            ],
+            default => ['client_id' => null, 'client_secret' => null],
+        };
+    }
+
+    /** Push the admin-configured credentials into Socialite's config for this request. */
+    private function configureProvider(string $provider): void
+    {
+        $creds = $this->providerCredentials($provider);
+
+        config([
+            "services.{$provider}.client_id" => $creds['client_id'],
+            "services.{$provider}.client_secret" => $creds['client_secret'],
+            "services.{$provider}.redirect" => route('admin.auth.callback', $provider),
+        ]);
     }
 
     // ---- helpers ------------------------------------------------------------

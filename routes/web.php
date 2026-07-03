@@ -89,8 +89,11 @@ Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->
 Route::get('/admin/login', [AdminAuthController::class, 'create'])->name('admin.login');
 Route::post('/admin/login', [AdminAuthController::class, 'store'])->name('admin.login.store');
 Route::post('/admin/logout', [AdminAuthController::class, 'destroy'])->middleware('auth')->name('admin.logout');
-Route::get('/admin/auth/microsoft', [AdminAuthController::class, 'redirectToMicrosoft'])->name('admin.auth.microsoft');
-Route::get('/auth/microsoft/callback', [AdminAuthController::class, 'microsoftCallback'])->name('admin.auth.microsoft.callback');
+// Social SSO for staff — providers are enabled/configured from the admin "Social login" settings.
+Route::get('/admin/auth/{provider}', [AdminAuthController::class, 'redirect'])
+    ->whereIn('provider', AdminAuthController::PROVIDERS)->name('admin.auth.redirect');
+Route::get('/admin/auth/{provider}/callback', [AdminAuthController::class, 'callback'])
+    ->whereIn('provider', AdminAuthController::PROVIDERS)->name('admin.auth.callback');
 
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.

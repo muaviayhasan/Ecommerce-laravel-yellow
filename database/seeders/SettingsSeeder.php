@@ -57,7 +57,9 @@ class SettingsSeeder extends Seeder
             'inclusive' => ['value' => false, 'type' => 'bool'],
         ],
         'social_login' => [
-            'microsoft_enabled' => ['value' => false, 'type' => 'bool'],
+            // Credentials are entered from the admin Settings → Social login screen.
+            'google_enabled' => ['value' => false, 'type' => 'bool'],
+            'facebook_enabled' => ['value' => false, 'type' => 'bool'],
         ],
         'store' => [
             'address' => ['value' => '', 'type' => 'string'],

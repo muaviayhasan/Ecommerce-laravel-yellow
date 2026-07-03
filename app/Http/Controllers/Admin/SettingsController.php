@@ -347,16 +347,18 @@ class SettingsController extends Controller implements HasMiddleware
                 'sections' => [
                     [
                         'title' => 'Google',
+                        'description' => 'Add this redirect URI in Google Cloud Console → Credentials: ' . route('admin.auth.callback', 'google'),
                         'fields' => [
-                            'google_enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Enable Google sign-in'],
+                            'google_enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Enable Google sign-in', 'help' => 'Staff can then sign in to the admin panel with Google. Customer accounts are always rejected.'],
                             'google_client_id' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'Client ID', 'rules' => ['nullable', 'string', 'max:255']],
                             'google_client_secret' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'Client secret', 'rules' => ['nullable', 'string', 'max:255']],
                         ],
                     ],
                     [
                         'title' => 'Facebook',
+                        'description' => 'Add this OAuth redirect URI in your Facebook app → Facebook Login settings: ' . route('admin.auth.callback', 'facebook'),
                         'fields' => [
-                            'facebook_enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Enable Facebook sign-in'],
+                            'facebook_enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Enable Facebook sign-in', 'help' => 'Staff can then sign in to the admin panel with Facebook. Customer accounts are always rejected.'],
                             'facebook_app_id' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'App ID', 'rules' => ['nullable', 'string', 'max:255']],
                             'facebook_app_secret' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'App secret', 'rules' => ['nullable', 'string', 'max:255']],
                         ],
