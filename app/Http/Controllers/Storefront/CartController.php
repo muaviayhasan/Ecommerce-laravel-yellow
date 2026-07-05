@@ -46,8 +46,21 @@ class CartController extends Controller
     public function update(Request $request, ProductVariant $variant): RedirectResponse
     {
         $data = $request->validate(['quantity' => ['required', 'integer', 'min:0', 'max:999']]);
+        $qty = (int) $data['quantity'];
 
-        $this->cart->update($variant->id, (int) $data['quantity']);
+        // Never let the cart hold more than what's in stock (unless overselling is allowed).
+        $allowOversell = (bool) setting('inventory', 'allow_negative_stock', false);
+        $stock = max(0, (int) floor((float) $variant->stock_quantity));
+
+        if ($qty > 0 && ! $allowOversell && $qty > $stock) {
+            $this->cart->update($variant->id, $stock);
+
+            return redirect()->route('cart')->with('error', $stock > 0
+                ? "Only {$stock} in stock — we set the quantity to {$stock}."
+                : 'That item is out of stock and has been removed.');
+        }
+
+        $this->cart->update($variant->id, $qty);
 
         return redirect()->route('cart')->with('status', 'Cart updated.');
     }

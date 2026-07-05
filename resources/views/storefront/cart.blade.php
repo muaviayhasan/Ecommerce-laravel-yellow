@@ -33,53 +33,56 @@
             @else
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     {{-- Items --}}
+                    @php $allowOversell = (bool) setting('inventory', 'allow_negative_stock', false); @endphp
                     <div class="lg:col-span-2 bg-white rounded-lg border border-outline-variant overflow-hidden">
-                        <table class="w-full text-left">
-                            <thead class="border-b border-outline-variant text-label-sm uppercase tracking-wide text-on-surface-variant">
-                                <tr>
-                                    <th class="p-4">Product</th>
-                                    <th class="p-4 text-center hidden sm:table-cell">Price</th>
-                                    <th class="p-4 text-center">Qty</th>
-                                    <th class="p-4 text-right">Total</th>
-                                    <th class="p-4"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-outline-variant">
-                                @foreach ($items as $item)
-                                    <tr>
-                                        <td class="p-4">
-                                            <div class="flex items-center gap-4">
-                                                <a href="{{ $item->url }}" class="w-16 h-16 shrink-0 border border-outline-variant rounded-lg overflow-hidden bg-white p-1">
-                                                    <img src="{{ $item->image }}" alt="{{ $item->name }}" class="w-full h-full object-contain">
-                                                </a>
-                                                <div class="min-w-0">
-                                                    <a href="{{ $item->url }}" class="font-bold hover:text-primary transition-colors line-clamp-2">{{ $item->name }}</a>
-                                                    <p class="text-label-sm text-on-surface-variant">{{ $item->sku }}</p>
-                                                    @if ($item->qty > $item->stock)
-                                                        <p class="text-label-sm text-error">Only {{ rtrim(rtrim(number_format($item->stock, 3), '0'), '.') }} in stock</p>
-                                                    @endif
-                                                </div>
+                        <div class="divide-y divide-outline-variant">
+                            @foreach ($items as $item)
+                                @php $max = $allowOversell ? 999 : max(0, (int) floor($item->stock)); @endphp
+                                <div class="p-4 flex gap-3 sm:gap-4">
+                                    <a href="{{ $item->url }}" class="w-20 h-20 shrink-0 border border-outline-variant rounded-lg overflow-hidden bg-white p-1">
+                                        <img src="{{ $item->image }}" alt="{{ $item->name }}" class="w-full h-full object-contain">
+                                    </a>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="min-w-0">
+                                                <a href="{{ $item->url }}" class="font-bold hover:text-primary transition-colors line-clamp-2 leading-snug">{{ $item->name }}</a>
+                                                <p class="text-label-sm text-on-surface-variant mt-0.5">{{ $item->sku }} · Rs {{ number_format($item->price) }} each</p>
                                             </div>
-                                        </td>
-                                        <td class="p-4 text-center hidden sm:table-cell whitespace-nowrap">Rs {{ number_format($item->price) }}</td>
-                                        <td class="p-4">
-                                            <form method="POST" action="{{ route('cart.update', $item->variant_id) }}" class="flex justify-center">
-                                                @csrf @method('PATCH')
-                                                <input type="number" name="quantity" value="{{ $item->qty }}" min="1" max="999" onchange="this.form.submit()"
-                                                    class="w-16 text-center border border-outline rounded-lg py-1.5 outline-none focus:ring-1 focus:ring-primary">
-                                            </form>
-                                        </td>
-                                        <td class="p-4 text-right font-bold whitespace-nowrap">Rs {{ number_format($item->line_total) }}</td>
-                                        <td class="p-4 text-right">
-                                            <form method="POST" action="{{ route('cart.remove', $item->variant_id) }}">
+                                            <form method="POST" action="{{ route('cart.remove', $item->variant_id) }}" class="shrink-0 -mt-1 -mr-1">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" aria-label="Remove" class="p-2 rounded text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined">close</span></button>
+                                                <button type="submit" aria-label="Remove {{ $item->name }}" class="p-1.5 rounded-full text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors"><span class="material-symbols-outlined text-[20px]">close</span></button>
                                             </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                        </div>
+
+                                        @if (! $allowOversell && $item->qty > $item->stock)
+                                            <p class="text-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">warning</span> Only {{ rtrim(rtrim(number_format($item->stock, 3), '0'), '.') }} in stock</p>
+                                        @endif
+
+                                        <div class="flex items-center justify-between gap-3 mt-3">
+                                            {{-- Quantity stepper (capped at stock) --}}
+                                            <form method="POST" action="{{ route('cart.update', $item->variant_id) }}"
+                                                x-data="{ qty: {{ (int) $item->qty }}, max: {{ $max }}, _t: null,
+                                                    step(d) { const n = this.qty + d; if (n >= 1 && n <= this.max) { this.qty = n; clearTimeout(this._t); this._t = setTimeout(() => this.$root.submit(), 450); } } }">
+                                                @csrf @method('PATCH')
+                                                <div class="inline-flex items-center rounded-full border border-outline-variant select-none">
+                                                    <button type="button" @click="step(-1)" :disabled="qty <= 1" aria-label="Decrease quantity"
+                                                        class="w-9 h-9 grid place-items-center rounded-full text-on-surface disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container transition-colors">
+                                                        <span class="material-symbols-outlined text-[18px]">remove</span>
+                                                    </button>
+                                                    <span class="w-9 text-center font-bold tabular-nums" x-text="qty"></span>
+                                                    <button type="button" @click="step(1)" :disabled="qty >= max" aria-label="Increase quantity"
+                                                        class="w-9 h-9 grid place-items-center rounded-full text-on-surface disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container transition-colors">
+                                                        <span class="material-symbols-outlined text-[18px]">add</span>
+                                                    </button>
+                                                </div>
+                                                <input type="hidden" name="quantity" :value="qty">
+                                            </form>
+                                            <span class="font-bold whitespace-nowrap">Rs {{ number_format($item->line_total) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                         <div class="p-4 flex justify-between items-center border-t border-outline-variant">
                             <a href="{{ route('shop') }}" class="text-primary font-bold hover:underline flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">arrow_back</span> Continue shopping</a>
                             <form method="POST" action="{{ route('cart.clear') }}">
