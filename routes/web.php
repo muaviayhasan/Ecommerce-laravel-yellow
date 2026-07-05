@@ -188,6 +188,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('orders/{order}/print', [OrderController::class, 'print'])->name('orders.print');
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::patch('orders/{order}/delivery', [OrderController::class, 'updateDelivery'])->name('orders.delivery');
+    Route::patch('orders/{order}/payment', [OrderController::class, 'recordPayment'])->name('orders.payment');
 
     // Support inbox — staff side of the customer chat widget.
     Route::get('support', [SupportController::class, 'index'])->name('support.index');

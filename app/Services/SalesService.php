@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 /**
  * Sales (§12). The single entry point for placing a sale on any channel
@@ -172,6 +174,54 @@ class SalesService
         }
 
         return (float) $variant->retail_price;
+    }
+
+    /**
+     * Record a customer payment against an order (e.g. COD collected or a bank transfer
+     * received). Bumps paid_total, updates payment_status, and posts Cash/Bank ↔ AR.
+     *
+     * @param  array{amount: mixed, method?: ?string, reference?: ?string}  $data
+     */
+    public function recordPayment(Order $order, array $data): Payment
+    {
+        $outstanding = round((float) $order->grand_total - (float) $order->paid_total, 2);
+        if ($outstanding <= 0) {
+            throw new RuntimeException('This order is already fully paid.');
+        }
+
+        $amount = round((float) $data['amount'], 2);
+        if ($amount <= 0) {
+            throw new RuntimeException('Enter a payment amount greater than zero.');
+        }
+        if ($amount > $outstanding) {
+            throw new RuntimeException('Payment cannot exceed the outstanding balance of ' . format_money($outstanding) . '.');
+        }
+
+        $method = ($data['method'] ?? 'cash') === 'bank' ? 'bank' : 'cash';
+
+        return DB::transaction(function () use ($order, $data, $amount, $method) {
+            $payment = $order->payments()->create([
+                'gateway' => $method,
+                'amount' => $amount,
+                'status' => 'succeeded',
+                'transaction_ref' => $data['reference'] ?? null,
+                'received_by' => auth()->id(),
+            ]);
+
+            $paid = round((float) $order->paid_total + $amount, 2);
+            $order->update([
+                'paid_total' => $paid,
+                'payment_status' => $paid >= (float) $order->grand_total ? 'paid' : 'partial',
+            ]);
+
+            // Clear the receivable raised when the order was placed.
+            $this->ledger->post([
+                ['account' => $method, 'debit' => $amount],
+                ['account' => 'accounts_receivable', 'credit' => $amount],
+            ], $payment, "Payment for {$order->order_number}");
+
+            return $payment;
+        });
     }
 
     private function gateway(string $method): string

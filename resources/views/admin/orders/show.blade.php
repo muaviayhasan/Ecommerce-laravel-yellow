@@ -181,26 +181,70 @@
                 @endif
             @endforeach
 
-            <x-admin.panel title="Payment">
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-on-surface-variant capitalize">{{ str_replace('_', ' ', $order->payment_method) }}</span>
-                    <x-admin.order-badge :status="$order->payment_status" type="payment" />
-                </div>
-                <div class="mt-3 flex items-center justify-between text-sm">
-                    <span class="text-on-surface-variant">Paid</span>
-                    <span class="font-semibold text-on-surface">{{ format_money($order->paid_total) }} / {{ format_money($order->grand_total) }}</span>
-                </div>
-                @if ($order->payments->isNotEmpty())
-                    <div class="mt-3 pt-3 border-t border-outline-variant/60 space-y-2">
-                        @foreach ($order->payments as $payment)
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-on-surface-variant capitalize">{{ str_replace('_', ' ', $payment->gateway) }} · {{ $payment->status }}</span>
-                                <span class="font-semibold text-on-surface">{{ format_money($payment->amount) }}</span>
+            @php
+                $outstanding = round((float) $order->grand_total - (float) $order->paid_total, 2);
+                $cellP = 'w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary';
+            @endphp
+            <div x-data="{ pay: false }">
+                <x-admin.panel title="Payment">
+                    @can('orders.edit')
+                        @if ($outstanding > 0)
+                            <x-slot:actions>
+                                <button type="button" @click="pay = !pay" class="text-xs font-semibold text-primary" x-text="pay ? 'Cancel' : 'Record payment'">Record payment</button>
+                            </x-slot:actions>
+                        @endif
+                    @endcan
+
+                    <div x-show="!pay">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-on-surface-variant capitalize">{{ str_replace('_', ' ', $order->payment_method) }}</span>
+                            <x-admin.order-badge :status="$order->payment_status" type="payment" />
+                        </div>
+                        <div class="mt-3 flex items-center justify-between text-sm">
+                            <span class="text-on-surface-variant">Paid</span>
+                            <span class="font-semibold text-on-surface">{{ format_money($order->paid_total) }} / {{ format_money($order->grand_total) }}</span>
+                        </div>
+                        @if ($outstanding > 0)
+                            <div class="mt-2 flex items-center justify-between text-sm">
+                                <span class="text-on-surface-variant">Outstanding</span>
+                                <span class="font-semibold text-error">{{ format_money($outstanding) }}</span>
                             </div>
-                        @endforeach
+                        @endif
+                        @if ($order->payments->isNotEmpty())
+                            <div class="mt-3 pt-3 border-t border-outline-variant/60 space-y-2">
+                                @foreach ($order->payments as $payment)
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-on-surface-variant capitalize">{{ str_replace('_', ' ', $payment->gateway) }} · {{ $payment->status }}{{ $payment->receiver ? ' · ' . $payment->receiver->name : '' }}</span>
+                                        <span class="font-semibold text-on-surface">{{ format_money($payment->amount) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
-                @endif
-            </x-admin.panel>
+
+                    @can('orders.edit')
+                        @if ($outstanding > 0)
+                            <form x-show="pay" x-cloak method="POST" action="{{ route('admin.orders.payment', $order) }}" class="space-y-3">
+                                @csrf @method('PATCH')
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-medium text-on-surface-variant">Amount received</label>
+                                    <input type="number" name="amount" step="0.01" min="0.01" max="{{ $outstanding }}" value="{{ $outstanding }}" required class="{{ $cellP }}">
+                                    <p class="text-xs text-on-surface-variant">Outstanding: {{ format_money($outstanding) }}</p>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-medium text-on-surface-variant">Method</label>
+                                    <select name="method" data-no-select2 class="{{ $cellP }} cursor-pointer">
+                                        <option value="cash">Cash</option>
+                                        <option value="bank">Bank transfer</option>
+                                    </select>
+                                </div>
+                                <input type="text" name="reference" maxlength="255" placeholder="Reference / txn # (optional)" class="{{ $cellP }}">
+                                <button type="submit" class="w-full px-4 py-2 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all">Record payment</button>
+                            </form>
+                        @endif
+                    @endcan
+                </x-admin.panel>
+            </div>
 
             {{-- Delivery --}}
             @php

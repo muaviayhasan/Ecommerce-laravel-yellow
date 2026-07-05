@@ -20,7 +20,7 @@ class OrderController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('can:orders.view', only: ['index', 'show', 'print']),
-            new Middleware('can:orders.edit', only: ['updateStatus', 'updateDelivery']),
+            new Middleware('can:orders.edit', only: ['updateStatus', 'updateDelivery', 'recordPayment']),
         ];
     }
 
@@ -113,6 +113,24 @@ class OrderController extends Controller implements HasMiddleware
         }
 
         return back()->with('status', 'Order updated.');
+    }
+
+    /** Record a customer payment (COD collected / bank transfer received) against the order. */
+    public function recordPayment(Request $request, Order $order, \App\Services\SalesService $sales): RedirectResponse
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'method' => ['required', Rule::in(['cash', 'bank'])],
+            'reference' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        try {
+            $sales->recordPayment($order, $data);
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('status', 'Payment recorded.');
     }
 
     /** Update delivery details (method / handler / contact). No financial change. */
