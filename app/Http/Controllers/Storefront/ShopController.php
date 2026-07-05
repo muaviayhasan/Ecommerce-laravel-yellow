@@ -46,6 +46,11 @@ class ShopController extends Controller
         $paginator = $query->paginate(12)->withQueryString();
         $paginator->setCollection(Storefront::cards($paginator->getCollection()));
 
+        // Mobile infinite scroll fetches subsequent pages as a lightweight items partial.
+        if ($request->boolean('partial')) {
+            return view('storefront.partials.shop-items', ['products' => $paginator]);
+        }
+
         return view('storefront.shop', [
             'products' => $paginator,
             'recommended' => Storefront::cards(Storefront::query()->latest('published_at')->take(8)->get()),

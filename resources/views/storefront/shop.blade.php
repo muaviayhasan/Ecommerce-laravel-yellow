@@ -11,126 +11,50 @@
     <div class="bg-white py-8">
         <div class="app-container" x-data="{ filtersOpen: false }">
             {{-- Breadcrumbs --}}
-            <nav class="text-label-sm text-on-surface-variant mb-8 flex items-center gap-2" aria-label="Breadcrumb">
+            <nav class="text-label-sm text-on-surface-variant mb-6 flex items-center gap-2" aria-label="Breadcrumb">
                 <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
                 <span>&rsaquo;</span>
                 <span class="text-on-surface">Shop</span>
             </nav>
 
-            {{-- Mobile: animated toggle for the categories + filters panel (always shown on lg) --}}
-            <button type="button" @click="filtersOpen = !filtersOpen" :aria-expanded="filtersOpen.toString()"
-                class="lg:hidden mb-6 w-full flex items-center justify-center gap-2 bg-surface-container-low border border-gray-300 rounded-full py-3 font-bold hover:bg-surface-container transition-colors">
+            {{-- Mobile: open the filters modal --}}
+            <button type="button" @click="filtersOpen = true"
+                class="lg:hidden mb-4 w-full flex items-center justify-center gap-2 bg-surface-container-low border border-gray-300 rounded-full py-3 font-bold hover:bg-surface-container transition-colors">
                 <span class="material-symbols-outlined text-[20px]">tune</span>
-                <span x-text="filtersOpen ? 'Hide Filters' : 'Categories & Filters'"></span>
-                <span class="material-symbols-outlined text-[20px] transition-transform duration-300"
-                    :class="{ 'rotate-180': filtersOpen }">expand_more</span>
+                Categories &amp; Filters
             </button>
 
-            <div class="flex flex-col lg:flex-row gap-8">
-                {{-- ============================ Sidebar ============================ --}}
-                <aside class="w-full lg:w-64 shrink-0">
-                    {{-- Animated collapse: hidden on mobile until toggled; always open on lg.
-                         The grid-rows 0fr→1fr trick gives a smooth height transition. --}}
-                    <div class="grid lg:!grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out"
-                        :class="filtersOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'">
-                        <div class="overflow-hidden lg:overflow-visible">
-                            {{-- Categories (accordion) --}}
-                            <x-storefront.filter-section title="All Categories">
-                                <ul class="space-y-3 text-body-base text-on-surface-variant">
-                                    <li><a href="{{ route('shop') }}" class="hover:text-primary transition-colors {{ empty($filters['category']) ? 'font-bold text-on-surface' : '' }}">All products</a></li>
-                                    @foreach ($categories as $cat)
-                                        <li>
-                                            <a href="{{ $mergeQuery(['category' => $cat->slug]) }}" class="hover:text-primary transition-colors {{ ($filters['category'] ?? '') === $cat->slug ? 'font-bold text-primary' : '' }}">
-                                                {{ $cat->name }} <span class="font-normal text-gray-400">({{ $cat->products_count }})</span>
-                                            </a>
-                                            @if ($cat->children->isNotEmpty())
-                                                <ul class="pl-4 mt-2 space-y-2">
-                                                    @foreach ($cat->children as $child)
-                                                        <li><a href="{{ $mergeQuery(['category' => $child->slug]) }}" class="hover:text-primary transition-colors {{ ($filters['category'] ?? '') === $child->slug ? 'font-bold text-primary' : '' }}">{{ $child->name }}</a></li>
-                                                    @endforeach
-                                                </ul>
-                                            @endif
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </x-storefront.filter-section>
+            <div class="flex flex-col lg:flex-row lg:gap-8">
+                {{-- ===================== Sidebar (desktop only) ===================== --}}
+                <aside class="hidden lg:block w-64 shrink-0">
+                    @include('storefront.partials.shop-filters')
 
-                            {{-- Brands (accordion) --}}
-                            @if ($brands->isNotEmpty())
-                                <x-storefront.filter-section title="Brands">
-                                    <div class="space-y-2 text-body-base text-on-surface-variant">
-                                        @foreach ($brands as $brand)
-                                            <a href="{{ $mergeQuery(['brand' => $brand->slug]) }}" class="flex items-center justify-between hover:text-primary transition-colors {{ ($filters['brand'] ?? '') === $brand->slug ? 'font-bold text-primary' : '' }}">
-                                                <span>{{ $brand->name }}</span><span class="text-gray-400">({{ $brand->products_count }})</span>
-                                            </a>
-                                        @endforeach
-                                        @if (! empty($filters['brand']))
-                                            <a href="{{ $mergeQuery(['brand' => null]) }}" class="inline-block pt-1 text-secondary text-label-sm font-medium hover:text-primary">&times; Clear brand</a>
-                                        @endif
-                                    </div>
-                                </x-storefront.filter-section>
-                            @endif
+                    {{-- Ad banner --}}
+                    <a href="{{ route('shop') }}" class="block relative rounded-lg overflow-hidden bg-surface-container group mt-8 mb-10">
+                        <img src="/images/promos/promo-1.png" alt="Cameras promo"
+                            class="w-full h-56 object-contain p-6 group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-6 left-6">
+                            <p class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant mb-1">All-new</p>
+                            <h4 class="text-3xl font-black text-on-surface leading-none">4K</h4>
+                            <p class="text-body-base font-bold text-on-surface">CAMERAS</p>
+                            <p class="text-[10px] text-on-surface-variant mt-3">STARTING AT</p>
+                            <p class="text-2xl font-bold text-primary">$79.99</p>
+                        </div>
+                    </a>
 
-                            {{-- Price (accordion) --}}
-                            <x-storefront.filter-section title="Price">
-                                <form method="GET" action="{{ route('shop') }}" class="space-y-3">
-                                    @foreach (['q', 'category', 'brand', 'sort'] as $k)
-                                        @if (! empty($filters[$k]))<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
-                                    @endforeach
-                                    <div class="flex items-center gap-2">
-                                        <input type="number" name="min" min="0" value="{{ $filters['min'] ?? '' }}" placeholder="Min" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
-                                        <span class="text-gray-400">&mdash;</span>
-                                        <input type="number" name="max" min="0" value="{{ $filters['max'] ?? '' }}" placeholder="Max" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
-                                    </div>
-                                    <button type="submit" class="bg-surface-container px-6 py-2 rounded-full text-label-sm font-bold hover:bg-primary-container transition-colors">Filter</button>
-                                </form>
-                            </x-storefront.filter-section>
-
-                            {{-- Ad banner --}}
-                            <a href="{{ route('shop') }}" class="block relative rounded-lg overflow-hidden bg-surface-container group mt-8 mb-10">
-                                <img src="/images/promos/promo-1.png" alt="Cameras promo"
-                                    class="w-full h-56 object-contain p-6 group-hover:scale-105 transition-transform duration-500">
-                                <div class="absolute top-6 left-6">
-                                    <p class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant mb-1">All-new</p>
-                                    <h4 class="text-3xl font-black text-on-surface leading-none">4K</h4>
-                                    <p class="text-body-base font-bold text-on-surface">CAMERAS</p>
-                                    <p class="text-[10px] text-on-surface-variant mt-3">STARTING AT</p>
-                                    <p class="text-2xl font-bold text-primary">$79.99</p>
-                                </div>
-                            </a>
-
-                            {{-- Latest Products --}}
-                            <div>
-                                <h3 class="font-bold border-b border-gray-200 pb-3 mb-6 text-lg">Latest Products</h3>
-                                <div class="space-y-6">
-                                    @foreach ($latest as $product)
-                                        <x-storefront.product-list-item :product="$product" />
-                                    @endforeach
-                                </div>
-                            </div>
+                    {{-- Latest Products --}}
+                    <div>
+                        <h3 class="font-bold border-b border-gray-200 pb-3 mb-6 text-lg">Latest Products</h3>
+                        <div class="space-y-6">
+                            @foreach ($latest as $product)
+                                <x-storefront.product-list-item :product="$product" />
+                            @endforeach
                         </div>
                     </div>
                 </aside>
 
                 {{-- ============================ Main ============================ --}}
                 <section class="flex-1 min-w-0" x-data="{ view: 'grid' }">
-                    {{-- Recommended Products carousel (reuses the same component + heading as the home sliders) --}}
-                    @php $recommendedSlides = $recommended->chunk(4)->values(); @endphp
-                    <div class="mb-12">
-                        <x-storefront.carousel title="Recommended Products" :count="$recommendedSlides->count()">
-                            @foreach ($recommendedSlides as $slide)
-                                <div class="w-full shrink-0">
-                                    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t border-l border-gray-200">
-                                        @foreach ($slide as $product)
-                                            <x-storefront.product-card :product="$product"
-                                                class="border-b border-gray-200 hover:border-transparent" />
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </x-storefront.carousel>
-                    </div>
-
                     <div class="flex flex-wrap justify-between items-end gap-4 mb-6">
                         <h1 class="text-3xl sm:text-4xl font-light">{{ $filters['q'] ?? '' ? 'Results for “' . $filters['q'] . '”' : 'All Products' }}</h1>
                         <span class="text-body-base text-on-surface-variant">
@@ -165,18 +89,18 @@
                     </div>
 
                     {{-- Grid view --}}
-                    <div x-show="view === 'grid'" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t border-l border-gray-200">
+                    <div id="shop-grid" x-show="view === 'grid'"
+                        data-current-page="{{ $products->currentPage() }}" data-last-page="{{ $products->lastPage() }}"
+                        class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t border-l border-gray-200">
                         @foreach ($products as $product)
-                            <x-storefront.product-card :product="$product"
-                                class="border-b border-gray-200 hover:border-transparent" />
+                            <x-storefront.product-card :product="$product" class="border-b border-gray-200 hover:border-transparent" />
                         @endforeach
                     </div>
 
                     {{-- List view --}}
-                    <div x-show="view === 'list'" x-cloak class="border border-gray-200">
+                    <div id="shop-list" x-show="view === 'list'" x-cloak class="border border-gray-200">
                         @foreach ($products as $product)
-                            <x-storefront.product-card-wide :product="$product"
-                                class="border-b border-gray-200 last:border-b-0 hover:border-transparent" />
+                            <x-storefront.product-card-wide :product="$product" class="border-b border-gray-200 last:border-b-0 hover:border-transparent" />
                         @endforeach
                     </div>
 
@@ -189,9 +113,16 @@
                         </div>
                     @endif
 
-                    {{-- Pagination --}}
+                    {{-- Mobile: infinite-scroll sentinel (loads the next page as you scroll) --}}
+                    @if ($products->hasMorePages())
+                        <div id="shop-sentinel" class="lg:hidden flex justify-center py-8">
+                            <span data-spinner class="material-symbols-outlined animate-spin text-outline text-[28px]">progress_activity</span>
+                        </div>
+                    @endif
+
+                    {{-- Pagination (desktop only) --}}
                     @if ($products->hasPages())
-                        <nav class="flex justify-center items-center gap-2 mt-10" aria-label="Pagination">
+                        <nav class="hidden lg:flex justify-center items-center gap-2 mt-10" aria-label="Pagination">
                             @if (! $products->onFirstPage())
                                 <a href="{{ $products->previousPageUrl() }}" aria-label="Previous page" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_left</span></a>
                             @endif
@@ -207,7 +138,45 @@
                             @endif
                         </nav>
                     @endif
+
+                    {{-- Recommended Products (below the listing) --}}
+                    @php $recommendedSlides = $recommended->chunk(4)->values(); @endphp
+                    @if ($recommendedSlides->isNotEmpty())
+                        <div class="mt-16">
+                            <x-storefront.carousel title="Recommended Products" :count="$recommendedSlides->count()">
+                                @foreach ($recommendedSlides as $slide)
+                                    <div class="w-full shrink-0">
+                                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t border-l border-gray-200">
+                                            @foreach ($slide as $product)
+                                                <x-storefront.product-card :product="$product"
+                                                    class="border-b border-gray-200 hover:border-transparent" />
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </x-storefront.carousel>
+                        </div>
+                    @endif
                 </section>
+            </div>
+
+            {{-- ===================== Mobile filters modal ===================== --}}
+            <div x-show="filtersOpen" x-cloak class="lg:hidden fixed inset-0 z-[70]" @keydown.escape.window="filtersOpen = false">
+                <div class="absolute inset-0 bg-black/40" @click="filtersOpen = false" x-transition.opacity></div>
+                <div class="absolute inset-y-0 left-0 w-[86%] max-w-sm bg-white shadow-2xl flex flex-col"
+                    x-transition:enter="transition duration-200 ease-out" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+                    x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full">
+                    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-200 shrink-0">
+                        <h2 class="font-bold text-lg flex items-center gap-2"><span class="material-symbols-outlined">tune</span> Categories &amp; Filters</h2>
+                        <button type="button" @click="filtersOpen = false" aria-label="Close" class="w-9 h-9 grid place-items-center rounded-full hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto px-4 py-2">
+                        @include('storefront.partials.shop-filters')
+                    </div>
+                    <div class="px-4 py-3 border-t border-gray-200 shrink-0">
+                        <button type="button" @click="filtersOpen = false" class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-full hover:brightness-105 transition">View results</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -219,4 +188,45 @@
         ['title' => 'Top Selling Products', 'items' => $topSelling, 'rating' => null],
         ['title' => 'On-sale Products', 'items' => $onSale, 'rating' => 5],
     ]" />
+
+    @push('scripts')
+        <script>
+            // Mobile infinite scroll: append the next page of products as the sentinel nears view.
+            document.addEventListener('DOMContentLoaded', () => {
+                const grid = document.getElementById('shop-grid');
+                const list = document.getElementById('shop-list');
+                const sentinel = document.getElementById('shop-sentinel');
+                if (!grid || !sentinel) return;
+
+                let page = parseInt(grid.dataset.currentPage || '1', 10);
+                const lastPage = parseInt(grid.dataset.lastPage || '1', 10);
+                let loading = false;
+
+                const loadMore = async () => {
+                    if (loading || page >= lastPage) return;
+                    loading = true;
+                    try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('page', page + 1);
+                        url.searchParams.set('partial', '1');
+                        const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                        if (r.ok) {
+                            const tmp = document.createElement('div');
+                            tmp.innerHTML = await r.text();
+                            tmp.querySelectorAll('[data-shop-grid-items] > *').forEach(el => grid.appendChild(el));
+                            if (list) tmp.querySelectorAll('[data-shop-list-items] > *').forEach(el => list.appendChild(el));
+                            page++;
+                        }
+                    } catch (e) {}
+                    loading = false;
+                    if (page >= lastPage) { io.disconnect(); sentinel.remove(); }
+                };
+
+                const io = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) loadMore();
+                }, { rootMargin: '600px' });
+                io.observe(sentinel);
+            });
+        </script>
+    @endpush
 @endsection
