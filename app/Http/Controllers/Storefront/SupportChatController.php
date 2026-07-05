@@ -7,6 +7,7 @@ use App\Events\SupportReceipt;
 use App\Http\Controllers\Controller;
 use App\Models\SupportConversation;
 use App\Models\SupportMessage;
+use App\Services\SupportBot;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +26,8 @@ class SupportChatController extends Controller
     /** Current state: whether a chat exists, the display name, and its messages. */
     public function state(Request $request): JsonResponse
     {
+        $this->maybeNudgeAbandonedCheckout($request);
+
         $conv = $this->resolve(create: false);
 
         if ($conv) {
@@ -126,6 +129,32 @@ class SupportChatController extends Controller
     }
 
     // ---- helpers -------------------------------------------------------------
+
+    /**
+     * Nudge a signed-in customer who reached checkout but wandered off without ordering.
+     * Fires lazily off the widget's normal poll (no scheduler/queue needed): once they've
+     * left the checkout page and a short grace period has passed, drop a one-time reminder.
+     */
+    private function maybeNudgeAbandonedCheckout(Request $request): void
+    {
+        if (! Auth::check() || session('co_nudged') || ! session('co_pending_at')) {
+            return;
+        }
+        // Still on the checkout page, or too soon → wait.
+        if (str_contains((string) $request->query('path'), 'checkout')) {
+            return;
+        }
+        if (now()->timestamp - (int) session('co_pending_at') < 60) {
+            return;
+        }
+
+        app(SupportBot::class)->notifyUser(Auth::user(),
+            "🛍️ You're just one step away from placing your order!\n"
+            . 'Pick up where you left off: ' . route('checkout'));
+
+        session(['co_nudged' => true]);
+        session()->forget('co_pending_at');
+    }
 
     /** Presence heartbeat — records that the widget is currently live (drives the online dot). */
     private function touchSeen(SupportConversation $conv): void

@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\CartService;
 use App\Services\SalesService;
+use App\Services\SupportBot;
 use App\Support\Storefront;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -31,6 +32,11 @@ class CheckoutController extends Controller
 
         $subtotal = $this->cart->subtotal();
         $shipping = $this->shipping($subtotal);
+
+        // Remember they reached checkout so the support bot can nudge if they don't finish.
+        if (auth()->check()) {
+            session(['co_pending_at' => now()->timestamp, 'co_nudged' => false]);
+        }
 
         return view('storefront.checkout', [
             'items' => $this->cart->items(),
@@ -145,6 +151,15 @@ class CheckoutController extends Controller
         // Optionally remember this address on the customer's account for next time.
         if (auth()->check() && $request->boolean('save_address')) {
             $this->rememberAddress($request->user(), $name, $data);
+        }
+
+        // Confirm the order in the customer's support chat + cancel any abandonment nudge.
+        if (auth()->check()) {
+            app(SupportBot::class)->notifyUser($request->user(),
+                "🎉 Thank you! Your order {$order->order_number} has been placed.\n"
+                . 'Total ' . format_money($order->grand_total) . ' · ' . ucfirst(str_replace('_', ' ', $order->payment_status)) . ".\n"
+                . 'Track it here: ' . route('account.orders.show', $order));
+            session()->forget(['co_pending_at', 'co_nudged']);
         }
 
         $this->cart->clear();

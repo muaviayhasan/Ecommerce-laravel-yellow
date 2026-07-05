@@ -112,7 +112,29 @@ class OrderController extends Controller implements HasMiddleware
             ]);
         }
 
+        // Keep the customer posted in their support chat when the status actually changes.
+        if ($from !== $data['status'] && $order->user) {
+            app(\App\Services\SupportBot::class)->notifyUser($order->user, $this->statusMessage($order, $data['status']));
+        }
+
         return back()->with('status', 'Order updated.');
+    }
+
+    /** Friendly support-chat message for an order status change. */
+    private function statusMessage(Order $order, string $status): string
+    {
+        $num = $order->order_number;
+        $body = match ($status) {
+            'processing' => "🛠️ Good news! Your order {$num} is now being processed.",
+            'shipped' => "🚚 Your order {$num} has been shipped" . ($order->tracking_number ? " (tracking: {$order->tracking_number})" : '') . '. It\'s on the way!',
+            'delivered' => "✅ Your order {$num} has been delivered. Enjoy! Reply here if anything's not right.",
+            'completed' => "🎉 Your order {$num} is complete. Thank you for shopping with us!",
+            'cancelled' => "❌ Your order {$num} has been cancelled. Reply here if you have any questions.",
+            'refunded' => "💸 A refund has been processed for your order {$num}.",
+            default => "📦 Update: your order {$num} is now " . ucfirst(str_replace('_', ' ', $status)) . '.',
+        };
+
+        return $body . "\nView it: " . route('account.orders.show', $order);
     }
 
     /** Record a customer payment (COD collected / bank transfer received) against the order. */

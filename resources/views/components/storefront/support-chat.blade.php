@@ -52,7 +52,7 @@
                         <div :class="m.from_admin ? 'justify-start' : 'justify-end'" class="flex">
                             <div :class="m.from_admin ? 'bg-white text-on-surface rounded-tl-none' : 'bg-primary-container text-on-primary-container rounded-tr-none'"
                                 class="max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-sm">
-                                <p class="whitespace-pre-wrap break-words" x-text="m.body"></p>
+                                <p class="whitespace-pre-wrap break-words" x-html="linkify(m.body)"></p>
                                 <p :class="m.from_admin ? 'text-outline' : 'text-on-primary-container/70'" class="text-[10px] mt-0.5 flex items-center justify-end gap-0.5">
                                     <span x-text="m.at"></span>
                                     <template x-if="!m.from_admin">
@@ -176,7 +176,7 @@
                     startPolling() { if (this._poll) return; this._poll = setInterval(() => this.refresh(), 15000); },
                     async refresh() {
                         try {
-                            const url = cfg.stateUrl + (cfg.stateUrl.includes('?') ? '&' : '?') + 'open=' + (this.viewing() ? 1 : 0);
+                            const url = cfg.stateUrl + (cfg.stateUrl.includes('?') ? '&' : '?') + 'open=' + (this.viewing() ? 1 : 0) + '&path=' + encodeURIComponent(location.pathname);
                             const r = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
                             if (!r.ok) return;
                             const d = await r.json();
@@ -280,6 +280,14 @@
                         } catch (e) { return false; }
                     },
                     scrollDown() { const el = this.$refs.scroll; if (el) el.scrollTop = el.scrollHeight; },
+                    // Escape the body, then turn bare URLs into clickable links (e.g. the checkout / order link).
+                    linkify(text) {
+                        const esc = (text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                        return esc.replace(/(https?:\/\/[^\s<]+)/g, (u) => {
+                            const m = u.match(/^(.*?)([.,;:!?)]*)$/);
+                            return `<a href="${m[1]}" class="underline font-semibold hover:opacity-80">${m[1]}</a>${m[2] || ''}`;
+                        });
+                    },
                 }));
             });
         </script>
