@@ -26,7 +26,7 @@
     @stack('head')
 </head>
 
-<body class="min-h-screen bg-background text-on-surface antialiased pb-16 md:pb-0">
+<body class="min-h-screen bg-background text-on-surface antialiased">
     <x-storefront.header />
 
     <main>

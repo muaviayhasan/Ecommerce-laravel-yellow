@@ -60,7 +60,8 @@
         </div>
     </div>
 
-    <div class="border-t border-outline-variant bg-surface-container-high py-6">
+    {{-- Extra bottom padding on mobile so the copyright bar clears the fixed bottom nav. --}}
+    <div class="border-t border-outline-variant bg-surface-container-high py-6 pb-24 md:pb-6">
         <div class="app-container flex flex-col md:flex-row justify-between items-center gap-6">
             <p class="text-label-sm text-on-surface-variant">
                 &copy; {{ date('Y') }} {{ config('app.name') }} — All Rights Reserved
