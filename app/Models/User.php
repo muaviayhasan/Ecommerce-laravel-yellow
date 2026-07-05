@@ -70,6 +70,20 @@ class User extends Authenticatable
         return $this->roles()->where('name', '!=', 'customer')->exists();
     }
 
+    // Accessors ---------------------------------------------------------------
+
+    /** Resolve the avatar to a usable URL — social providers give a full URL, uploads give a storage path. */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (! $this->avatar) {
+            return null;
+        }
+
+        return \Illuminate\Support\Str::startsWith($this->avatar, ['http://', 'https://'])
+            ? $this->avatar
+            : \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar);
+    }
+
     // Relations ----------------------------------------------------------------
 
     public function customer(): HasOne

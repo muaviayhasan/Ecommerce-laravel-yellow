@@ -28,8 +28,12 @@
             {{-- Sidebar --}}
             <aside class="bg-white rounded-lg border border-outline-variant overflow-hidden">
                 <div class="p-5 border-b border-outline-variant flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-full bg-primary-container text-on-primary-container grid place-items-center font-bold shrink-0">
-                        {{ strtoupper(mb_substr($user->name, 0, 1)) }}
+                    <div class="w-11 h-11 rounded-full overflow-hidden bg-primary-container text-on-primary-container grid place-items-center font-bold shrink-0">
+                        @if ($user->avatar_url)
+                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                        @else
+                            {{ strtoupper(mb_substr($user->name, 0, 1)) }}
+                        @endif
                     </div>
                     <div class="min-w-0">
                         <p class="font-bold truncate">{{ $user->name }}</p>

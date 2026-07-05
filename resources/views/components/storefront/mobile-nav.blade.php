@@ -9,7 +9,7 @@
         ['url' => route('shop'), 'match' => 'shop', 'icon' => 'storefront', 'label' => 'Shop'],
         null,
         ['url' => route('wishlist'), 'match' => 'wishlist', 'icon' => 'favorite', 'label' => 'Wishlist', 'badge' => $wishlistCount],
-        ['url' => auth()->check() ? route('account') : route('login'), 'match' => 'account', 'icon' => 'person', 'label' => 'Account'],
+        ['url' => auth()->check() ? route('account') : route('login'), 'match' => 'account*', 'icon' => 'person', 'label' => 'Account', 'avatar' => auth()->check() ? auth()->user()->avatar_url : null],
     ];
 @endphp
 
@@ -33,7 +33,11 @@
                 @php $on = request()->routeIs($item['match']); @endphp
                 <a href="{{ $item['url'] }}" @class(['flex flex-col items-center justify-center gap-1 transition-colors', 'text-primary' => $on, 'text-on-surface-variant' => ! $on])>
                     <span @class(['relative grid place-items-center h-7 w-14 rounded-full transition-colors', 'bg-primary-container/30' => $on])>
-                        <span class="material-symbols-outlined text-[22px]" style="{{ $on ? "font-variation-settings:'FILL' 1" : '' }}">{{ $item['icon'] }}</span>
+                        @if (! empty($item['avatar']))
+                            <img src="{{ $item['avatar'] }}" alt="" @class(['w-6 h-6 rounded-full object-cover', 'ring-2 ring-primary' => $on])>
+                        @else
+                            <span class="material-symbols-outlined text-[22px]" style="{{ $on ? "font-variation-settings:'FILL' 1" : '' }}">{{ $item['icon'] }}</span>
+                        @endif
                         @if (! empty($item['badge']))
                             <span class="absolute top-0 right-2.5 min-w-4 h-4 px-1 rounded-full bg-error text-white text-[9px] font-bold grid place-items-center ring-2 ring-surface-container-lowest">{{ $item['badge'] }}</span>
                         @endif

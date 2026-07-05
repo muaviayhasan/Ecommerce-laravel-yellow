@@ -87,7 +87,11 @@
                             </div>
                             <div>
                                 <label class="block text-label-sm font-medium mb-1">Phone</label>
-                                <input type="tel" name="phone" x-model="form.phone" data-mask="phone" maxlength="12" autocomplete="tel" inputmode="tel" placeholder="0300-0000000" class="w-full rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('phone') border-error @enderror">
+                                <div class="flex rounded-lg border border-outline-variant overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-colors @error('phone') border-error @enderror">
+                                    <span class="grid place-items-center px-3 bg-surface-container-low text-on-surface-variant font-semibold border-r border-outline-variant select-none">03</span>
+                                    <input type="tel" inputmode="numeric" x-model="phoneRest" @input="formatPhone" maxlength="10" placeholder="00-0000000" autocomplete="tel-national" class="flex-1 min-w-0 px-3 py-2.5 outline-none bg-transparent">
+                                </div>
+                                <input type="hidden" name="phone" :value="phoneFull">
                                 @error('phone')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
@@ -198,7 +202,7 @@
                 };
                 return {
                     open: {{ $errors->any() ? 'true' : 'false' }},
-                    showApt: false, showMore: false, labelCustom: false,
+                    showApt: false, showMore: false, labelCustom: false, phoneRest: '',
                     map: null, marker: null, geocoder: null, autocomplete: null,
                     form: @js([
                         'id' => old('address_id', ''),
@@ -220,13 +224,30 @@
                         if (!this.form.country) this.form.country = DEFAULT_COUNTRY;
                         if (!this.form.label) this.form.label = 'Home';
                         this.syncLabelState();
+                        this.seedPhone(this.form.phone);
                         this.$watch('open', (v) => v && this.bootMap());
                         if (this.open) this.bootMap();
                     },
                     openCreate() { this.form = { ...blank }; this.reset(); this.open = true; },
                     openEdit(a) { this.form = { ...blank, ...a }; if (!this.form.country) this.form.country = DEFAULT_COUNTRY; this.reset(); this.open = true; },
-                    reset() { this.showApt = false; this.showMore = false; this.syncLabelState(); this.$nextTick(() => this.centreMap()); },
+                    reset() { this.showApt = false; this.showMore = false; this.syncLabelState(); this.seedPhone(this.form.phone); this.$nextTick(() => this.centreMap()); },
                     close() { this.open = false; },
+
+                    // Phone: fixed "03" prefix + 9 editable digits shown as "00-0000000"
+                    seedPhone(full) {
+                        const d = (full || '').replace(/\D/g, '');
+                        const rest = d.startsWith('03') ? d.slice(2) : d;
+                        this.phoneRest = rest.length > 2 ? rest.slice(0, 2) + '-' + rest.slice(2) : rest;
+                    },
+                    formatPhone() {
+                        const d = this.phoneRest.replace(/\D/g, '').slice(0, 9);
+                        this.phoneRest = d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d;
+                    },
+                    get phoneFull() {
+                        const d = this.phoneRest.replace(/\D/g, '');
+                        if (!d) return '';
+                        return d.length > 2 ? '03' + d.slice(0, 2) + '-' + d.slice(2) : '03' + d;
+                    },
 
                     // Label chips
                     setLabel(v) { this.form.label = v; this.labelCustom = false; },

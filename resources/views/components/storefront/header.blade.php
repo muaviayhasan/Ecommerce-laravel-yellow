@@ -49,7 +49,11 @@
                         </a>
                     @endif
                     <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('account') }}">
-                        <span class="material-symbols-outlined text-[16px]">person</span>
+                        @if (auth()->user()->avatar_url)
+                            <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}" class="w-6 h-6 rounded-full object-cover">
+                        @else
+                            <span class="material-symbols-outlined text-[16px]">person</span>
+                        @endif
                         <span class="hidden md:inline">My Account</span>
                     </a>
                     <form method="POST" action="{{ route('logout') }}" class="contents">

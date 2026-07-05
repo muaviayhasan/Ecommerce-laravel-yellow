@@ -8,6 +8,8 @@ use App\Models\Order;
 use App\Services\WishlistService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /** Signed-in customer "My Account" area — dashboard, orders, addresses, profile. */
@@ -152,9 +154,18 @@ class AccountController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', self::PHONE_RULE],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
         ], ['phone.regex' => self::PHONE_MESSAGE]);
 
-        $user->update($data);
+        if ($request->hasFile('avatar')) {
+            // Replace a previously uploaded file, but never delete a social provider URL.
+            if ($user->avatar && ! Str::startsWith($user->avatar, ['http://', 'https://'])) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user->fill(['name' => $data['name'], 'phone' => $data['phone'] ?? null])->save();
         $user->customer?->update(['name' => $data['name'], 'phone' => $data['phone'] ?? $user->customer->phone]);
 
         return back()->with('status', 'Your details have been updated.');
