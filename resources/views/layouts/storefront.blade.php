@@ -26,7 +26,7 @@
     @stack('head')
 </head>
 
-<body class="min-h-screen bg-background text-on-surface antialiased">
+<body class="min-h-screen bg-background text-on-surface antialiased pb-16 md:pb-0">
     <x-storefront.header />
 
     <main>
@@ -48,6 +48,8 @@
     <x-storefront.compare-tray />
 
     <x-storefront.support-chat />
+
+    <x-storefront.mobile-nav />
 
     @livewireScripts
     @stack('scripts')

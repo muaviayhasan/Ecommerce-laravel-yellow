@@ -10,7 +10,7 @@
     <div x-data="{ show: true }" x-show="show" x-init="$store.compareBar.visible = true"
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
-        class="fixed inset-x-0 bottom-0 z-50 bg-inverse-surface text-inverse-on-surface shadow-[0_-4px_24px_rgba(0,0,0,0.25)] print:hidden">
+        class="fixed inset-x-0 bottom-16 md:bottom-0 z-50 bg-inverse-surface text-inverse-on-surface shadow-[0_-4px_24px_rgba(0,0,0,0.25)] print:hidden">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 sm:gap-4">
 
             {{-- Prompt --}}

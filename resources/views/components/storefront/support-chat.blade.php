@@ -7,8 +7,8 @@
         authed: @js(auth()->check()),
         authName: @js(auth()->user()?->name),
     })"
-    :style="($store.compareBar && $store.compareBar.visible) ? 'bottom: 7rem' : ''"
-    class="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3 print:hidden transition-all duration-200">
+    :class="($store.compareBar && $store.compareBar.visible) ? '!bottom-40 md:!bottom-28' : ''"
+    class="fixed bottom-20 md:bottom-5 right-5 z-[60] flex flex-col items-end gap-3 print:hidden transition-all duration-200">
 
     {{-- Panel --}}
     <div x-show="open" x-cloak x-transition.origin.bottom.right
