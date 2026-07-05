@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\ProductVariant;
+use App\Models\User;
 use App\Services\CartService;
 use App\Services\SalesService;
 use App\Support\Storefront;
@@ -33,6 +34,9 @@ class CheckoutController extends Controller
             'shipping' => $shipping,
             'total' => $subtotal + $shipping,
             'user' => auth()->user(),
+            'addresses' => auth()->check()
+                ? auth()->user()->addresses()->orderByDesc('is_default_shipping')->orderByDesc('is_default_billing')->orderBy('id')->get()
+                : collect(),
             'featured' => Storefront::cards(Storefront::query()->featured()->take(2)->get()),
             'topSelling' => Storefront::cards(Storefront::query()->bestseller()->take(2)->get()),
             'onSale' => Storefront::cards(Storefront::onSaleQuery()->take(2)->get()),
@@ -60,6 +64,7 @@ class CheckoutController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
             'payment_method' => ['required', 'in:cod,bank'],
             'terms' => ['accepted'],
+            'save_address' => ['nullable', 'boolean'],
         ]);
 
         $items = $this->cart->items();
@@ -107,6 +112,11 @@ class CheckoutController extends Controller
             $order->update(['customer_notes' => $data['notes']]);
         }
 
+        // Optionally remember this address on the customer's account for next time.
+        if (auth()->check() && $request->boolean('save_address')) {
+            $this->rememberAddress($request->user(), $name, $data);
+        }
+
         $this->cart->clear();
         session(['last_order_id' => $order->id]);
 
@@ -126,6 +136,36 @@ class CheckoutController extends Controller
         }
 
         return view('storefront.checkout-success', ['order' => $order]);
+    }
+
+    /** Save the checkout address to the customer's address book, skipping exact duplicates. */
+    private function rememberAddress(User $user, string $name, array $data): void
+    {
+        $exists = $user->addresses()
+            ->where('line1', $data['line1'])
+            ->where('city', $data['city'])
+            ->where('zip', $data['zip'] ?? null)
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
+        $isFirst = $user->addresses()->count() === 0;
+
+        $user->addresses()->create([
+            'name' => $name,
+            'company' => $data['company'] ?? null,
+            'phone' => $data['phone'],
+            'line1' => $data['line1'],
+            'line2' => $data['line2'] ?? null,
+            'city' => $data['city'],
+            'state' => $data['state'] ?? null,
+            'zip' => $data['zip'] ?? null,
+            'country' => $data['country'],
+            'is_default_billing' => $isFirst,
+            'is_default_shipping' => $isFirst,
+        ]);
     }
 
     private function shipping(float $subtotal): float

@@ -45,10 +45,34 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('checkout.store') }}" class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <form method="POST" action="{{ route('checkout.store') }}" class="grid grid-cols-1 lg:grid-cols-12 gap-10" x-data="checkoutAddress()">
                 @csrf
                 {{-- ===================== Billing & shipping ===================== --}}
                 <div class="lg:col-span-7">
+                    @auth
+                        @if ($addresses->isNotEmpty())
+                            <div class="mb-8">
+                                <h2 class="text-headline-md font-medium border-b border-outline-variant pb-4 mb-5">Your saved addresses</h2>
+                                <div class="grid sm:grid-cols-2 gap-3">
+                                    @foreach ($addresses as $a)
+                                        @php $ad = ['id' => $a->id, 'name' => $a->name ?? '', 'phone' => $a->phone ?? '', 'line1' => $a->line1 ?? '', 'line2' => $a->line2 ?? '', 'city' => $a->city ?? '', 'state' => $a->state ?? '', 'zip' => $a->zip ?? '', 'country' => $a->country ?? '']; @endphp
+                                        <button type="button" @click='fill(@json($ad))'
+                                            class="text-left p-4 border rounded-lg transition-colors"
+                                            :class="selected === {{ $a->id }} ? 'border-primary bg-surface-container-low ring-1 ring-primary' : 'border-outline-variant hover:border-primary'">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                @if ($a->label)<span class="font-bold text-body-base">{{ $a->label }}</span>@endif
+                                                @if ($a->is_default_shipping)<span class="text-[10px] font-bold uppercase tracking-wide bg-primary-container/40 text-on-primary-container px-2 py-0.5 rounded-full">Default</span>@endif
+                                            </div>
+                                            <p class="font-medium text-body-base">{{ $a->name }}</p>
+                                            <p class="text-label-sm text-on-surface-variant">{{ \Illuminate\Support\Str::limit(collect([$a->line1, $a->city, $a->state])->filter()->join(', '), 60) }}</p>
+                                        </button>
+                                    @endforeach
+                                </div>
+                                <p class="text-label-sm text-on-surface-variant mt-3">Pick one to fill the form, or enter a new address below.</p>
+                            </div>
+                        @endif
+                    @endauth
+
                     <h2 class="text-headline-md font-medium border-b border-outline-variant pb-4 mb-8">Billing details</h2>
                     @php $err = fn ($f) => $errors->has($f) ? '<p class="text-error text-label-sm mt-1">' . e($errors->first($f)) . '</p>' : ''; @endphp
                     <div class="space-y-6">
@@ -60,12 +84,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="{{ $label }}" for="fname">First name *</label>
-                                <input id="fname" name="first_name" type="text" value="{{ old('first_name') }}" class="{{ $field }}">
+                                <input id="fname" x-ref="fname" name="first_name" type="text" value="{{ old('first_name') }}" class="{{ $field }}">
                                 {!! $err('first_name') !!}
                             </div>
                             <div>
                                 <label class="{{ $label }}" for="lname">Last name *</label>
-                                <input id="lname" name="last_name" type="text" value="{{ old('last_name') }}" class="{{ $field }}">
+                                <input id="lname" x-ref="lname" name="last_name" type="text" value="{{ old('last_name') }}" class="{{ $field }}">
                                 {!! $err('last_name') !!}
                             </div>
                         </div>
@@ -75,7 +99,7 @@
                         </div>
                         <div>
                             <label class="{{ $label }}" for="country">Country / Region *</label>
-                            <select id="country" name="country" class="{{ $field }}">
+                            <select id="country" x-ref="country" name="country" class="{{ $field }}">
                                 @foreach (['Pakistan', 'United States (US)', 'United Kingdom (UK)', 'United Arab Emirates'] as $c)
                                     <option @selected(old('country', 'Pakistan') === $c)>{{ $c }}</option>
                                 @endforeach
@@ -84,20 +108,20 @@
                         <div>
                             <label class="{{ $label }}">Street address *</label>
                             <div class="space-y-3">
-                                <input type="text" name="line1" value="{{ old('line1') }}" placeholder="House number and street name" class="{{ $field }}">
-                                <input type="text" name="line2" value="{{ old('line2') }}" placeholder="Apartment, suite, unit, etc. (optional)" class="{{ $field }}">
+                                <input type="text" x-ref="line1" name="line1" value="{{ old('line1') }}" placeholder="House number and street name" class="{{ $field }}">
+                                <input type="text" x-ref="line2" name="line2" value="{{ old('line2') }}" placeholder="Apartment, suite, unit, etc. (optional)" class="{{ $field }}">
                             </div>
                             {!! $err('line1') !!}
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="{{ $label }}" for="city">Town / City *</label>
-                                <input id="city" name="city" type="text" value="{{ old('city') }}" class="{{ $field }}">
+                                <input id="city" x-ref="city" name="city" type="text" value="{{ old('city') }}" class="{{ $field }}">
                                 {!! $err('city') !!}
                             </div>
                             <div>
                                 <label class="{{ $label }}" for="state">Province / State *</label>
-                                <select id="state" name="state" class="{{ $field }}">
+                                <select id="state" x-ref="state" name="state" class="{{ $field }}">
                                     @foreach (['Punjab', 'Sindh', 'Khyber Pakhtunkhwa', 'Balochistan', 'Islamabad Capital Territory'] as $s)
                                         <option @selected(old('state') === $s)>{{ $s }}</option>
                                     @endforeach
@@ -107,11 +131,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="{{ $label }}" for="zip">ZIP / Postal code</label>
-                                <input id="zip" name="zip" type="text" value="{{ old('zip') }}" class="{{ $field }}">
+                                <input id="zip" x-ref="zip" name="zip" type="text" value="{{ old('zip') }}" class="{{ $field }}">
                             </div>
                             <div>
                                 <label class="{{ $label }}" for="phone">Phone *</label>
-                                <input id="phone" name="phone" type="tel" value="{{ old('phone') }}" class="{{ $field }}">
+                                <input id="phone" x-ref="phone" name="phone" type="tel" value="{{ old('phone') }}" class="{{ $field }}">
                                 {!! $err('phone') !!}
                             </div>
                         </div>
@@ -127,6 +151,11 @@
                             <label class="{{ $label }}" for="notes">Order notes (optional)</label>
                             <textarea id="notes" name="notes" rows="4" placeholder="Notes about your order, e.g. special notes for delivery." class="{{ $field }}">{{ old('notes') }}</textarea>
                         </div>
+                        @auth
+                            <label class="flex items-center gap-3 mt-6 font-medium cursor-pointer">
+                                <input type="checkbox" name="save_address" value="1" @checked(old('save_address')) class="w-4 h-4 rounded border-outline-variant accent-primary-container"> Save this address to my account for next time
+                            </label>
+                        @endauth
                     </div>
                 </div>
 
@@ -212,4 +241,32 @@
         ['title' => 'Top Selling Products', 'items' => $topSelling, 'rating' => null],
         ['title' => 'On-sale Products', 'items' => $onSale, 'rating' => 5],
     ]" />
+
+    @push('scripts')
+        <script>
+            function checkoutAddress() {
+                return {
+                    selected: null,
+                    fill(a) {
+                        const parts = (a.name || '').trim().split(/\s+/);
+                        this.$refs.fname.value = parts.shift() || '';
+                        this.$refs.lname.value = parts.join(' ');
+                        this.$refs.phone.value = a.phone || '';
+                        this.$refs.line1.value = a.line1 || '';
+                        this.$refs.line2.value = a.line2 || '';
+                        this.$refs.city.value = a.city || '';
+                        this.$refs.zip.value = a.zip || '';
+                        this.setSelect(this.$refs.state, a.state);
+                        this.setSelect(this.$refs.country, a.country);
+                        this.selected = a.id;
+                    },
+                    setSelect(sel, val) {
+                        if (!sel || !val) return;
+                        const opt = [...sel.options].find((o) => o.value === val || o.text === val);
+                        if (opt) sel.value = opt.value;
+                    },
+                };
+            }
+        </script>
+    @endpush
 @endsection
