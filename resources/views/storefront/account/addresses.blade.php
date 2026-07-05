@@ -58,20 +58,23 @@
             @endif
 
             {{-- Add / edit modal --}}
-            <div x-show="open" x-cloak class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" style="display:none;">
+            <div x-show="open" x-cloak x-effect="document.documentElement.style.overflow = open ? 'hidden' : ''"
+                class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center" style="display:none;">
                 <div class="absolute inset-0 bg-black/50" @click="close()"></div>
                 <div x-show="open" x-transition
-                    class="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto shadow-2xl">
-                    <div class="sticky top-0 bg-white border-b border-outline-variant px-5 py-4 flex items-center justify-between">
+                    class="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+                    <div class="shrink-0 bg-white border-b border-outline-variant px-5 py-4 flex items-center justify-between">
                         <h2 class="font-bold text-lg" x-text="form.id ? 'Edit address' : 'Add address'"></h2>
                         <button type="button" @click="close()" class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined">close</span></button>
                     </div>
 
-                    <form method="POST" :action="form.id ? `{{ url('account/addresses') }}/${form.id}` : '{{ route('account.addresses.store') }}'" class="p-5 space-y-4">
+                    <form method="POST" :action="form.id ? `{{ url('account/addresses') }}/${form.id}` : '{{ route('account.addresses.store') }}'" class="flex flex-col min-h-0 flex-1">
                         @csrf
                         <template x-if="form.id"><input type="hidden" name="_method" value="PUT"></template>
                         <input type="hidden" name="address_id" :value="form.id">
 
+                        {{-- Scrollable fields --}}
+                        <div class="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4">
                         <div>
                             <label class="block text-label-sm font-medium mb-1">Label <span class="text-on-surface-variant font-normal">(e.g. Home, Office)</span></label>
                             <input type="text" name="label" x-model="form.label" maxlength="60" class="w-full rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
@@ -134,7 +137,10 @@
                             </label>
                         </div>
 
-                        <div class="flex items-center gap-3 pt-2">
+                        </div>{{-- /scrollable fields --}}
+
+                        {{-- Pinned footer --}}
+                        <div class="shrink-0 border-t border-outline-variant p-4 flex items-center gap-3 bg-white">
                             <button type="submit" class="flex-1 bg-primary-container text-on-primary-container py-3 rounded-full font-bold hover:brightness-105 transition">Save address</button>
                             <button type="button" @click="close()" class="px-5 py-3 rounded-full font-bold text-on-surface-variant hover:bg-surface-container transition">Cancel</button>
                         </div>
