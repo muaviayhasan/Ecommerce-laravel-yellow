@@ -1,10 +1,19 @@
-{{-- Shop filter fields (checkboxes + price), shared by the desktop sidebar and the
+{{-- Shop filter fields (price + checkboxes), shared by the desktop sidebar and the
      mobile modal. The PARENT wraps these in a <form method="GET"> and supplies the
      submit button. Expects: $categories, $brands, $filters (category/brand are arrays). --}}
 
 {{-- Keep the current search + sort when filters are applied. --}}
 @if (! empty($filters['q']))<input type="hidden" name="q" value="{{ $filters['q'] }}">@endif
 @if (! empty($filters['sort']))<input type="hidden" name="sort" value="{{ $filters['sort'] }}">@endif
+
+{{-- Price --}}
+<x-storefront.filter-section title="Price">
+    <div class="flex items-center gap-2">
+        <input type="number" name="min" min="0" value="{{ $filters['min'] ?? '' }}" placeholder="Min" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
+        <span class="text-gray-400">&mdash;</span>
+        <input type="number" name="max" min="0" value="{{ $filters['max'] ?? '' }}" placeholder="Max" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
+    </div>
+</x-storefront.filter-section>
 
 {{-- Categories --}}
 <x-storefront.filter-section title="All Categories">
@@ -49,15 +58,6 @@
         </div>
     </x-storefront.filter-section>
 @endif
-
-{{-- Price --}}
-<x-storefront.filter-section title="Price">
-    <div class="flex items-center gap-2">
-        <input type="number" name="min" min="0" value="{{ $filters['min'] ?? '' }}" placeholder="Min" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
-        <span class="text-gray-400">&mdash;</span>
-        <input type="number" name="max" min="0" value="{{ $filters['max'] ?? '' }}" placeholder="Max" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
-    </div>
-</x-storefront.filter-section>
 
 @if (! empty($filters['category']) || ! empty($filters['brand']) || ! empty($filters['min']) || ! empty($filters['max']))
     <a href="{{ route('shop', array_filter(['q' => $filters['q'] ?? null, 'sort' => $filters['sort'] ?? null])) }}"
