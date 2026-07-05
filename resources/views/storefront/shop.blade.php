@@ -163,7 +163,7 @@
             {{-- ===================== Mobile filters modal ===================== --}}
             <div x-show="filtersOpen" x-cloak class="lg:hidden fixed inset-0 z-[70]" @keydown.escape.window="filtersOpen = false">
                 <div class="absolute inset-0 bg-black/40" @click="filtersOpen = false" x-transition.opacity></div>
-                <div class="absolute inset-y-0 left-0 w-[86%] max-w-sm bg-white shadow-2xl flex flex-col"
+                <div class="absolute inset-y-0 left-0 w-full bg-white shadow-2xl flex flex-col"
                     x-transition:enter="transition duration-200 ease-out" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
                     x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full">
                     <div class="flex items-center justify-between px-4 py-4 border-b border-gray-200 shrink-0">
