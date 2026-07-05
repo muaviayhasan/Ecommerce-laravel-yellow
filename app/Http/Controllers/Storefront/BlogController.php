@@ -69,6 +69,8 @@ class BlogController extends Controller
             'format' => 'standard',
             'category' => $post->categories->pluck('name')->implode(', ') ?: 'Uncategorized',
             'date' => ($post->published_at ?? $post->created_at)?->format('F j, Y'),
+            'published_iso' => ($post->published_at ?? $post->created_at)?->toIso8601String(),
+            'updated_iso' => $post->updated_at?->toIso8601String(),
             'author' => $post->author?->name ?? 'admin',
             'image' => $post->cover?->url ?? self::PLACEHOLDER,
             'excerpt' => $post->excerpt ?: Str::limit(strip_tags((string) $post->body), 160),

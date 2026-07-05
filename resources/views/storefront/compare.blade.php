@@ -1,4 +1,5 @@
 @extends('layouts.storefront')
+@section('robots', 'noindex, follow')
 
 @section('title', 'Compare — ' . config('app.name'))
 

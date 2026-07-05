@@ -1,4 +1,5 @@
 @extends('layouts.storefront')
+@section('robots', 'noindex, follow')
 
 @section('title', 'Order #' . $order->order_number . ' — ' . config('app.name'))
 @section('hideNewsletter', '1')

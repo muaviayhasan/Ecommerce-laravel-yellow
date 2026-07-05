@@ -1,4 +1,5 @@
 @extends('layouts.storefront')
+@section('robots', 'noindex, follow')
 
 @section('title', 'My Account — ' . config('app.name'))
 @section('hideNewsletter', '1')

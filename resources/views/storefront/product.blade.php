@@ -1,7 +1,50 @@
 @extends('layouts.storefront')
 
 @section('title', $product['name'] . ' — ' . config('app.name'))
-@section('meta_description', \Illuminate\Support\Str::limit(strip_tags($product['features'][0] ?? $product['name']), 155))
+@section('meta_description', \Illuminate\Support\Str::limit(strip_tags($product['short_description'] ?: ($product['description'] ?: ($product['features'][0] ?? $product['name']))), 155))
+@section('og_type', 'product')
+@section('og_image', $product['image'])
+
+@php
+    $currency = setting('general', 'currency', 'PKR');
+    $productSchema = array_filter([
+        '@context' => 'https://schema.org',
+        '@type' => 'Product',
+        'name' => $product['name'],
+        'image' => $product['gallery'] ?: [$product['image']],
+        'description' => \Illuminate\Support\Str::limit(strip_tags($product['description'] ?: ($product['short_description'] ?: $product['name'])), 500),
+        'sku' => $product['sku'] ?: null,
+        'category' => $product['category'] ?: null,
+        'offers' => array_filter([
+            '@type' => 'Offer',
+            'url' => $product['url'],
+            'priceCurrency' => $currency,
+            'price' => number_format((float) $product['price'], 2, '.', ''),
+            'availability' => 'https://schema.org/' . ((float) $product['stock'] > 0 ? 'InStock' : 'OutOfStock'),
+        ]),
+    ]);
+    if ((int) ($product['reviews_count'] ?? 0) > 0) {
+        $productSchema['aggregateRating'] = [
+            '@type' => 'AggregateRating',
+            'ratingValue' => (string) $product['avg_rating'],
+            'reviewCount' => (int) $product['reviews_count'],
+        ];
+    }
+    $productBreadcrumb = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Shop', 'item' => route('shop')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $product['name'], 'item' => $product['url']],
+        ],
+    ];
+@endphp
+
+@push('schema')
+    <script type="application/ld+json">@json($productSchema)</script>
+    <script type="application/ld+json">@json($productBreadcrumb)</script>
+@endpush
 
 @php
     $isOnSale = $product['compare'] !== null && (float) $product['compare'] > (float) $product['price'];

@@ -389,6 +389,33 @@ class SettingsController extends Controller implements HasMiddleware
                     ],
                 ],
             ],
+
+            'seo' => [
+                'label' => 'SEO & sharing',
+                'icon' => 'travel_explore',
+                'sections' => [
+                    [
+                        'title' => 'Search engines',
+                        'description' => 'Defaults for pages that don\'t set their own. Keep descriptions under ~160 characters.',
+                        'fields' => [
+                            'meta_description' => ['input' => 'textarea', 'label' => 'Default meta description', 'rows' => 2, 'max' => 300, 'rules' => ['nullable', 'string', 'max:300']],
+                            'meta_keywords' => ['input' => 'text', 'label' => 'Default keywords', 'max' => 255, 'rules' => ['nullable', 'string', 'max:255'], 'help' => 'Comma-separated. Optional, minor effect.'],
+                            'indexable' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Allow search engines to index this site', 'default' => true, 'help' => 'Turn OFF on a staging site — every page then sends "noindex".'],
+                            'google_site_verification' => ['input' => 'text', 'label' => 'Google verification code', 'max' => 255, 'rules' => ['nullable', 'string', 'max:255'], 'help' => 'The content value from Search Console\'s meta-tag method.'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Social sharing',
+                        'description' => 'Open Graph / Twitter cards shown when a page link is shared.',
+                        'fields' => [
+                            'og_image' => ['input' => 'text', 'label' => 'Default share image', 'max' => 500, 'rules' => ['nullable', 'string', 'max:500'], 'help' => 'Absolute URL or /storage path. 1200×630 works best.'],
+                            'twitter_handle' => ['input' => 'text', 'label' => 'Twitter / X handle', 'max' => 50, 'rules' => ['nullable', 'string', 'max:50'], 'help' => 'e.g. @yourstore'],
+                            'facebook_url' => ['input' => 'text', 'label' => 'Facebook page URL', 'max' => 255, 'rules' => ['nullable', 'url', 'max:255']],
+                            'instagram_url' => ['input' => 'text', 'label' => 'Instagram URL', 'max' => 255, 'rules' => ['nullable', 'url', 'max:255']],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 }

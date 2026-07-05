@@ -6,11 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- SEO: a page sets @section('title') / @push('meta'); falls back to the store name. --}}
-    <title>@yield('title', config('app.name'))</title>
-    @hasSection('meta_description')
-        <meta name="description" content="@yield('meta_description')">
-    @endif
+    {{-- SEO: title, description, canonical, robots, Open Graph, Twitter + global JSON-LD.
+         Pages override via @section('title'|'meta_description'|'canonical'|'robots'|'og_image'|'og_type')
+         and add page-specific structured data with @push('schema'). --}}
+    @include('storefront.partials.seo')
     @stack('meta')
 
     {{-- Fonts: Work Sans (body) + Material Symbols (icons), matching the storefront theme. --}}
@@ -23,6 +22,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @stack('schema')
     @stack('head')
 </head>
 

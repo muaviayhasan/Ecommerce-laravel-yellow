@@ -2,6 +2,37 @@
 
 @section('title', $post['title'] . ' — ' . config('app.name'))
 @section('meta_description', \Illuminate\Support\Str::limit(strip_tags($post['excerpt'] ?? $post['title']), 155))
+@section('og_type', 'article')
+@section('og_image', $post['image'])
+
+@php
+    $articleSchema = array_filter([
+        '@context' => 'https://schema.org',
+        '@type' => 'BlogPosting',
+        'headline' => \Illuminate\Support\Str::limit($post['title'], 110),
+        'image' => $post['image'] ? [$post['image']] : null,
+        'datePublished' => $post['published_iso'] ?? null,
+        'dateModified' => $post['updated_iso'] ?? ($post['published_iso'] ?? null),
+        'author' => ['@type' => 'Person', 'name' => $post['author'] ?? config('app.name')],
+        'publisher' => ['@type' => 'Organization', 'name' => config('app.name')],
+        'mainEntityOfPage' => $post['url'],
+        'description' => \Illuminate\Support\Str::limit(strip_tags($post['excerpt'] ?? $post['title']), 300),
+    ]);
+    $blogBreadcrumb = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blog', 'item' => route('blog')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $post['title'], 'item' => $post['url']],
+        ],
+    ];
+@endphp
+
+@push('schema')
+    <script type="application/ld+json">@json($articleSchema)</script>
+    <script type="application/ld+json">@json($blogBreadcrumb)</script>
+@endpush
 
 @section('content')
     {{-- Breadcrumbs --}}

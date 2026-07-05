@@ -59,6 +59,10 @@ Route::post('/product/{product:slug}/reviews', [StorefrontReviewController::clas
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
+// SEO — dynamic sitemap + robots
+Route::get('/sitemap.xml', [\App\Http\Controllers\Storefront\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [\App\Http\Controllers\Storefront\SitemapController::class, 'robots'])->name('robots');
+
 // Cart (session-based)
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
