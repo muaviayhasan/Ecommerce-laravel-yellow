@@ -75,6 +75,7 @@ class SalesService
                 'order_number' => $this->nextNumber(),
                 'channel' => $channel,
                 'customer_id' => $customer?->id,
+                'user_id' => $opts['user_id'] ?? $customer?->user_id, // links the order to the customer's account
                 'quotation_id' => $opts['quotation_id'] ?? null,
                 'price_tier' => $tier,
                 'status' => $paid >= $grand ? 'paid' : 'pending',

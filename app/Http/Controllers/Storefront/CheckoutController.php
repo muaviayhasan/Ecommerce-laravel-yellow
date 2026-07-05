@@ -115,6 +115,7 @@ class CheckoutController extends Controller
                 'payment_method' => $data['payment_method'],
                 'shipping_total' => $shipping,
                 'paid' => 0, // COD / bank transfer — settled later
+                'user_id' => auth()->id(), // so it shows in the customer's account
             ]);
         } catch (Throwable $e) {
             return back()->withInput()->with('error', $e->getMessage());
