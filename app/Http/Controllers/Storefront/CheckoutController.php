@@ -17,6 +17,10 @@ use Throwable;
 
 class CheckoutController extends Controller
 {
+    /** Pakistani mobile number in 0300-0000000 form (dash optional). */
+    private const PHONE_RULE = 'regex:/^03\d{2}-?\d{7}$/';
+    private const PHONE_MESSAGE = 'Enter a valid mobile number like 0300-0000000.';
+
     public function __construct(private CartService $cart) {}
 
     public function index(): View|RedirectResponse
@@ -54,7 +58,7 @@ class CheckoutController extends Controller
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'company' => ['nullable', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:30'],
+            'phone' => ['required', self::PHONE_RULE],
             'line1' => ['required', 'string', 'max:255'],
             'line2' => ['nullable', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:120'],
@@ -65,6 +69,22 @@ class CheckoutController extends Controller
             'payment_method' => ['required', 'in:cod,bank'],
             'terms' => ['accepted'],
             'save_address' => ['nullable', 'boolean'],
+            // Separate shipping address (only when "ship to a different address" is on)
+            'ship_to_different' => ['nullable', 'boolean'],
+            'ship_name' => ['nullable', 'required_if:ship_to_different,1', 'string', 'max:255'],
+            'ship_phone' => ['nullable', self::PHONE_RULE],
+            'ship_line1' => ['nullable', 'required_if:ship_to_different,1', 'string', 'max:255'],
+            'ship_line2' => ['nullable', 'string', 'max:255'],
+            'ship_city' => ['nullable', 'required_if:ship_to_different,1', 'string', 'max:120'],
+            'ship_state' => ['nullable', 'string', 'max:120'],
+            'ship_zip' => ['nullable', 'string', 'max:20'],
+            'ship_country' => ['nullable', 'string', 'max:120'],
+        ], [
+            'phone.regex' => self::PHONE_MESSAGE,
+            'ship_phone.regex' => self::PHONE_MESSAGE,
+            'ship_name.required_if' => 'Enter the shipping name.',
+            'ship_line1.required_if' => 'Enter the shipping street address.',
+            'ship_city.required_if' => 'Enter the shipping city.',
         ]);
 
         $items = $this->cart->items();
@@ -106,7 +126,16 @@ class CheckoutController extends Controller
             'state' => $data['state'] ?? null, 'zip' => $data['zip'] ?? null, 'country' => $data['country'],
         ];
         $order->addresses()->create(['type' => 'billing'] + $address);
-        $order->addresses()->create(['type' => 'shipping'] + $address);
+
+        // Ship to the same place unless the customer gave a separate shipping address.
+        $shippingAddress = $request->boolean('ship_to_different')
+            ? [
+                'name' => $data['ship_name'], 'company' => null, 'phone' => $data['ship_phone'] ?: $data['phone'], 'email' => $data['email'],
+                'line1' => $data['ship_line1'], 'line2' => $data['ship_line2'] ?? null, 'city' => $data['ship_city'],
+                'state' => $data['ship_state'] ?? null, 'zip' => $data['ship_zip'] ?? null, 'country' => $data['ship_country'] ?: $data['country'],
+            ]
+            : $address;
+        $order->addresses()->create(['type' => 'shipping'] + $shippingAddress);
 
         if (! empty($data['notes'])) {
             $order->update(['customer_notes' => $data['notes']]);
