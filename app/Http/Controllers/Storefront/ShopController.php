@@ -28,11 +28,12 @@ class ShopController extends Controller
         if ($request->filled('q')) {
             $query->where('name', 'like', '%' . $request->string('q') . '%');
         }
-        if ($request->filled('category')) {
-            $query->whereHas('category', fn ($c) => $c->where('slug', $request->string('category')));
+        // Category / brand accept a single slug (?category=x) or many (?category[]=x&category[]=y).
+        if ($categories = array_filter((array) $request->input('category', []))) {
+            $query->whereHas('category', fn ($c) => $c->whereIn('slug', $categories));
         }
-        if ($request->filled('brand')) {
-            $query->whereHas('brand', fn ($b) => $b->where('slug', $request->string('brand')));
+        if ($brandSlugs = array_filter((array) $request->input('brand', []))) {
+            $query->whereHas('brand', fn ($b) => $b->whereIn('slug', $brandSlugs));
         }
         if ($request->filled('min')) {
             $query->whereHas('defaultVariant', fn ($v) => $v->where('retail_price', '>=', (float) $request->input('min')));
@@ -65,7 +66,14 @@ class ShopController extends Controller
             'brands' => Brand::query()->where('is_active', true)
                 ->withCount(['products' => fn ($q) => $q->webListed()])
                 ->orderBy('name')->get()->where('products_count', '>', 0)->values(),
-            'filters' => $request->only('q', 'category', 'brand', 'min', 'max', 'sort'),
+            'filters' => [
+                'q' => $request->input('q'),
+                'category' => array_values(array_filter((array) $request->input('category', []))),
+                'brand' => array_values(array_filter((array) $request->input('brand', []))),
+                'min' => $request->input('min'),
+                'max' => $request->input('max'),
+                'sort' => $request->input('sort'),
+            ],
             'sorts' => self::SORTS,
         ]);
     }
