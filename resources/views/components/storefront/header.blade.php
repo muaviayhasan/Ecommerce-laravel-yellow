@@ -42,6 +42,12 @@
                     <span class="hidden md:inline">Shop</span>
                 </a>
                 @auth
+                    @if (auth()->user()->isStaff())
+                        <a class="flex items-center gap-1 text-primary font-medium hover:opacity-80 transition-opacity" href="{{ route('admin.dashboard') }}" title="Go to admin panel">
+                            <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                            <span class="hidden md:inline">Admin</span>
+                        </a>
+                    @endif
                     <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('account') }}">
                         <span class="material-symbols-outlined text-[16px]">person</span>
                         <span class="hidden md:inline">My Account</span>
@@ -225,6 +231,9 @@
             </ul>
             <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
                 @auth
+                    @if (auth()->user()->isStaff())
+                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-primary font-medium"><span class="material-symbols-outlined">admin_panel_settings</span> Admin panel</a>
+                    @endif
                     <a href="{{ route('account') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">person</span> My Account</a>
                 @else
                     <a href="{{ route('login') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">person</span> Login</a>
