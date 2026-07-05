@@ -8,6 +8,7 @@
     $image = data_get($product, 'image');
     $url = data_get($product, 'url', '#');
     $slug = data_get($product, 'slug');
+    $variantId = data_get($product, 'variant_id');
     $onSale = $compare !== null && (float) $compare > $price;
 @endphp
 
@@ -44,10 +45,8 @@
                 <p class="text-price-lg text-on-surface">Rs {{ number_format($price) }}</p>
             @endif
         </div>
-        <button type="button" aria-label="Add {{ $name }} to cart"
-            class="w-9 h-9 rounded-full bg-surface-container text-secondary flex items-center justify-center transition-colors group-hover:bg-primary-container group-hover:text-white hover:!bg-primary-fixed-dim">
-            <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
-        </button>
+        <x-storefront.add-to-cart :variant-id="$variantId" :name="$name" :url="$url" icon-class="text-[18px]"
+            class="w-9 h-9 rounded-full bg-surface-container text-secondary flex items-center justify-center transition-colors group-hover:bg-primary-container group-hover:text-white hover:!bg-primary-fixed-dim" />
     </div>
 
     {{-- Hover actions: Wishlist / Compare --}}
