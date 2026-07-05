@@ -32,6 +32,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Support\SocialLogin;
+use App\Http\Controllers\Storefront\AccountController;
 use App\Http\Controllers\Storefront\BlogController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
@@ -103,10 +104,23 @@ Route::get('/admin/auth/{provider}', [AdminAuthController::class, 'redirect'])
 Route::get('/admin/auth/{provider}/callback', [AdminAuthController::class, 'callback'])
     ->whereIn('provider', SocialLogin::PROVIDERS)->name('admin.auth.callback');
 
+// Customer account area (storefront) — requires a signed-in user.
+Route::middleware('auth')->prefix('account')->group(function () {
+    Route::get('/', [AccountController::class, 'dashboard'])->name('account');
+    Route::get('/orders', [AccountController::class, 'orders'])->name('account.orders');
+    Route::get('/orders/{order}', [AccountController::class, 'showOrder'])->name('account.orders.show');
+    Route::get('/addresses', [AccountController::class, 'addresses'])->name('account.addresses');
+    Route::post('/addresses', [AccountController::class, 'storeAddress'])->name('account.addresses.store');
+    Route::put('/addresses/{address}', [AccountController::class, 'updateAddress'])->name('account.addresses.update');
+    Route::delete('/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('account.addresses.destroy');
+    Route::get('/profile', [AccountController::class, 'profile'])->name('account.profile');
+    Route::put('/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::put('/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+});
+
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.
 $placeholders = [
-    'account' => 'My Account',
     'contact' => 'Contact Us',
 ];
 
