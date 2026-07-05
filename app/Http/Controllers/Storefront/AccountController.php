@@ -47,15 +47,38 @@ class AccountController extends Controller
         return view('storefront.account.addresses', [
             'addresses' => $request->user()->addresses()
                 ->orderByDesc('is_default_shipping')->orderByDesc('is_default_billing')->orderBy('id')->get(),
+            ...$this->mapConfig(),
         ]);
+    }
+
+    /** Shared Google Maps config for address forms — all keys degrade gracefully when unset. */
+    public static function mapConfig(): array
+    {
+        $key = setting('maps', 'google_maps_key');
+        $enabled = (bool) setting('maps', 'enabled', false) && filled($key);
+        [$lat, $lng] = array_pad(array_map('trim', explode(',', (string) setting('maps', 'map_center', '30.3753,69.3451'))), 2, null);
+        $code = strtoupper((string) setting('maps', 'country_code', 'PK'));
+
+        return [
+            'mapsEnabled' => $enabled,
+            'mapsKey' => $enabled ? $key : null,
+            'mapCenter' => ['lat' => (float) ($lat ?: 30.3753), 'lng' => (float) ($lng ?: 69.3451)],
+            'countryCode' => $code !== '' ? $code : null,
+        ];
     }
 
     public function storeAddress(Request $request): RedirectResponse
     {
         $data = $this->validateAddress($request);
+        $isFirst = $request->user()->addresses()->count() === 0;
 
         $address = $request->user()->addresses()->create($data);
-        $this->syncDefaults($request, $address);
+
+        // A customer's very first address becomes their default automatically.
+        $this->syncDefaults($request, $address,
+            billing: $isFirst || $request->boolean('is_default_billing'),
+            shipping: $isFirst || $request->boolean('is_default_shipping'),
+        );
 
         return redirect()->route('account.addresses')->with('status', 'Address added.');
     }
@@ -65,7 +88,10 @@ class AccountController extends Controller
         abort_unless($address->user_id === $request->user()->id, 404);
 
         $address->update($this->validateAddress($request));
-        $this->syncDefaults($request, $address);
+        $this->syncDefaults($request, $address,
+            billing: $request->boolean('is_default_billing'),
+            shipping: $request->boolean('is_default_shipping'),
+        );
 
         return redirect()->route('account.addresses')->with('status', 'Address updated.');
     }
@@ -92,15 +118,14 @@ class AccountController extends Controller
             'state' => ['nullable', 'string', 'max:120'],
             'zip' => ['nullable', 'string', 'max:20'],
             'country' => ['required', 'string', 'max:120'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
     }
 
     /** When an address is flagged default, clear the flag on the customer's other addresses. */
-    protected function syncDefaults(Request $request, CustomerAddress $address): void
+    protected function syncDefaults(Request $request, CustomerAddress $address, bool $billing, bool $shipping): void
     {
-        $billing = $request->boolean('is_default_billing');
-        $shipping = $request->boolean('is_default_shipping');
-
         if ($billing) {
             $request->user()->addresses()->whereKeyNot($address->id)->update(['is_default_billing' => false]);
         }

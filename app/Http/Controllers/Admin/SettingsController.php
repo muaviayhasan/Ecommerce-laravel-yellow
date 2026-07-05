@@ -365,6 +365,30 @@ class SettingsController extends Controller implements HasMiddleware
                     ],
                 ],
             ],
+
+            'maps' => [
+                'label' => 'Maps & address',
+                'icon' => 'map',
+                'sections' => [
+                    [
+                        'title' => 'Google Maps',
+                        'description' => 'Powers address search, "use my location" and the draggable map pin on the customer address form. In Google Cloud Console enable the Maps JavaScript API, Places API and Geocoding API, create an API key, and restrict it to your domain.',
+                        'fields' => [
+                            'enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Enable maps on address form', 'help' => 'Adds search-as-you-type, current-location and a pin. Requires an API key below.'],
+                            'google_maps_key' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'Google Maps API key', 'rules' => ['nullable', 'string', 'max:255']],
+                        ],
+                    ],
+                    [
+                        'title' => 'Address defaults',
+                        'description' => 'Used to simplify the customer address form.',
+                        'fields' => [
+                            'default_country' => ['input' => 'text', 'label' => 'Default country', 'default' => 'Pakistan', 'max' => 120, 'rules' => ['nullable', 'string', 'max:120'], 'help' => 'Pre-filled and hidden on the address form so customers never type it.'],
+                            'country_code' => ['input' => 'text', 'label' => 'Country code (ISO-2)', 'default' => 'PK', 'max' => 2, 'rules' => ['nullable', 'string', 'max:2'], 'help' => 'Biases address search to this country, e.g. PK.'],
+                            'map_center' => ['input' => 'text', 'label' => 'Default map center', 'default' => '30.3753,69.3451', 'max' => 60, 'rules' => ['nullable', 'string', 'max:60'], 'help' => 'lat,lng the map opens on before a pin is set, e.g. 30.3753,69.3451.'],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 }

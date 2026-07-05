@@ -13,6 +13,7 @@ class CustomerAddress extends Model
     protected $fillable = [
         'user_id', 'label', 'name', 'company', 'phone',
         'line1', 'line2', 'city', 'state', 'zip', 'country',
+        'latitude', 'longitude',
         'is_default_billing', 'is_default_shipping',
     ];
 
@@ -21,6 +22,8 @@ class CustomerAddress extends Model
         return [
             'is_default_billing' => 'boolean',
             'is_default_shipping' => 'boolean',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
         ];
     }
 
