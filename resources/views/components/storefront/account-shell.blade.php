@@ -2,14 +2,14 @@
 @php
     $nav = [
         'dashboard' => ['label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'account'],
+        'profile' => ['label' => 'Profile', 'icon' => 'manage_accounts', 'route' => 'account.profile'],
         'orders' => ['label' => 'My Orders', 'icon' => 'receipt_long', 'route' => 'account.orders'],
         'addresses' => ['label' => 'Addresses', 'icon' => 'location_on', 'route' => 'account.addresses'],
-        'profile' => ['label' => 'Account Details', 'icon' => 'manage_accounts', 'route' => 'account.profile'],
     ];
     $user = auth()->user();
 @endphp
 
-<div class="bg-background py-8">
+<div class="bg-background pt-8 pb-16 md:pb-12">
     <div class="app-container">
         {{-- Breadcrumb --}}
         <nav class="flex items-center gap-2 text-label-sm text-on-surface-variant mb-6" aria-label="Breadcrumb">

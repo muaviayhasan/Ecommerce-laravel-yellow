@@ -5,7 +5,7 @@
 
 @section('content')
     <x-storefront.account-shell active="addresses">
-        <div x-data="addressBook()">
+        <div x-data="addressBook()" class="space-y-6">
             {{-- Header --}}
             <div class="bg-white rounded-lg border border-outline-variant p-5 flex items-center justify-between gap-3">
                 <div>
@@ -87,7 +87,8 @@
                             </div>
                             <div>
                                 <label class="block text-label-sm font-medium mb-1">Phone</label>
-                                <input type="tel" name="phone" x-model="form.phone" autocomplete="tel" inputmode="tel" class="w-full rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                                <input type="tel" name="phone" x-model="form.phone" data-mask="phone" maxlength="12" autocomplete="tel" inputmode="tel" placeholder="0300-0000000" class="w-full rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('phone') border-error @enderror">
+                                @error('phone')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
                             </div>
                         </div>
 

@@ -1,6 +1,6 @@
 @extends('layouts.storefront')
 
-@section('title', 'Account Details — ' . config('app.name'))
+@section('title', 'Profile — ' . config('app.name'))
 @section('hideNewsletter', '1')
 
 @section('content')
@@ -8,7 +8,7 @@
         {{-- Details --}}
         <div class="bg-white rounded-lg border border-outline-variant overflow-hidden">
             <div class="p-5 border-b border-outline-variant">
-                <h1 class="text-xl font-bold">Account Details</h1>
+                <h1 class="text-xl font-bold">Profile</h1>
                 <p class="text-label-sm text-on-surface-variant">Update your personal information.</p>
             </div>
             <form method="POST" action="{{ route('account.profile.update') }}" class="p-5 space-y-4">
@@ -22,7 +22,7 @@
                     </div>
                     <div>
                         <label class="block text-label-sm font-medium mb-1">Phone</label>
-                        <input type="text" name="phone" value="{{ old('phone', $user->phone) }}"
+                        <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}" data-mask="phone" maxlength="12" inputmode="tel" placeholder="0300-0000000"
                             class="w-full rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('phone') border-error @enderror">
                         @error('phone')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
                     </div>

@@ -13,6 +13,10 @@ use Illuminate\View\View;
 /** Signed-in customer "My Account" area — dashboard, orders, addresses, profile. */
 class AccountController extends Controller
 {
+    /** Pakistani mobile number in 0300-0000000 form (dash optional). */
+    private const PHONE_RULE = 'regex:/^03\d{2}-?\d{7}$/';
+    private const PHONE_MESSAGE = 'Enter a valid mobile number like 0300-0000000.';
+
     public function dashboard(Request $request): View
     {
         $user = $request->user();
@@ -111,7 +115,7 @@ class AccountController extends Controller
         return $request->validate([
             'label' => ['nullable', 'string', 'max:60'],
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'phone' => ['nullable', self::PHONE_RULE],
             'line1' => ['required', 'string', 'max:255'],
             'line2' => ['nullable', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:120'],
@@ -120,7 +124,7 @@ class AccountController extends Controller
             'country' => ['required', 'string', 'max:120'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-        ]);
+        ], ['phone.regex' => self::PHONE_MESSAGE]);
     }
 
     /** When an address is flagged default, clear the flag on the customer's other addresses. */
@@ -147,8 +151,8 @@ class AccountController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-        ]);
+            'phone' => ['nullable', self::PHONE_RULE],
+        ], ['phone.regex' => self::PHONE_MESSAGE]);
 
         $user->update($data);
         $user->customer?->update(['name' => $data['name'], 'phone' => $data['phone'] ?? $user->customer->phone]);
