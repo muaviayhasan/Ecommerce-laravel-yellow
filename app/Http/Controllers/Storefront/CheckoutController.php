@@ -65,7 +65,7 @@ class CheckoutController extends Controller
         $data = $request->validate([
             'email' => ['required', 'email', 'max:255'],
             'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'company' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', self::PHONE_RULE],
             'line1' => ['required', 'string', 'max:255'],
@@ -111,7 +111,7 @@ class CheckoutController extends Controller
             return redirect()->route('cart')->with('error', 'Your cart is empty.');
         }
 
-        $name = trim($data['first_name'] . ' ' . $data['last_name']);
+        $name = trim($data['first_name'] . ' ' . ($data['last_name'] ?? ''));
         $customer = Customer::firstOrCreate(
             ['email' => $data['email']],
             ['name' => $name, 'phone' => $data['phone'], 'type' => 'retail', 'price_tier' => 'retail', 'is_active' => true, 'user_id' => auth()->id()],

@@ -177,36 +177,47 @@
     </section>
 
     {{-- Television Entertainment — full-width textured background + product slider --}}
-    @php $tvSlides = $tvProducts->chunk(4)->values(); @endphp
-    <section class="bg-cover bg-center bg-no-repeat"
-        style="background-image: url('/assets/images/television-entertainment-bg.webp')">
-        <div class="app-container py-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            {{-- Left: TV visual --}}
-            <div class="flex justify-center">
-                <img src="/assets/images/television-entertainment-tv.png" alt="Television Entertainment"
-                    class="w-full max-w-xl object-contain">
-            </div>
+    @if ($spotlights->isNotEmpty())
+        @php
+            $spotPrimary = $spotlights->first();
+            $spotCategory = $spotPrimary['category'];
+            $tvSlides = collect($spotPrimary['products'])->chunk(4)->values();
+        @endphp
+        <section class="bg-cover bg-center bg-no-repeat"
+            style="background-image: url('/assets/images/television-entertainment-bg.webp')">
+            <div class="app-container py-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                {{-- Left: category visual (uses the category's admin image; falls back to a placeholder) --}}
+                <div class="flex justify-center">
+                    <img src="{{ $spotCategory->image?->url ?: '/assets/images/television-entertainment-tv.png' }}"
+                        alt="{{ $spotCategory->name }}" class="w-full max-w-xl object-contain">
+                </div>
 
-            {{-- Right: slider --}}
-            <x-storefront.carousel title="Television Entertainment" :count="$tvSlides->count()">
-                @foreach ($tvSlides as $slide)
-                    <div class="w-full shrink-0">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            @foreach ($slide as $product)
-                                <x-storefront.product-card-wide :product="$product" />
-                            @endforeach
+                {{-- Right: slider --}}
+                <x-storefront.carousel :title="$spotCategory->name" :count="$tvSlides->count()">
+                    @foreach ($tvSlides as $slide)
+                        <div class="w-full shrink-0">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                @foreach ($slide as $product)
+                                    <x-storefront.product-card-wide :product="$product" />
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
-                @endforeach
-            </x-storefront.carousel>
-        </div>
-    </section>
+                    @endforeach
+                </x-storefront.carousel>
+            </div>
+        </section>
+    @endif
 
-    {{-- Laptops & Computers --}}
-    @php $laptopSlides = $laptops->chunk(6)->values(); @endphp
+    {{-- Second category spotlight (falls back to the latest products) --}}
+    @php
+        $spotSecondary = $spotlights->get(1);
+        $laptopTitle = $spotSecondary['category']->name ?? 'Popular Products';
+        $laptopSlides = collect($spotSecondary['products'] ?? $latestFallback)->chunk(6)->values();
+    @endphp
+    @if ($laptopSlides->isNotEmpty())
     <section class="py-12 bg-white">
         <div class="app-container">
-            <x-storefront.carousel title="Laptops & Computers" :count="$laptopSlides->count()">
+            <x-storefront.carousel :title="$laptopTitle" :count="$laptopSlides->count()">
                 @foreach ($laptopSlides as $slide)
                     <div class="w-full shrink-0">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -220,6 +231,7 @@
             </x-storefront.carousel>
         </div>
     </section>
+    @endif
 
     {{-- Trending Products (single row of 4) --}}
     @php $trendingSlides = $trending->chunk(4)->values(); @endphp
@@ -264,45 +276,40 @@
         </div>
     </section>
 
-    {{-- Top categories — 4x2 grid of horizontal category cards --}}
-    @php
-        $topCategories = [
-            ['name' => 'Accessories', 'image' => 'https://picsum.photos/seed/cat-acc/200/200', 'subs' => ['Cases', 'Chargers', 'Headphone Accessories', 'Headphone Cases', 'Headphones', 'Pendrives']],
-            ['name' => 'Laptops & Computers', 'image' => 'https://picsum.photos/seed/cat-lap/200/200', 'subs' => ['Laptops', 'Desktops', 'Monitors', 'Keyboards']],
-            ['name' => 'TV & Audio', 'image' => 'https://picsum.photos/seed/cat-tv/200/200', 'subs' => []],
-            ['name' => 'All in One', 'image' => 'https://picsum.photos/seed/cat-aio/200/200', 'subs' => []],
-            ['name' => 'Audio Speakers', 'image' => 'https://picsum.photos/seed/cat-spk/200/200', 'subs' => []],
-            ['name' => 'Bluetooth Speakers', 'image' => 'https://picsum.photos/seed/cat-bt/200/200', 'subs' => []],
-            ['name' => 'Cameras', 'image' => 'https://picsum.photos/seed/cat-cam/200/200', 'subs' => []],
-            ['name' => 'Cameras & Photography', 'image' => 'https://picsum.photos/seed/cat-photo/200/200', 'subs' => ['Cameras', 'Photo Cameras', 'Video Cameras']],
-        ];
-    @endphp
+    {{-- Top categories — real category departments (managed in Admin → Categories) --}}
+    @if ($topCategories->isNotEmpty())
     <section class="py-12 bg-white">
         <div class="app-container">
             <x-storefront.section-title title="Top Categories this Month" />
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:[&>*]:border-gray-200 lg:[&>*:not(:nth-child(4n+1))]:border-l">
-                @foreach ($topCategories as $cat)
+                @foreach ($topCategories->take(8) as $cat)
                     <div class="flex items-start gap-4 px-6 py-4">
-                        <a href="{{ route('shop') }}" class="w-20 h-20 shrink-0">
-                            <img src="{{ $cat['image'] }}" alt="{{ $cat['name'] }}" loading="lazy"
-                                class="w-full h-full object-contain">
+                        <a href="{{ route('shop', ['category' => $cat->slug]) }}" class="w-20 h-20 shrink-0">
+                            @if ($cat->image?->url)
+                                <img src="{{ $cat->image->url }}" alt="{{ $cat->name }}" loading="lazy"
+                                    class="w-full h-full object-contain">
+                            @else
+                                <span class="w-full h-full rounded-lg bg-surface-container-low border border-outline-variant/40 grid place-items-center">
+                                    <span class="material-symbols-outlined text-outline">category</span>
+                                </span>
+                            @endif
                         </a>
                         <div class="flex-1 flex flex-col min-h-[170px]">
                             <h4 class="text-base font-semibold text-on-surface mb-3">
-                                <a href="{{ route('shop') }}" class="hover:text-primary transition-colors">{{ $cat['name'] }}</a>
+                                <a href="{{ route('shop', ['category' => $cat->slug]) }}" class="hover:text-primary transition-colors">{{ $cat->name }}</a>
                             </h4>
-                            @if (count($cat['subs']))
+                            @if ($cat->children->isNotEmpty())
                                 <ul class="space-y-1.5 mb-3">
-                                    @foreach ($cat['subs'] as $sub)
+                                    @foreach ($cat->children as $sub)
                                         <li>
-                                            <a href="{{ route('shop') }}"
-                                                class="text-label-sm text-on-surface-variant hover:text-primary transition-colors">{{ $sub }}</a>
+                                            <a href="{{ route('shop', ['category' => $sub->slug]) }}"
+                                                class="text-label-sm text-on-surface-variant hover:text-primary transition-colors">{{ $sub->name }}</a>
                                         </li>
                                     @endforeach
                                 </ul>
                             @endif
-                            <a href="{{ route('shop') }}"
+                            <a href="{{ route('shop', ['category' => $cat->slug]) }}"
                                 class="mt-auto self-end text-label-sm font-bold text-on-surface-variant hover:text-primary transition-colors">See all</a>
                         </div>
                     </div>
@@ -310,39 +317,40 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- Promo banners --}}
     <section class="py-12 bg-white">
         <div class="app-container grid grid-cols-1 md:grid-cols-2 gap-8">
-            {{-- G9 Laptops --}}
-            <a href="{{ route('shop') }}"
+            {{-- Inverter coolers --}}
+            <a href="{{ route('shop', ['category' => 'coolers']) }}"
                 class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
                 <div class="max-w-[55%]">
-                    <h3 class="text-headline-md font-bold mb-2 text-on-surface">G9 Laptops with Ultra 4K</h3>
-                    <p class="text-body-base text-on-surface-variant">and the fastest Intel Core i7 processor ever</p>
+                    <h3 class="text-headline-md font-bold mb-2 text-on-surface">Inverter Air Coolers</h3>
+                    <p class="text-body-base text-on-surface-variant">powerful cooling that saves on your electricity bill</p>
                 </div>
-                <img src="/assets/images/banner-laptops.png" alt="G9 Laptops"
+                <img src="/assets/images/banner-laptops.png" alt="Inverter air coolers"
                     class="w-40 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
             </a>
 
-            {{-- smartG3 --}}
-            <a href="{{ route('shop') }}"
+            {{-- SolarMax --}}
+            <a href="{{ route('shop', ['category' => 'solar-plates']) }}"
                 class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
                 <div class="flex items-center gap-5">
                     <div>
                         <p class="text-2xl leading-none">
-                            <span class="font-bold text-on-surface">smart</span><span class="font-bold text-[#29b6f6]">G3</span>
+                            <span class="font-bold text-on-surface">Solar</span><span class="font-bold text-primary-container">Max</span>
                         </p>
-                        <p class="text-label-sm text-on-surface-variant mt-1">Now with 4G</p>
+                        <p class="text-label-sm text-on-surface-variant mt-1">550W Mono PERC</p>
                     </div>
                     <div class="border-l border-outline-variant pl-5">
                         <p class="text-label-sm text-on-surface-variant">from</p>
                         <p class="text-2xl font-bold text-on-surface leading-none">
-                            <span class="text-base align-top">$</span>129<sup class="text-[0.6em] align-super">99</sup>
+                            <span class="text-base align-top">Rs</span> 21,999
                         </p>
                     </div>
                 </div>
-                <img src="/assets/images/banner-smartg3.png" alt="smartG3"
+                <img src="/assets/images/banner-smartg3.png" alt="SolarMax solar panels"
                     class="w-36 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
             </a>
         </div>

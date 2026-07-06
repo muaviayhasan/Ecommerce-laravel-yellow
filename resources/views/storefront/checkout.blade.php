@@ -37,6 +37,21 @@
                 </div>
             @endif
 
+            {{-- Always-visible summary so validation errors on hidden (saved-address)
+                 fields are never silently swallowed. --}}
+            @if ($errors->any())
+                <div class="mb-5 p-4 rounded-lg bg-error-container/40 text-on-surface">
+                    <div class="flex items-center gap-2 font-bold mb-1">
+                        <span class="material-symbols-outlined text-error">error</span> Please fix the following to place your order:
+                    </div>
+                    <ul class="list-disc list-inside text-label-sm space-y-0.5 ml-1">
+                        @foreach ($errors->all() as $message)
+                            <li>{{ $message }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('checkout.store') }}" x-data="checkout()" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 @csrf
                 <input type="hidden" name="country" :value="country">
@@ -288,15 +303,21 @@
                     phoneRest: '',
                     shipPhoneRest: '',
                     init() {
-                        @auth
-                            @if ($addresses->isNotEmpty())
-                                this.mode = @js(old('address_mode', 'saved'));
-                                if (this.mode === 'saved') {
-                                    const id = {{ (int) old('selected_address') }} || {{ (int) (optional($default)->id ?? 0) }};
-                                    if (this.addresses[id]) this.pick(this.addresses[id]);
-                                }
-                            @endif
-                        @endauth
+                        @if ($errors->any())
+                            // Submission failed — open the editable address form (pre-filled with
+                            // what was submitted) so any hidden-field errors are visible & fixable.
+                            this.mode = 'new';
+                        @else
+                            @auth
+                                @if ($addresses->isNotEmpty())
+                                    this.mode = @js(old('address_mode', 'saved'));
+                                    if (this.mode === 'saved') {
+                                        const id = {{ (int) old('selected_address') }} || {{ (int) (optional($default)->id ?? 0) }};
+                                        if (this.addresses[id]) this.pick(this.addresses[id]);
+                                    }
+                                @endif
+                            @endauth
+                        @endif
                         @if (old('phone')) this.seedPhone(@js(old('phone'))); @endif
                         @if (old('ship_phone')) this.shipPhoneRest = this.fmtPhone(@js(old('ship_phone'))); @endif
                     },

@@ -17,6 +17,7 @@ use App\Models\Review;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Listeners\SendWelcomeEmail;
+use App\Listeners\SendWelcomeSupportMessage;
 use App\Observers\AuditObserver;
 use App\Support\SettingsApplier;
 use Illuminate\Auth\Events\Registered;
@@ -70,8 +71,10 @@ class AppServiceProvider extends ServiceProvider
         // Bridge admin-managed mail settings into config('mail') at runtime.
         SettingsApplier::apply();
 
-        // On registration: send the welcome email and the email-verification link.
+        // On registration: send the welcome email and the email-verification link,
+        // and post a welcome message from support into the customer's chat.
         Event::listen(Registered::class, SendWelcomeEmail::class);
+        Event::listen(Registered::class, SendWelcomeSupportMessage::class);
         Event::listen(Registered::class, \Illuminate\Auth\Listeners\SendEmailVerificationNotification::class);
     }
 }

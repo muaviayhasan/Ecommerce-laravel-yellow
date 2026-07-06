@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Support\RecentlyViewed;
 use App\Support\Storefront;
 use Illuminate\View\View;
 
@@ -25,6 +26,9 @@ class ProductController extends Controller
                 'reviews' => fn ($q) => $q->where('is_approved', true)->with('user:id,name')->latest(),
             ])
             ->firstOrFail();
+
+        // Track this view on the visitor's browser for the "Recently Viewed" strip.
+        RecentlyViewed::add($product->id);
 
         $activeVariants = $product->variants->where('is_active', true)->values();
 

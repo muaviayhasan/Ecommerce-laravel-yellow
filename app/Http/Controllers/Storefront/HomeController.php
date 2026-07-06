@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\HeroSlide;
 use App\Models\InfoBarItem;
 use App\Models\PromoCard;
+use App\Support\RecentlyViewed;
 use App\Support\Storefront;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -29,6 +31,11 @@ class HomeController extends Controller
         $onSale = Storefront::cards(Storefront::onSaleQuery()->take(6)->get());
         $topRated = $orLatest(Storefront::cards(Storefront::query()->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating')->take(6)->get()), 6);
 
+        // Real category tree: "departments" are the children of the top-level roots
+        // (Coolers, Geysers, Fans, …). They drive the two spotlight sliders and the
+        // "Top Categories" grid, and carry their own sub-categories + image.
+        $departments = $this->departments();
+
         return view('storefront.home', [
             'heroSlides' => $this->heroSlides(),
             'promoCards' => PromoCard::query()->with('image')->active()->ordered()->get(),
@@ -36,13 +43,59 @@ class HomeController extends Controller
             'featured' => $featured,
             'onSale' => $onSale,
             'topRated' => $topRated,
-            'laptops' => $latest,
             'trending' => $trending,
             'bestsellers' => $bestsellers,
             'bestsellerFeature' => $bestsellers->first() ?? $latest->first() ?? [],
-            'tvProducts' => $latest,
-            'recentlyViewed' => $latest->slice(2, 6)->values(),
+            'topCategories' => $departments,
+            'spotlights' => $this->spotlights($departments),
+            'latestFallback' => $latest,
+            'recentlyViewed' => RecentlyViewed::cards(6),
         ]);
+    }
+
+    /**
+     * Storefront "departments" — the active children of the active root categories,
+     * each with its own image and sub-categories eager-loaded.
+     *
+     * @return Collection<int, \App\Models\Category>
+     */
+    private function departments(): Collection
+    {
+        return Category::query()
+            ->where('is_active', true)
+            ->whereNull('parent_id')
+            ->with(['children' => fn ($q) => $q->where('is_active', true)
+                ->with(['image', 'children' => fn ($c) => $c->where('is_active', true)->orderBy('sort_order')->orderBy('name')])
+                ->orderBy('sort_order')->orderBy('name')])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->flatMap
+            ->children
+            ->values();
+    }
+
+    /**
+     * Category "spotlights" for the two feature sliders: each department that has
+     * products, paired with the newest cards from its sub-tree.
+     *
+     * @param  Collection<int, \App\Models\Category>  $departments
+     * @return Collection<int, array{category: \App\Models\Category, products: Collection<int, array<string, mixed>>}>
+     */
+    private function spotlights(Collection $departments): Collection
+    {
+        return $departments->map(function (Category $dept) {
+            $slugs = collect([$dept->slug])->merge($dept->children->pluck('slug'))->all();
+
+            return [
+                'category' => $dept,
+                'products' => Storefront::cards(
+                    Storefront::query()
+                        ->whereHas('category', fn ($q) => $q->whereIn('slug', $slugs))
+                        ->latest('published_at')->take(8)->get()
+                ),
+            ];
+        })->filter(fn ($s) => $s['products']->isNotEmpty())->values();
     }
 
     /**
