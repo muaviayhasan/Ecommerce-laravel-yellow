@@ -1,21 +1,32 @@
 @php
-    // Placeholder taxonomy — replace with Category::active()->roots() when the
-    // catalog module is wired (PROJECT_DOCUMENTATION build order). `icon` is a
-    // Material Symbol name used in the Browse Categories dropdown.
-    $allCategories = [
-        ['name' => 'Laptops & Computers', 'icon' => 'laptop_mac'],
-        ['name' => 'Smartphones & Tablets', 'icon' => 'smartphone'],
-        ['name' => 'TV & Audio', 'icon' => 'tv'],
-        ['name' => 'Cameras & Photography', 'icon' => 'photo_camera'],
-        ['name' => 'Gaming & Consoles', 'icon' => 'sports_esports'],
-        ['name' => 'Audio & Headphones', 'icon' => 'headphones'],
-        ['name' => 'Wearables & Smartwatches', 'icon' => 'watch'],
-        ['name' => 'Accessories', 'icon' => 'cable'],
-        ['name' => 'Home Appliances', 'icon' => 'kitchen'],
-    ];
+    // Live taxonomy from the catalog (managed in Admin → Categories). Roots with
+    // their active children are eager-loaded; the storefront nav is data-driven so
+    // it always mirrors the real category tree.
+    $rootCategories = \App\Models\Category::query()
+        ->where('is_active', true)
+        ->whereNull('parent_id')
+        ->with(['children' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('name')])
+        ->orderBy('sort_order')
+        ->orderBy('name')
+        ->get();
 
-    // Shorter set shown inline in the yellow bar.
-    $navCategories = ['Laptops & Computers', 'Smartphones & Tablets', 'TV & Audio', 'Cameras', 'Gaming', 'Accessories'];
+    // Departments for the inline yellow bar: a root's children when it has any,
+    // otherwise the root itself — so a single "Electronics" root still surfaces
+    // Coolers / Geysers / Fans / … as top-level links. Adapts to any tree shape.
+    $navDepartments = $rootCategories
+        ->flatMap(fn ($root) => $root->children->isNotEmpty() ? $root->children : collect([$root]))
+        ->take(8);
+
+    // Material Symbol per category slug for the Browse dropdown / mobile menu.
+    $categoryIcons = [
+        'electronics' => 'devices', 'coolers' => 'ac_unit', 'air-cooler' => 'air',
+        'water-cooler' => 'water_drop', 'geysers' => 'water_heater', 'instant-geysers' => 'bolt',
+        'electric-geysers' => 'electric_bolt', 'gas-geysers' => 'local_fire_department',
+        'fans' => 'mode_fan', 'ac-fans' => 'mode_fan', 'dc-fans' => 'mode_fan',
+        'home-appliances' => 'kitchen', 'washing-machine' => 'local_laundry_service',
+        'water-dispenser' => 'water_drop', 'stoves' => 'stove', 'solar-plates' => 'solar_power',
+    ];
+    $iconFor = fn ($slug) => $categoryIcons[$slug] ?? 'category';
 
     $cart = app(\App\Services\CartService::class);
     $cartCount = $cart->count();
@@ -121,9 +132,12 @@
                     <div class="cat-select2 flex items-center pl-4 border-l border-outline-variant bg-surface-bright">
                         <select name="category" aria-label="Category"
                             class="bg-transparent border-none outline-none text-label-sm cursor-pointer">
-                            <option value="">All Categories</option>
-                            @foreach ($allCategories as $category)
-                                <option value="{{ \Illuminate\Support\Str::slug($category['name']) }}">{{ $category['name'] }}</option>
+                            <option value="" @selected(! request('category'))>All Categories</option>
+                            @foreach ($rootCategories as $root)
+                                <option value="{{ $root->slug }}" @selected(request('category') == $root->slug)>{{ $root->name }}</option>
+                                @foreach ($root->children as $child)
+                                    <option value="{{ $child->slug }}" @selected(request('category') == $child->slug)>&nbsp;&nbsp;— {{ $child->name }}</option>
+                                @endforeach
                             @endforeach
                         </select>
                     </div>
@@ -174,24 +188,34 @@
                             x-transition:enter="transition ease-out duration-150"
                             x-transition:enter-start="opacity-0 -translate-y-1"
                             x-transition:enter-end="opacity-100 translate-y-0"
-                            class="absolute left-0 top-full z-50 mt-3 w-72 rounded-lg bg-surface-container-lowest text-on-surface normal-case shadow-xl border border-outline-variant py-2">
-                            @foreach ($allCategories as $category)
-                                <a href="{{ route('shop') }}"
-                                    class="flex items-center gap-3 px-4 py-2.5 text-body-base font-medium hover:bg-surface-container hover:text-primary transition-colors">
-                                    <span class="material-symbols-outlined text-[20px] text-primary">{{ $category['icon'] }}</span>
-                                    {{ $category['name'] }}
+                            class="absolute left-0 top-full z-50 mt-3 w-72 max-h-[70vh] overflow-y-auto rounded-lg bg-surface-container-lowest text-on-surface normal-case shadow-xl border border-outline-variant py-2">
+                            @forelse ($rootCategories as $root)
+                                <a href="{{ route('shop', ['category' => $root->slug]) }}"
+                                    class="flex items-center gap-3 px-4 py-2.5 text-body-base font-bold hover:bg-surface-container hover:text-primary transition-colors">
+                                    <span class="material-symbols-outlined text-[20px] text-primary">{{ $iconFor($root->slug) }}</span>
+                                    {{ $root->name }}
                                 </a>
-                            @endforeach
+                                @foreach ($root->children as $child)
+                                    <a href="{{ route('shop', ['category' => $child->slug]) }}"
+                                        class="flex items-center gap-3 pl-11 pr-4 py-2 text-body-base font-medium text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[18px] text-outline">{{ $iconFor($child->slug) }}</span>
+                                        {{ $child->name }}
+                                    </a>
+                                @endforeach
+                            @empty
+                                <a href="{{ route('shop') }}" class="block px-4 py-2.5 text-body-base font-medium hover:bg-surface-container hover:text-primary transition-colors">Shop all products</a>
+                            @endforelse
                         </div>
                     </li>
 
                     <li class="shrink-0">
                         <a href="{{ route('home') }}"
-                            class="pb-1 border-b-2 border-on-primary-container hover:text-on-primary-container transition-colors">Home</a>
+                            class="pb-1 border-b-2 {{ request()->routeIs('home') ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">Home</a>
                     </li>
-                    @foreach ($navCategories as $category)
+                    @foreach ($navDepartments as $department)
                         <li class="shrink-0">
-                            <a href="{{ route('shop') }}" class="hover:text-on-primary-container transition-colors">{{ $category }}</a>
+                            <a href="{{ route('shop', ['category' => $department->slug]) }}"
+                                class="pb-1 border-b-2 {{ request('category') == $department->slug ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">{{ $department->name }}</a>
                         </li>
                     @endforeach
                 </ul>
@@ -224,13 +248,21 @@
             </form>
             <ul class="p-2">
                 <li><a href="{{ route('home') }}" class="block px-4 py-3 rounded hover:bg-surface-container font-bold">Home</a></li>
-                @foreach ($allCategories as $category)
+                @foreach ($rootCategories as $root)
                     <li>
-                        <a href="{{ route('shop') }}" class="flex items-center gap-3 px-4 py-3 rounded hover:bg-surface-container">
-                            <span class="material-symbols-outlined text-[20px] text-primary">{{ $category['icon'] }}</span>
-                            {{ $category['name'] }}
+                        <a href="{{ route('shop', ['category' => $root->slug]) }}" class="flex items-center gap-3 px-4 py-3 rounded hover:bg-surface-container font-bold">
+                            <span class="material-symbols-outlined text-[20px] text-primary">{{ $iconFor($root->slug) }}</span>
+                            {{ $root->name }}
                         </a>
                     </li>
+                    @foreach ($root->children as $child)
+                        <li>
+                            <a href="{{ route('shop', ['category' => $child->slug]) }}" class="flex items-center gap-3 pl-11 pr-4 py-2.5 rounded hover:bg-surface-container text-on-surface-variant">
+                                <span class="material-symbols-outlined text-[18px] text-outline">{{ $iconFor($child->slug) }}</span>
+                                {{ $child->name }}
+                            </a>
+                        </li>
+                    @endforeach
                 @endforeach
             </ul>
             <div class="p-4 border-t border-outline-variant flex flex-col gap-2">

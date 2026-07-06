@@ -24,7 +24,7 @@ class CatalogSeeder extends Seeder
     {
         // Brands -----------------------------------------------------------------
         $brands = [];
-        foreach (['Electro', 'Apple', 'Dell', 'HP', 'Sony', 'Microsoft'] as $name) {
+        foreach (['Dawlance', 'PEL', 'Boss', 'Orient', 'Super Asia', 'GFC', 'Haier', 'Homage', 'Kenwood', 'Waves'] as $name) {
             $brands[$name] = Brand::updateOrCreate(
                 ['slug' => Str::slug($name)],
                 ['name' => $name, 'is_active' => true],
@@ -32,33 +32,57 @@ class CatalogSeeder extends Seeder
         }
 
         // Categories -------------------------------------------------------------
-        $categoryNames = [
-            'Laptops & Computers', 'Smart Phones', 'Headphones',
-            'Audio Speakers', 'Cameras', 'Game Consoles', 'Accessories',
+        // A single "Electronics" root groups every appliance family. Geysers,
+        // Coolers, Fans and Home Appliances each nest their own type-specific
+        // children beneath it (parent → group → leaves).
+        $categoryTree = [
+            'Electronics' => [
+                'Coolers'         => ['Air Cooler', 'Water Cooler'],
+                'Geysers'         => ['Instant Geysers', 'Electric Geysers', 'Gas Geysers'],
+                'Fans'            => ['AC Fans', 'DC Fans'],
+                'Home Appliances' => ['Washing Machine', 'Water Dispenser', 'Stoves'],
+                'Solar Plates'    => [],
+            ],
         ];
+
         $categories = [];
-        foreach ($categoryNames as $i => $name) {
-            $categories[$name] = Category::updateOrCreate(
+        $makeCategory = function (string $name, ?int $parentId, int $order) use (&$categories) {
+            return $categories[$name] = Category::updateOrCreate(
                 ['slug' => Str::slug($name)],
-                ['name' => $name, 'sort_order' => $i, 'is_active' => true],
+                ['name' => $name, 'parent_id' => $parentId, 'sort_order' => $order, 'is_active' => true],
             );
+        };
+
+        $rootOrder = 0;
+        foreach ($categoryTree as $rootName => $groups) {
+            $root = $makeCategory($rootName, null, $rootOrder++);
+            $groupOrder = 0;
+            foreach ($groups as $groupName => $leaves) {
+                $group = $makeCategory($groupName, $root->id, $groupOrder++);
+                $leafOrder = 0;
+                foreach ($leaves as $leafName) {
+                    $makeCategory($leafName, $group->id, $leafOrder++);
+                }
+            }
         }
 
         // Products + default variants -------------------------------------------
         // [name, category, brand, retail, compare|null, featured]
         $items = [
-            ['Wireless Audio System Multiroom 360', 'Audio Speakers', 'Sony', 2299, null, true],
-            ['Tablet White EliteBook Revolve 810 G2', 'Laptops & Computers', 'HP', 1300, null, false],
-            ['Purple Solo 2 Wireless', 'Headphones', 'Sony', 248, null, false],
-            ['Tablet Red EliteBook Revolve 810 G2', 'Laptops & Computers', 'HP', 2100, 2299, false],
-            ['White Solo 2 Wireless', 'Headphones', 'Sony', 249, null, false],
-            ['Smartphone 6S 32GB LTE', 'Smart Phones', 'Apple', 1100, 1215, true],
-            ['Apple MacBook Pro 13-inch M2 256GB', 'Laptops & Computers', 'Apple', 1299, null, true],
-            ['Dell XPS 15 9520 i7 16GB 512GB', 'Laptops & Computers', 'Dell', 1948, null, false],
-            ['HP Spectre x360 Convertible 14', 'Laptops & Computers', 'HP', 1499, null, false],
-            ['Camera C430W 4k with Waterproof cover', 'Cameras', 'Sony', 782, null, false],
-            ['Game Console Controller + USB 3.0', 'Game Consoles', 'Microsoft', 90, 99, false],
-            ['Universal Headphones Case in Black', 'Accessories', 'Electro', 159, null, false],
+            ['Super Asia Room Air Cooler ECM-4000', 'Air Cooler', 'Super Asia', 32999, 35999, true],
+            ['Boss Room Air Cooler ECM-9000 Icy Cool', 'Air Cooler', 'Boss', 28999, null, false],
+            ['Waves Electric Water Cooler 65L', 'Water Cooler', 'Waves', 74999, null, false],
+            ['Dawlance Automatic Washing Machine DWT-260', 'Washing Machine', 'Dawlance', 66999, 72999, true],
+            ['Haier Twin Tub Washing Machine HWM-120', 'Washing Machine', 'Haier', 38999, null, false],
+            ['Orient 3-Tap Water Dispenser Icon', 'Water Dispenser', 'Orient', 45999, null, false],
+            ['GFC Ceiling Fan Deluxe 56 inch', 'AC Fans', 'GFC', 8999, 9999, false],
+            ['PEL DC Inverter Ceiling Fan SmartSaver', 'DC Fans', 'PEL', 12999, null, true],
+            ['Homage Solar Panel 550W Mono PERC', 'Solar Plates', 'Homage', 21999, null, true],
+            ['Boss Instant Gas Geyser 6L', 'Instant Geysers', 'Boss', 15999, null, false],
+            ['PEL Electric Storage Geyser 30 Gallon', 'Electric Geysers', 'PEL', 33999, 36999, false],
+            ['Super Asia Gas Geyser 35 Gallon', 'Gas Geysers', 'Super Asia', 27999, null, false],
+            ['Kenwood 5-Burner Gas Stove Crystal', 'Stoves', 'Kenwood', 18999, null, false],
+            ['Dawlance Microwave Oven MD-9 Grill', 'Home Appliances', 'Dawlance', 24999, 27999, false],
         ];
 
         $author = User::query()->first(); // seeded admin — author for demo reviews

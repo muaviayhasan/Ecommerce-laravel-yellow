@@ -12,11 +12,14 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\HeroSlideController;
+use App\Http\Controllers\Admin\InfoBarItemController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\LedgerController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PosController;
+use App\Http\Controllers\Admin\PromoCardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductionController;
 use App\Http\Controllers\Admin\PurchaseController;
@@ -188,6 +191,9 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('brands', BrandController::class)->except('show');
+    Route::resource('hero-slides', HeroSlideController::class)->except('show');
+    Route::resource('promo-cards', PromoCardController::class)->except('show');
+    Route::resource('info-bar-items', InfoBarItemController::class)->except('show');
     Route::resource('attributes', AttributeController::class)->except('show');
     Route::resource('coupons', CouponController::class)->except('show');
 

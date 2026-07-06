@@ -79,6 +79,24 @@ return [
                     'permission' => 'brands.view',
                 ],
                 [
+                    'label' => 'Hero Slides',
+                    'route' => 'admin.hero-slides.index',
+                    'active' => 'admin.hero-slides.*',
+                    'permission' => 'hero-slides.view',
+                ],
+                [
+                    'label' => 'Promo Cards',
+                    'route' => 'admin.promo-cards.index',
+                    'active' => 'admin.promo-cards.*',
+                    'permission' => 'promo-cards.view',
+                ],
+                [
+                    'label' => 'Info Bar',
+                    'route' => 'admin.info-bar-items.index',
+                    'active' => 'admin.info-bar-items.*',
+                    'permission' => 'info-bar-items.view',
+                ],
+                [
                     'label' => 'Attributes',
                     'route' => 'admin.attributes.index',
                     'active' => 'admin.attributes.*',

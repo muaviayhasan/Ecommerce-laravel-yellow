@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Models\HeroSlide;
+use App\Models\InfoBarItem;
+use App\Models\PromoCard;
 use App\Support\Storefront;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -27,6 +30,9 @@ class HomeController extends Controller
         $topRated = $orLatest(Storefront::cards(Storefront::query()->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating')->take(6)->get()), 6);
 
         return view('storefront.home', [
+            'heroSlides' => $this->heroSlides(),
+            'promoCards' => PromoCard::query()->with('image')->active()->ordered()->get(),
+            'infoBarItems' => InfoBarItem::query()->active()->ordered()->get(),
             'featured' => $featured,
             'onSale' => $onSale,
             'topRated' => $topRated,
@@ -37,6 +43,32 @@ class HomeController extends Controller
             'tvProducts' => $latest,
             'recentlyViewed' => $latest->slice(2, 6)->values(),
         ]);
+    }
+
+    /**
+     * Active hero carousel slides in display order. Falls back to a single built-in
+     * slide so the banner is never empty on a fresh install (before HeroSlideSeeder).
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\HeroSlide>
+     */
+    private function heroSlides(): Collection
+    {
+        $slides = HeroSlide::query()->with('image')->active()->ordered()->get();
+
+        if ($slides->isNotEmpty()) {
+            return $slides;
+        }
+
+        return collect([new HeroSlide([
+            'kicker' => 'Welcome',
+            'line1' => 'SHOP THE LATEST',
+            'line2' => 'HOME APPLIANCES',
+            'tail' => 'DEALS',
+            'highlight' => 'EVERY DAY',
+            'cta_label' => 'Shop Now',
+            'image_path' => '/assets/images/banner-laptops.png',
+            'image_alt' => 'Featured products',
+        ])]);
     }
 
     /**

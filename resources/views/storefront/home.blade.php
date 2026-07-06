@@ -4,44 +4,9 @@
 @section('meta_description', 'Shop the latest electronics — phones, laptops, cameras, audio and more at ' . config('app.name') . '.')
 
 @section('content')
-    {{-- Hero slider --}}
-    @php
-        // Hero uses transparent PNG product cut-outs (object-contain), so the product
-        // shows in full on both desktop and mobile.
-        $heroSlides = [
-            [
-                'kicker' => 'Power meets portability',
-                'line1' => 'NEXT-GEN LAPTOPS',
-                'line2' => 'BUILT FOR SPEED',
-                'tail' => 'SAVE UP TO',
-                'highlight' => '30% OFF',
-                'cta' => 'Shop Laptops',
-                'image' => '/assets/images/banner-laptops.png',
-                'alt' => 'Next-gen laptop',
-            ],
-            [
-                'kicker' => 'Capture every moment',
-                'line1' => 'PRO-GRADE',
-                'line2' => 'CAMERAS',
-                'tail' => 'UP TO',
-                'highlight' => '40% OFF',
-                'cta' => 'Shop Cameras',
-                'image' => '/images/promos/promo-1.png',
-                'alt' => '4K camera',
-            ],
-            [
-                'kicker' => 'Hear every detail',
-                'line1' => 'IMMERSIVE AUDIO',
-                'line2' => 'WIRELESS FREEDOM',
-                'tail' => 'STARTING AT',
-                'highlight' => 'Rs 4,999',
-                'cta' => 'Shop Audio',
-                'image' => '/assets/images/banner-smartg3.png',
-                'alt' => 'Wireless audio device',
-            ],
-        ];
-    @endphp
-
+    {{-- Hero slider — slides are managed in Admin → Ecommerce → Hero Slides.
+         Images use transparent PNG product cut-outs (object-contain), so the
+         product shows in full on both desktop and mobile. --}}
     <section class="group relative bg-surface overflow-hidden"
         x-data="{
             current: 0,
@@ -66,16 +31,20 @@
                              regardless of text length; content is vertically centered. --}}
                         <div class="app-container relative flex items-center h-[480px] lg:h-[500px] overflow-hidden">
                             <div class="w-3/5 md:w-1/2 z-10 py-4">
-                                <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-3 md:mb-4">{{ $slide['kicker'] }}</p>
+                                @if ($slide->kicker)
+                                    <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-3 md:mb-4">{{ $slide->kicker }}</p>
+                                @endif
                                 <h1 class="text-3xl sm:text-4xl lg:text-display-hero font-light leading-tight tracking-tight mb-6 md:mb-8">
-                                    {{ $slide['line1'] }}<br>
-                                    <span class="font-bold">{{ $slide['line2'] }}</span><br>
-                                    {{ $slide['tail'] }} <span class="font-bold text-primary">{{ $slide['highlight'] }}</span>
+                                    {{ $slide->line1 }}
+                                    @if ($slide->line2)<br><span class="font-bold">{{ $slide->line2 }}</span>@endif
+                                    @if ($slide->tail || $slide->highlight)<br>{{ $slide->tail }} <span class="font-bold text-primary">{{ $slide->highlight }}</span>@endif
                                 </h1>
-                                <a href="{{ route('shop') }}"
-                                    class="inline-block bg-primary-container px-10 py-4 rounded-full font-bold text-on-surface hover:opacity-90 transition-all shadow-lg">
-                                    {{ $slide['cta'] }}
-                                </a>
+                                @if ($slide->cta_label)
+                                    <a href="{{ $slide->cta_link }}"
+                                        class="inline-block bg-primary-container px-10 py-4 rounded-full font-bold text-on-surface hover:opacity-90 transition-all shadow-lg">
+                                        {{ $slide->cta_label }}
+                                    </a>
+                                @endif
                                 {{-- Dots --}}
                                 <div class="flex gap-2 mt-8 md:mt-12">
                                     @foreach ($heroSlides as $di => $dslide)
@@ -87,11 +56,13 @@
                             </div>
                             {{-- PNG product cut-out, contained. Floated on the right on all
                                  screens (the text may overlap it on small screens — that's fine). --}}
-                            <div class="absolute right-0 top-0 bottom-0 w-2/5 md:w-1/2 flex items-center justify-center p-3 md:p-8">
-                                <img class="max-w-full max-h-full w-auto object-contain"
-                                    src="{{ $slide['image'] }}" alt="{{ $slide['alt'] }}"
-                                    @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
-                            </div>
+                            @if ($slide->image_url)
+                                <div class="absolute right-0 top-0 bottom-0 w-2/5 md:w-1/2 flex items-center justify-center p-3 md:p-8">
+                                    <img class="max-w-full max-h-full w-auto object-contain"
+                                        src="{{ $slide->image_url }}" alt="{{ $slide->image_alt }}"
+                                        @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -111,40 +82,36 @@
     </section>
 
     {{-- Promo grid --}}
+    {{-- Promo grid — cards managed in Admin → Ecommerce → Promo Cards. --}}
+    @if ($promoCards->isNotEmpty())
     <section class="py-12 bg-white">
         <div class="app-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            @php
-                // Product images pulled from the electro design (public/images/promos).
-                $promos = [
-                    ['kicker' => 'Catch the hottest', 'title' => 'Deals', 'subtitle' => 'In Cameras', 'type' => 'shop', 'image' => '/images/promos/promo-1.png'],
-                    ['kicker' => 'The New', 'title' => '360 Cameras', 'type' => 'price', 'prefix' => 'From', 'currency' => '$', 'amount' => '749', 'cents' => '99', 'image' => '/images/promos/promo-2.png'],
-                    ['kicker' => 'Tablets, Smartphones', 'title' => 'And More', 'type' => 'percent', 'prefix' => 'Up to', 'amount' => '70', 'image' => '/images/promos/promo-3.png'],
-                    ['kicker' => 'The New', 'title' => '360 Cameras', 'type' => 'percent', 'prefix' => 'Up to', 'amount' => '70', 'image' => '/images/promos/promo-4.png'],
-                ];
-            @endphp
-
-            @foreach ($promos as $promo)
-                <a href="{{ route('shop') }}"
+            @foreach ($promoCards as $promo)
+                <a href="{{ $promo->link }}"
                     class="bg-surface-container-low p-6 flex items-center gap-4 group transition-shadow hover:shadow-md">
                     {{-- Image first (left), text second (right) --}}
-                    <img src="{{ $promo['image'] }}" alt="{{ $promo['title'] }}" loading="lazy"
-                        class="w-24 h-24 object-contain shrink-0">
+                    @if ($promo->image_url)
+                        <img src="{{ $promo->image_url }}" alt="{{ $promo->image_alt ?: $promo->title }}" loading="lazy"
+                            class="w-24 h-24 object-contain shrink-0">
+                    @endif
                     <div class="flex-1 min-w-0">
-                        <p class="text-label-sm font-bold uppercase text-secondary">{{ $promo['kicker'] }}</p>
-                        <h3 class="font-bold text-headline-md leading-tight uppercase text-on-surface">{{ $promo['title'] }}</h3>
-                        @isset($promo['subtitle'])
-                            <p class="text-label-sm font-bold uppercase text-secondary">{{ $promo['subtitle'] }}</p>
-                        @endisset
+                        @if ($promo->kicker)
+                            <p class="text-label-sm font-bold uppercase text-secondary">{{ $promo->kicker }}</p>
+                        @endif
+                        <h3 class="font-bold text-headline-md leading-tight uppercase text-on-surface">{{ $promo->title }}</h3>
+                        @if ($promo->subtitle)
+                            <p class="text-label-sm font-bold uppercase text-secondary">{{ $promo->subtitle }}</p>
+                        @endif
 
                         <div class="flex items-center gap-2 mt-2">
-                            @if ($promo['type'] === 'shop')
-                                <span class="font-bold text-on-surface">Shop now</span>
-                            @elseif ($promo['type'] === 'price')
-                                <span class="text-label-sm uppercase text-secondary">{{ $promo['prefix'] }}</span>
-                                <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo['currency'] }}{{ $promo['amount'] }}<sup class="text-[0.55em] align-super">{{ $promo['cents'] }}</sup></span>
+                            @if ($promo->display_type === \App\Models\PromoCard::TYPE_SHOP)
+                                <span class="font-bold text-on-surface">{{ $promo->prefix ?: 'Shop now' }}</span>
+                            @elseif ($promo->display_type === \App\Models\PromoCard::TYPE_PRICE)
+                                <span class="text-label-sm uppercase text-secondary">{{ $promo->prefix }}</span>
+                                <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo->currency }}{{ $promo->amount }}<sup class="text-[0.55em] align-super">{{ $promo->cents }}</sup></span>
                             @else
-                                <span class="text-label-sm uppercase text-secondary leading-tight">{{ $promo['prefix'] }}</span>
-                                <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo['amount'] }}<sup class="text-[0.55em] align-super">%</sup></span>
+                                <span class="text-label-sm uppercase text-secondary leading-tight">{{ $promo->prefix }}</span>
+                                <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo->amount }}<sup class="text-[0.55em] align-super">%</sup></span>
                             @endif
                             <span class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
                                 <span class="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
@@ -155,29 +122,26 @@
             @endforeach
         </div>
     </section>
+    @endif
 
-    {{-- Info bar --}}
+    {{-- Info bar — items managed in Admin → Ecommerce → Info Bar. --}}
+    @if ($infoBarItems->isNotEmpty())
     <section class="pb-12 bg-white">
         <div class="app-container">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 rounded-lg border border-outline-variant divide-y lg:divide-y-0 lg:divide-x divide-outline-variant">
-                @foreach ([
-                    ['icon' => 'local_shipping', 'title' => 'Free Delivery', 'sub' => 'from Rs 5,000'],
-                    ['icon' => 'thumb_up', 'title' => '99% Positive', 'sub' => 'Feedbacks'],
-                    ['icon' => 'cached', 'title' => '365 days', 'sub' => 'for free return'],
-                    ['icon' => 'account_balance_wallet', 'title' => 'Payment', 'sub' => 'Secure System'],
-                    ['icon' => 'sell', 'title' => 'Only Best', 'sub' => 'Brands'],
-                ] as $info)
+                @foreach ($infoBarItems as $info)
                     <div class="flex items-center justify-center gap-4 px-6 py-6">
-                        <span class="material-symbols-outlined text-primary-container text-4xl">{{ $info['icon'] }}</span>
+                        <span class="material-symbols-outlined text-primary-container text-4xl">{{ $info->icon }}</span>
                         <div>
-                            <p class="text-body-base font-bold">{{ $info['title'] }}</p>
-                            <p class="text-label-sm text-on-surface-variant">{{ $info['sub'] }}</p>
+                            <p class="text-body-base font-bold">{{ $info->title }}</p>
+                            <p class="text-label-sm text-on-surface-variant">{{ $info->subtitle }}</p>
                         </div>
                     </div>
                 @endforeach
             </div>
         </div>
     </section>
+    @endif
 
     {{-- Featured tabs --}}
     <section class="py-12 bg-white" x-data="{ tab: 'featured' }">
