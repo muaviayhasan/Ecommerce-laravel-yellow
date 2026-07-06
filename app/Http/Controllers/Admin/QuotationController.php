@@ -161,6 +161,12 @@ class QuotationController extends Controller implements HasMiddleware
 
         $quotation->update(['status' => $to]);
 
+        // Email the quote to the customer when it's marked as "sent".
+        if ($to === 'sent') {
+            $quotation->loadMissing('items', 'customer');
+            \App\Support\Mail\Notifier::send('quotation_sent', $quotation->customer?->email, new \App\Mail\QuotationSentMail($quotation));
+        }
+
         return back()->with('status', "Quotation marked {$to}.");
     }
 

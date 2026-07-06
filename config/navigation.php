@@ -117,6 +117,24 @@ return [
             ],
         ],
         [
+            'label' => 'Marketing',
+            'icon' => 'campaign',
+            'children' => [
+                [
+                    'label' => 'Campaigns',
+                    'route' => 'admin.campaigns.index',
+                    'active' => 'admin.campaigns.*',
+                    'permission' => 'campaigns.view',
+                ],
+                [
+                    'label' => 'Subscribers',
+                    'route' => 'admin.subscribers.index',
+                    'active' => 'admin.subscribers.*',
+                    'permission' => 'subscribers.view',
+                ],
+            ],
+        ],
+        [
             'label' => 'Procurement',
             'icon' => 'local_shipping',
             'children' => [

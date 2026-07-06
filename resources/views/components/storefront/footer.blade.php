@@ -53,6 +53,7 @@
         <div>
             <h4 class="font-bold text-headline-md mb-6">Customer Care</h4>
             <ul class="space-y-3 text-body-base text-on-surface-variant">
+                <li><a href="{{ route('quote.request') }}" class="hover:text-primary transition-colors font-medium">Request a Quote</a></li>
                 @foreach ($customerCare as $link)
                     <li><a href="#" class="hover:text-primary transition-colors">{{ $link }}</a></li>
                 @endforeach

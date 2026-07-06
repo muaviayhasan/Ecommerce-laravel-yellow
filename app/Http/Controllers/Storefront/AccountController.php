@@ -183,6 +183,9 @@ class AccountController extends Controller
 
         $request->user()->update(['password' => $request->input('password')]);
 
+        // Security notice: confirm the change by email.
+        \App\Support\Mail\Notifier::send('password_changed', $request->user()->email, new \App\Mail\PasswordChangedMail($request->user()));
+
         return back()->with('status', 'Your password has been changed.');
     }
 }

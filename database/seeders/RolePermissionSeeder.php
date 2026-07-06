@@ -41,6 +41,9 @@ class RolePermissionSeeder extends Seeder
         'reviews' => ['view', 'moderate'],
         'wishlists' => ['view'],
         'support' => ['view', 'reply'],
+        // Marketing
+        'subscribers' => ['view', 'delete', 'export'],
+        'campaigns' => ['view', 'create', 'edit', 'delete', 'send'],
         // Content
         'blog-posts' => ['view', 'create', 'edit', 'delete'],
         'blog-categories' => ['view', 'create', 'edit', 'delete'],
@@ -71,7 +74,7 @@ class RolePermissionSeeder extends Seeder
         'inventory-manager' => ['dashboard', 'stock', 'products', 'variants'],
         'cashier' => ['dashboard', 'pos', 'customers', 'orders'],
         'sales-rep' => ['dashboard', 'quotations', 'orders', 'customers'],
-        'order-manager' => ['dashboard', 'orders', 'customers', 'reports', 'support'],
+        'order-manager' => ['dashboard', 'orders', 'customers', 'reports', 'support', 'subscribers', 'campaigns'],
         'accountant' => ['dashboard', 'ledger', 'reports', 'orders', 'purchases'],
         'editor' => ['dashboard', 'blog-posts', 'blog-categories', 'blog-tags', 'media', 'gallery'],
         'customer' => [],

@@ -12,6 +12,7 @@
 
     {{-- Panel --}}
     <div x-show="open" x-cloak x-transition.origin.bottom.right
+        @wheel="guardScroll($event)" @touchmove="guardTouch($event)"
         class="w-[22rem] max-w-[calc(100vw-2.5rem)] h-[30rem] max-h-[calc(100vh-7rem)] bg-white rounded-2xl shadow-2xl border border-outline-variant/60 flex flex-col overflow-hidden">
 
         {{-- Header --}}
@@ -43,7 +44,7 @@
         {{-- Conversation --}}
         <template x-if="authed || started">
             <div class="flex-1 flex flex-col min-h-0">
-                <div x-ref="scroll" @scroll.passive="onScroll($event)" class="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-low/40">
+                <div x-ref="scroll" @scroll.passive="onScroll($event)" class="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3 bg-surface-container-low/40">
                     <div x-show="loadingMore" class="flex justify-center py-1">
                         <span class="material-symbols-outlined animate-spin text-outline text-[18px]">progress_activity</span>
                     </div>
@@ -280,6 +281,23 @@
                         } catch (e) { return false; }
                     },
                     scrollDown() { const el = this.$refs.scroll; if (el) el.scrollTop = el.scrollHeight; },
+                    // Keep the page still while the pointer is over the panel: scroll the messages,
+                    // never the site behind. Blocks page scroll on non-scrollable areas (header/input)
+                    // and when the list is already at its top/bottom edge.
+                    guardScroll(e) {
+                        const s = this.$refs.scroll;
+                        if (!s || !s.contains(e.target)) { e.preventDefault(); return; }
+                        const up = e.deltaY < 0;
+                        const atTop = s.scrollTop <= 0;
+                        const atBottom = Math.ceil(s.scrollTop + s.clientHeight) >= s.scrollHeight;
+                        if ((up && atTop) || (!up && atBottom)) e.preventDefault();
+                    },
+                    // Touch equivalent: block the background from scrolling when dragging over a
+                    // non-scrollable part of the panel. Inside the list, overscroll-contain handles the edges.
+                    guardTouch(e) {
+                        const s = this.$refs.scroll;
+                        if (!s || !s.contains(e.target)) { if (e.cancelable) e.preventDefault(); }
+                    },
                     // Escape the body, then turn bare URLs into clickable links (e.g. the checkout / order link).
                     linkify(text) {
                         const esc = (text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

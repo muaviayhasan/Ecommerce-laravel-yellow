@@ -112,12 +112,38 @@ class OrderController extends Controller implements HasMiddleware
             ]);
         }
 
-        // Keep the customer posted in their support chat when the status actually changes.
-        if ($from !== $data['status'] && $order->user) {
-            app(\App\Services\SupportBot::class)->notifyUser($order->user, $this->statusMessage($order, $data['status']));
+        // Keep the customer posted when the status actually changes — support chat + email.
+        if ($from !== $data['status']) {
+            if ($order->user) {
+                app(\App\Services\SupportBot::class)->notifyUser($order->user, $this->statusMessage($order, $data['status']));
+            }
+
+            $order->loadMissing('customer');
+            $customerUrl = $order->user ? route('account.orders.show', $order) : null;
+            \App\Support\Mail\Notifier::send(
+                'order_status_update',
+                $order->customer?->email,
+                new \App\Mail\OrderStatusUpdatedMail($order, $this->statusEmailLine($order, $data['status']), $customerUrl),
+            );
         }
 
         return back()->with('status', 'Order updated.');
+    }
+
+    /** Plain-text status line for the email body (no chat link / emoji). */
+    private function statusEmailLine(Order $order, string $status): string
+    {
+        $num = $order->order_number;
+
+        return match ($status) {
+            'processing' => "Good news — your order {$num} is now being processed.",
+            'shipped' => "Your order {$num} has been shipped and is on its way.",
+            'delivered' => "Your order {$num} has been delivered. We hope you love it!",
+            'completed' => "Your order {$num} is complete. Thank you for shopping with us!",
+            'cancelled' => "Your order {$num} has been cancelled. Reply to this email if you have any questions.",
+            'refunded' => "A refund has been processed for your order {$num}.",
+            default => "Your order {$num} is now " . ucfirst(str_replace('_', ' ', $status)) . '.',
+        };
     }
 
     /** Friendly support-chat message for an order status change. */
