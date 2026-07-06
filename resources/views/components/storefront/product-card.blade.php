@@ -16,9 +16,14 @@
 <div {{ $attributes->class('product-card group relative flex flex-col bg-white pt-5 px-6 pb-4 border-r border-gray-200 last:border-r-0 transition-all duration-200 hover:border-transparent hover:shadow-[0_0_6px_0_rgba(1,1,1,0.3)] hover:z-20') }}>
     <p class="text-label-sm text-secondary mb-1 line-clamp-1 min-h-4">{{ $category }}</p>
 
-    <h4 class="text-product-title text-primary mb-4 line-clamp-2 min-h-9">
+    <h4 class="text-product-title text-primary mb-1 line-clamp-2 min-h-9">
         <a href="{{ $url }}" class="hover:underline">{{ $name }}</a>
     </h4>
+    @if ($variantLabel = data_get($product, 'variant_label'))
+        <p class="text-label-sm text-on-surface-variant mb-3 line-clamp-1">{{ $variantLabel }}</p>
+    @else
+        <div class="mb-3"></div>
+    @endif
 
     <a href="{{ $url }}" class="block aspect-square mb-4">
         <img src="{{ $image }}" alt="{{ $name }}" loading="lazy"

@@ -73,11 +73,17 @@
 
             {{-- ===================== Product hero card ===================== --}}
             <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12 bg-white p-6 lg:p-8 rounded-lg shadow-sm border border-outline-variant"
-                x-data="{ active: 0, images: @js($product['gallery']) }">
+                x-data="productDetail({
+                    gallery: @js($product['gallery']),
+                    matrix: @js($variantMatrix),
+                    groups: @js($variantOptions),
+                    initial: @js($selectedVariant),
+                    fallback: { price: @js((float) $product['price']), compare: @js($product['compare']), sku: @js($product['sku'] ?? ''), stock: @js((float) $product['stock']) },
+                })">
                 {{-- Gallery: main image on top, thumbnails below --}}
                 <div class="space-y-6">
                     <div class="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center p-6 sm:p-8 group cursor-zoom-in">
-                        <img :src="images[active]" alt="{{ $product['name'] }}"
+                        <img :src="gallery[active]" alt="{{ $product['name'] }}"
                             class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
                     </div>
                     <div class="flex gap-3 sm:gap-4 overflow-x-auto pb-2 no-scrollbar">
@@ -113,23 +119,60 @@
                                 <li>{{ $feature }}</li>
                             @endforeach
                         </ul>
-                        <p class="mt-4 text-on-surface-variant italic">SKU: {{ $product['sku'] ?? 'N/A' }}</p>
+                        <p class="mt-4 text-on-surface-variant italic">SKU: <span x-text="sku || 'N/A'"></span></p>
                     </div>
 
+                    {{-- Variant selector (colour / size / …) --}}
+                    @if (! empty($variantOptions))
+                        <div class="border-t border-outline-variant pt-6 space-y-5">
+                            @foreach ($variantOptions as $group)
+                                @php $isColor = collect($group['values'])->contains(fn ($v) => $v['color_hex'] || $v['image']); @endphp
+                                <div>
+                                    <div class="text-label-sm font-bold text-on-surface-variant mb-2">
+                                        {{ $group['name'] }}<span class="font-normal ml-1" x-text="selectedLabel({{ $group['id'] }})"></span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($group['values'] as $v)
+                                            @if ($isColor)
+                                                <button type="button" @click="pick({{ $group['id'] }}, {{ $v['id'] }})"
+                                                    title="{{ $v['label'] }}" aria-label="{{ $v['label'] }}"
+                                                    :class="isOn({{ $group['id'] }}, {{ $v['id'] }}) ? 'ring-2 ring-primary ring-offset-2' : 'ring-1 ring-outline-variant hover:ring-primary'"
+                                                    class="w-9 h-9 rounded-full overflow-hidden bg-surface grid place-items-center cursor-pointer transition">
+                                                    @if ($v['image'])
+                                                        <img src="{{ $v['image'] }}" alt="{{ $v['label'] }}" class="w-full h-full object-cover">
+                                                    @else
+                                                        <span class="w-full h-full block" style="background-color: {{ $v['color_hex'] ?: '#cccccc' }}"></span>
+                                                    @endif
+                                                </button>
+                                            @else
+                                                <button type="button" @click="pick({{ $group['id'] }}, {{ $v['id'] }})"
+                                                    :class="isOn({{ $group['id'] }}, {{ $v['id'] }}) ? 'border-primary bg-primary-container text-on-primary-container' : 'border-outline-variant hover:border-primary text-on-surface'"
+                                                    class="min-w-11 px-3 h-10 rounded-lg border text-sm font-semibold cursor-pointer transition">{{ $v['label'] }}</button>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
                     {{-- Availability + price + actions --}}
-                    <div class="border-t border-outline-variant pt-6">
-                        <div class="text-label-sm text-green-600 font-bold mb-2">Availability: {{ $product['stock'] ?? 0 }} in stock</div>
+                    <div class="border-t border-outline-variant pt-6 mt-6">
+                        <div class="text-label-sm font-bold mb-2" :class="stock > 0 ? 'text-green-600' : 'text-error'">
+                            <span x-show="stock > 0">Availability: <span x-text="stock"></span> in stock</span>
+                            <span x-show="stock <= 0" x-cloak>Out of stock</span>
+                        </div>
                         <div class="flex items-end gap-3 mb-6">
-                            <span class="text-[40px] leading-none font-black {{ $isOnSale ? 'text-error' : 'text-on-surface' }}">Rs {{ number_format($product['price']) }}</span>
-                            @if ($isOnSale)
-                                <span class="text-xl text-on-surface-variant line-through pb-1">Rs {{ number_format($product['compare']) }}</span>
-                            @endif
+                            <span class="text-[40px] leading-none font-black" :class="onSale ? 'text-error' : 'text-on-surface'">Rs <span x-text="money(price)"></span></span>
+                            <template x-if="onSale">
+                                <span class="text-xl text-on-surface-variant line-through pb-1">Rs <span x-text="money(compare)"></span></span>
+                            </template>
                         </div>
 
                         @if ($product['variant_id'])
-                            <form method="POST" action="{{ route('cart.add') }}" class="flex flex-wrap gap-4 items-center" x-data="{ qty: 1 }">
+                            <form method="POST" action="{{ route('cart.add') }}" class="flex flex-wrap gap-4 items-center">
                                 @csrf
-                                <input type="hidden" name="variant_id" value="{{ $product['variant_id'] }}">
+                                <input type="hidden" name="variant_id" :value="variantId">
                                 <input type="hidden" name="quantity" :value="qty">
                                 <div class="flex border border-outline rounded-lg overflow-hidden h-12">
                                     <button type="button" @click="qty = Math.max(1, qty - 1)" aria-label="Decrease quantity" class="px-4 hover:bg-surface transition-colors">&minus;</button>
@@ -137,8 +180,10 @@
                                         class="w-12 text-center border-none focus:ring-0 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
                                     <button type="button" @click="qty++" aria-label="Increase quantity" class="px-4 hover:bg-surface transition-colors">+</button>
                                 </div>
-                                <button type="submit" @class(['bg-primary-container text-on-primary-container px-10 h-12 font-bold rounded hover:brightness-95 transition-all flex items-center gap-2', 'opacity-50 pointer-events-none' => $product['stock'] <= 0])>
-                                    <span class="material-symbols-outlined">shopping_cart</span> {{ $product['stock'] > 0 ? 'Add to Cart' : 'Out of stock' }}
+                                <button type="submit" :class="stock <= 0 ? 'opacity-50 pointer-events-none' : ''"
+                                    class="bg-primary-container text-on-primary-container px-10 h-12 font-bold rounded hover:brightness-95 transition-all flex items-center gap-2">
+                                    <span class="material-symbols-outlined">shopping_cart</span>
+                                    <span x-text="stock > 0 ? 'Add to Cart' : 'Out of stock'"></span>
                                 </button>
                             </form>
                         @endif
@@ -376,3 +421,59 @@
         ['title' => 'On-sale Products', 'items' => $onSale, 'rating' => 5],
     ]" />
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            // Reactive product buy-box: variant picker + gallery + price/stock/cart.
+            Alpine.data('productDetail', (cfg) => ({
+                gallery: cfg.gallery,
+                matrix: cfg.matrix || [],
+                groups: cfg.groups || [],
+                selected: {},
+                active: 0,
+                qty: 1,
+                init() {
+                    const start = this.matrix.find(v => v.id === cfg.initial) || this.matrix[0];
+                    if (start) this.selected = { ...start.options };
+                    this.syncImage();
+                },
+                // The variant matching every currently-selected option.
+                get current() {
+                    if (! this.matrix.length) return null;
+                    return this.matrix.find(v => this.groups.every(g => v.options[g.id] === this.selected[g.id])) || null;
+                },
+                isOn(gid, vid) { return this.selected[gid] === vid; },
+                pick(gid, vid) {
+                    this.selected[gid] = vid;
+                    // If that exact combination doesn't exist, snap to a variant that has this value.
+                    if (! this.current) {
+                        const v = this.matrix.find(x => x.options[gid] === vid);
+                        if (v) this.selected = { ...v.options };
+                    }
+                    this.syncImage();
+                },
+                selectedLabel(gid) {
+                    const g = this.groups.find(x => x.id === gid);
+                    if (! g) return '';
+                    const val = g.values.find(v => v.id === this.selected[gid]);
+                    return val ? ('· ' + val.label) : '';
+                },
+                syncImage() {
+                    const img = this.current && this.current.image ? this.current.image : null;
+                    if (img) {
+                        const i = this.gallery.indexOf(img);
+                        if (i >= 0) this.active = i;
+                    }
+                },
+                get price() { return this.current ? this.current.price : cfg.fallback.price; },
+                get compare() { return this.current ? this.current.compare : cfg.fallback.compare; },
+                get onSale() { return this.compare && Number(this.compare) > Number(this.price); },
+                get sku() { return this.current ? this.current.sku : cfg.fallback.sku; },
+                get stock() { return this.current ? this.current.stock : cfg.fallback.stock; },
+                get variantId() { return this.current ? this.current.id : cfg.initial; },
+                money(n) { return Number(n || 0).toLocaleString(); },
+            }));
+        });
+    </script>
+@endpush

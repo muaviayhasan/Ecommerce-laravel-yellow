@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\ProductVariant;
 use App\Support\Storefront;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,32 +19,32 @@ class ShopController extends Controller
         'popular' => 'Popularity',
     ];
 
-    /** Shop / catalog listing — real products with category, brand, price, search, sort and pagination. */
+    /** Shop / catalog listing — one card per active variant, with category, brand, price, search, sort and pagination. */
     public function index(Request $request): View
     {
-        $query = Storefront::query();
+        $query = Storefront::variantQuery();
 
         if ($request->filled('q')) {
-            $query->where('name', 'like', '%' . $request->string('q') . '%');
+            $query->whereHas('product', fn ($p) => $p->where('name', 'like', '%' . $request->string('q') . '%'));
         }
         // Category / brand accept a single slug (?category=x) or many (?category[]=x&category[]=y).
         if ($categories = array_filter((array) $request->input('category', []))) {
-            $query->whereHas('category', fn ($c) => $c->whereIn('slug', $categories));
+            $query->whereHas('product.category', fn ($c) => $c->whereIn('slug', $categories));
         }
         if ($brandSlugs = array_filter((array) $request->input('brand', []))) {
-            $query->whereHas('brand', fn ($b) => $b->whereIn('slug', $brandSlugs));
+            $query->whereHas('product.brand', fn ($b) => $b->whereIn('slug', $brandSlugs));
         }
         if ($request->filled('min')) {
-            $query->whereHas('defaultVariant', fn ($v) => $v->where('retail_price', '>=', (float) $request->input('min')));
+            $query->where('retail_price', '>=', (float) $request->input('min'));
         }
         if ($request->filled('max')) {
-            $query->whereHas('defaultVariant', fn ($v) => $v->where('retail_price', '<=', (float) $request->input('max')));
+            $query->where('retail_price', '<=', (float) $request->input('max'));
         }
 
         $this->applySort($query, $request->string('sort')->toString());
 
         $paginator = $query->paginate(12)->withQueryString();
-        $paginator->setCollection(Storefront::cards($paginator->getCollection()));
+        $paginator->setCollection(Storefront::variantCards($paginator->getCollection()));
 
         // Mobile infinite scroll fetches subsequent pages as a lightweight items partial.
         if ($request->boolean('partial')) {
@@ -78,19 +77,22 @@ class ShopController extends Controller
         ]);
     }
 
+    /** Sort the per-variant query. Name/popularity/newness sort by the parent product. */
     private function applySort($query, string $sort): void
     {
-        $defaultPrice = ProductVariant::select('retail_price')
-            ->whereColumn('product_variants.product_id', 'products.id')
-            ->where('is_default', true)
+        $productCol = fn (string $col) => \App\Models\Product::select($col)
+            ->whereColumn('products.id', 'product_variants.product_id')
             ->limit(1);
 
+        $reviewCount = \App\Models\Review::selectRaw('count(*)')
+            ->whereColumn('reviews.product_id', 'product_variants.product_id');
+
         match ($sort) {
-            'price_low' => $query->orderBy((clone $defaultPrice), 'asc'),
-            'price_high' => $query->orderBy((clone $defaultPrice), 'desc'),
-            'name' => $query->orderBy('name'),
-            'popular' => $query->withCount('reviews')->orderByDesc('reviews_count'),
-            default => $query->latest('published_at'),
+            'price_low' => $query->orderBy('retail_price'),
+            'price_high' => $query->orderByDesc('retail_price'),
+            'name' => $query->orderBy($productCol('name'))->orderBy('product_variants.id'),
+            'popular' => $query->orderByDesc($reviewCount)->orderBy('product_variants.id'),
+            default => $query->orderByDesc($productCol('published_at'))->orderBy('product_variants.id'),
         };
     }
 }
