@@ -28,21 +28,8 @@
                         <button type="submit" class="mt-4 w-full bg-primary-container text-on-primary-container font-bold py-2.5 rounded-full hover:brightness-105 active:scale-95 transition">Apply Filters</button>
                     </form>
 
-                    {{-- Ad banner --}}
-                    <a href="{{ route('shop') }}" class="block relative rounded-lg overflow-hidden bg-surface-container group mt-8 mb-10">
-                        <img src="/images/promos/promo-1.png" alt="Cameras promo"
-                            class="w-full h-56 object-contain p-6 group-hover:scale-105 transition-transform duration-500">
-                        <div class="absolute top-6 left-6">
-                            <p class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant mb-1">All-new</p>
-                            <h4 class="text-3xl font-black text-on-surface leading-none">4K</h4>
-                            <p class="text-body-base font-bold text-on-surface">CAMERAS</p>
-                            <p class="text-[10px] text-on-surface-variant mt-3">STARTING AT</p>
-                            <p class="text-2xl font-bold text-primary">$79.99</p>
-                        </div>
-                    </a>
-
                     {{-- Latest Products --}}
-                    <div>
+                    <div class="mt-10">
                         <h3 class="font-bold border-b border-gray-200 pb-3 mb-6 text-lg">Latest Products</h3>
                         <div class="space-y-6">
                             @foreach ($latest as $product)

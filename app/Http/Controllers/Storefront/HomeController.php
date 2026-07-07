@@ -50,7 +50,39 @@ class HomeController extends Controller
             'spotlights' => $this->spotlights($departments),
             'latestFallback' => $latest,
             'recentlyViewed' => RecentlyViewed::cards(6),
+            // Representative images for the two hardcoded promo banners so they
+            // mirror the real catalog instead of leftover demo art.
+            'promoBanners' => [
+                'coolers' => $this->categoryImage('coolers'),
+                'solar' => $this->categoryImage('solar-plates'),
+            ],
         ]);
+    }
+
+    /**
+     * A representative image URL for a category: its own curated image if set,
+     * otherwise the image of the newest product in its sub-tree. Null when the
+     * category is missing/empty so the caller can fall back to a static asset.
+     */
+    private function categoryImage(string $slug): ?string
+    {
+        $category = Category::query()->where('slug', $slug)->with('image')->first();
+
+        if ($category?->image?->url) {
+            return $category->image->url;
+        }
+
+        $slugs = $category
+            ? collect([$category->slug])->merge($category->children()->pluck('slug'))->all()
+            : [$slug];
+
+        $card = Storefront::cards(
+            Storefront::query()
+                ->whereHas('category', fn ($q) => $q->whereIn('slug', $slugs))
+                ->latest('published_at')->take(1)->get()
+        )->first();
+
+        return $card['image'] ?? null;
     }
 
     /**

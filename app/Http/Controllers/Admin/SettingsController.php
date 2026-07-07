@@ -171,6 +171,7 @@ class SettingsController extends Controller implements HasMiddleware
                         'fields' => [
                             'address' => ['input' => 'textarea', 'label' => 'Business address', 'rows' => 2, 'max' => 500, 'rules' => ['nullable', 'string', 'max:500']],
                             'phone' => ['input' => 'text', 'label' => 'Phone', 'max' => 30, 'rules' => ['nullable', 'string', 'max:30']],
+                            'whatsapp' => ['input' => 'text', 'label' => 'WhatsApp number', 'max' => 30, 'rules' => ['nullable', 'string', 'max:30'], 'help' => 'Full international format, e.g. 923001234567. Powers the “Chat on WhatsApp” button in the support widget. Leave blank to hide it.'],
                             'support_email' => ['input' => 'email', 'label' => 'Support email', 'max' => 255, 'rules' => ['nullable', 'email', 'max:255']],
                             'business_hours' => ['input' => 'text', 'label' => 'Business hours', 'max' => 255, 'rules' => ['nullable', 'string', 'max:255'], 'help' => 'e.g. Mon–Sat, 10am–8pm'],
                         ],

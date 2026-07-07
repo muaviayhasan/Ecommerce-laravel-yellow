@@ -1,5 +1,6 @@
 @props([
     'columns', // array of ['title' => string, 'items' => iterable, 'rating' => int|null]
+    'solarImage' => null, // representative solar image; falls back to the static banner
 ])
 
 {{-- Featured / Top Selling / On-sale product lists + a SolarMax promo banner. --}}
@@ -33,7 +34,7 @@
                 </div>
             </div>
             <a href="{{ route('shop', ['category' => 'solar-plates']) }}" class="flex-1 flex items-center justify-center min-h-[200px]">
-                <img src="/assets/images/banner-smartg3.png" alt="SolarMax solar panels" class="max-h-[260px] w-auto object-contain">
+                <img src="{{ $solarImage ?? '/assets/images/banner-smartg3.png' }}" alt="SolarMax solar panels" class="max-h-[260px] w-auto object-contain">
             </a>
         </div>
     </div>

@@ -64,6 +64,7 @@ class SettingsSeeder extends Seeder
         'store' => [
             'address' => ['value' => '', 'type' => 'string'],
             'phone' => ['value' => '', 'type' => 'string'],
+            'whatsapp' => ['value' => '', 'type' => 'string'],
             'support_email' => ['value' => '', 'type' => 'string'],
             'business_hours' => ['value' => '', 'type' => 'string'],
             'bill_type' => ['value' => 'a4', 'type' => 'string'],     // a4|thermal — printed order bill format

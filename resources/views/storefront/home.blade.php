@@ -329,7 +329,7 @@
                     <h3 class="text-headline-md font-bold mb-2 text-on-surface">Inverter Air Coolers</h3>
                     <p class="text-body-base text-on-surface-variant">powerful cooling that saves on your electricity bill</p>
                 </div>
-                <img src="/assets/images/banner-laptops.png" alt="Inverter air coolers"
+                <img src="{{ $promoBanners['coolers'] ?? '/assets/images/banner-laptops.png' }}" alt="Inverter air coolers"
                     class="w-40 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
             </a>
 
@@ -350,7 +350,7 @@
                         </p>
                     </div>
                 </div>
-                <img src="/assets/images/banner-smartg3.png" alt="SolarMax solar panels"
+                <img src="{{ $promoBanners['solar'] ?? '/assets/images/banner-smartg3.png' }}" alt="SolarMax solar panels"
                     class="w-36 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
             </a>
         </div>
@@ -372,7 +372,7 @@
 
     <x-storefront.brand-strip />
 
-    <x-storefront.product-columns :columns="[
+    <x-storefront.product-columns :solar-image="$promoBanners['solar'] ?? null" :columns="[
         ['title' => 'Featured Products', 'items' => $featured->take(3), 'rating' => null],
         ['title' => 'Top Selling Products', 'items' => $bestsellers->take(3), 'rating' => null],
         ['title' => 'On-sale Products', 'items' => $onSale->take(3), 'rating' => 5],

@@ -1,4 +1,9 @@
 {{-- Floating support chat widget. Polls for new messages; guests enter a name first. --}}
+@php
+    // WhatsApp number for the deep-link button, digits only (wa.me needs no + or spaces).
+    // Blank → the "Chat on WhatsApp" button stays hidden. Set it in Admin → Settings → Store.
+    $waNumber = preg_replace('/\D+/', '', (string) setting('store', 'whatsapp'));
+@endphp
 <div x-data="supportChat({
         stateUrl: @js(route('support.state')),
         startUrl: @js(route('support.start')),
@@ -6,6 +11,7 @@
         historyUrl: @js(route('support.history')),
         authed: @js(auth()->check()),
         authName: @js(auth()->user()?->name),
+        whatsapp: @js($waNumber),
     })"
     :class="($store.compareBar && $store.compareBar.visible) ? '!bottom-40 md:!bottom-28' : ''"
     class="fixed bottom-20 md:bottom-5 right-5 z-[60] flex flex-col items-end gap-3 print:hidden transition-all duration-200">
@@ -16,16 +22,30 @@
         class="w-[22rem] max-w-[calc(100vw-2.5rem)] h-[30rem] max-h-[calc(100vh-7rem)] bg-white rounded-2xl shadow-2xl border border-outline-variant/60 flex flex-col overflow-hidden">
 
         {{-- Header --}}
-        <div class="bg-primary-container text-on-primary-container px-5 py-4 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-full bg-black/10 grid place-items-center"><span class="material-symbols-outlined">support_agent</span></span>
-                <div>
+        <div class="bg-primary-container text-on-primary-container px-5 py-4 flex items-center justify-between gap-3 shrink-0">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="w-10 h-10 rounded-full bg-black/10 grid place-items-center shrink-0"><span class="material-symbols-outlined">support_agent</span></span>
+                <div class="min-w-0">
                     <p class="font-semibold leading-tight">Support</p>
-                    <p class="text-xs opacity-80">Typically replies in a few minutes</p>
+                    <p class="text-xs opacity-80 truncate">Typically replies in a few minutes</p>
                 </div>
             </div>
-            <button type="button" @click="open = false" class="w-8 h-8 grid place-items-center rounded-full hover:bg-black/10 transition"><span class="material-symbols-outlined text-[20px]">close</span></button>
+            <button type="button" @click="open = false" class="w-8 h-8 grid place-items-center rounded-full hover:bg-black/10 transition shrink-0"><span class="material-symbols-outlined text-[20px]">close</span></button>
         </div>
+
+        {{-- WhatsApp quick-connect strip: the single, always-visible hop to WhatsApp.
+             Hidden until a number is set in Admin → Settings → Store. --}}
+        <a x-show="whatsapp" x-cloak :href="waUrl()" target="_blank" rel="noopener"
+            class="group flex items-center gap-3 px-5 py-3 bg-[#25D366] text-white shrink-0 hover:brightness-105 active:brightness-95 transition">
+            <span class="w-8 h-8 rounded-full bg-white/20 grid place-items-center shrink-0">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-[18px] h-[18px]"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.512 5.26l-.999 3.648 3.736-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+            </span>
+            <span class="flex-1 min-w-0">
+                <span class="block text-sm font-semibold leading-tight">Chat on WhatsApp</span>
+                <span class="block text-[11px] text-white/80 leading-tight">Get a faster reply on your phone</span>
+            </span>
+            <span class="material-symbols-outlined text-[20px] text-white/90 group-hover:translate-x-0.5 transition-transform shrink-0">chevron_right</span>
+        </a>
 
         {{-- Guest name step --}}
         <template x-if="!authed && !started">
@@ -103,6 +123,7 @@
                     authed: !!cfg.authed,
                     started: false,
                     guestName: cfg.authName || '',
+                    whatsapp: cfg.whatsapp || '',
                     messages: [],
                     body: '',
                     unread: 0,
@@ -117,6 +138,12 @@
                     _channel: null,
                     _bell: null,
                     token() { return document.querySelector('meta[name="csrf-token"]')?.content; },
+                    // Deep-link to WhatsApp with a greeting that carries the visitor's name.
+                    waUrl() {
+                        const name = (this.guestName || '').trim();
+                        const msg = (name ? `Hi, this is ${name}. ` : 'Hi! ') + "I'd like some help with my order.";
+                        return 'https://wa.me/' + this.whatsapp + '?text=' + encodeURIComponent(msg);
+                    },
                     // One reusable audio, unlocked on the first user gesture so later programmatic
                     // plays (from sockets/timers) aren't blocked by the browser autoplay policy.
                     mountBell() {

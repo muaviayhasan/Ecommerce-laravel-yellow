@@ -199,37 +199,6 @@
         <nav class="hidden md:block bg-primary-container" aria-label="Categories">
             <div class="app-container">
                 <ul class="flex items-center gap-6 py-3 text-label-sm font-bold uppercase tracking-tight no-scrollbar overflow-x-auto">
-                    {{-- Browse Categories dropdown --}}
-                    <li class="relative shrink-0 border-r border-on-primary-container/20 pr-6" x-data="{ open: false }"
-                        @click.outside="open = false" @keydown.escape="open = false">
-                        <button type="button" @click="open = !open" :aria-expanded="open.toString()"
-                            class="flex items-center gap-2 hover:text-on-primary-container transition-colors">
-                            <span class="material-symbols-outlined">menu</span> Browse Categories
-                        </button>
-                        <div x-cloak x-show="open"
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 -translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            class="absolute left-0 top-full z-50 mt-3 w-72 max-h-[70vh] overflow-y-auto rounded-lg bg-surface-container-lowest text-on-surface normal-case shadow-xl border border-outline-variant py-2">
-                            @forelse ($rootCategories as $root)
-                                <a href="{{ route('shop', ['category' => $root->slug]) }}"
-                                    class="flex items-center gap-3 px-4 py-2.5 text-body-base font-bold hover:bg-surface-container hover:text-primary transition-colors">
-                                    <span class="material-symbols-outlined text-[20px] text-primary">{{ $iconFor($root->slug) }}</span>
-                                    {{ $root->name }}
-                                </a>
-                                @foreach ($root->children as $child)
-                                    <a href="{{ route('shop', ['category' => $child->slug]) }}"
-                                        class="flex items-center gap-3 pl-11 pr-4 py-2 text-body-base font-medium text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-[18px] text-outline">{{ $iconFor($child->slug) }}</span>
-                                        {{ $child->name }}
-                                    </a>
-                                @endforeach
-                            @empty
-                                <a href="{{ route('shop') }}" class="block px-4 py-2.5 text-body-base font-medium hover:bg-surface-container hover:text-primary transition-colors">Shop all products</a>
-                            @endforelse
-                        </div>
-                    </li>
-
                     <li class="shrink-0">
                         <a href="{{ route('home') }}"
                             class="pb-1 border-b-2 {{ request()->routeIs('home') ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">Home</a>
