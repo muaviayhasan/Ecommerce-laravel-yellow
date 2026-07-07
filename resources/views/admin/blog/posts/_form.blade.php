@@ -25,7 +25,8 @@
                 </div>
                 <div class="space-y-1.5">
                     <label class="block text-sm font-medium text-on-surface-variant">Body <span class="text-error">*</span></label>
-                    <textarea name="body" rows="16" class="{{ $cell }} resize-y font-mono text-xs leading-relaxed" placeholder="Write the post… HTML is allowed.">{{ old('body', $post->body) }}</textarea>
+                    <textarea id="post-body" name="body" rows="16" class="{{ $cell }} resize-y">{{ old('body', $post->body) }}</textarea>
+                    <p class="text-xs text-outline">Format with the toolbar — the <span class="font-mono">&lt;/&gt;</span> button edits raw HTML.</p>
                     @error('body')<p class="text-xs text-error">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -99,3 +100,42 @@
         </x-settings.section>
     </div>
 </div>
+
+@push('scripts')
+    {{-- Rich-text editor for the Body field (self-hosted TinyMCE via CDN — no API key).
+         Falls back to the plain HTML textarea if the script can't load. --}}
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>
+        (function () {
+            function initBodyEditor() {
+                if (typeof tinymce === 'undefined') return;               // offline → keep plain textarea
+                if (!document.getElementById('post-body')) return;
+                if (tinymce.get('post-body')) return;                     // already initialised
+                tinymce.init({
+                    selector: 'textarea#post-body',
+                    plugins: 'lists link code table autolink',
+                    toolbar: 'undo redo | blocks | bold italic underline | bullist numlist | link table | code removeformat',
+                    menubar: false,
+                    branding: false,
+                    promotion: false,
+                    height: 500,
+                    content_style: 'body{font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.7}',
+                    // Keep the underlying <textarea name="body"> in sync so validation + submit work.
+                    setup: function (editor) {
+                        editor.on('change keyup', function () { editor.save(); });
+                    },
+                });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initBodyEditor);
+            } else {
+                initBodyEditor();
+            }
+            // Play nice with Livewire SPA navigation, if used.
+            document.addEventListener('livewire:navigated', initBodyEditor);
+            document.addEventListener('livewire:navigating', function () {
+                if (typeof tinymce !== 'undefined') tinymce.remove('#post-body');
+            });
+        })();
+    </script>
+@endpush
