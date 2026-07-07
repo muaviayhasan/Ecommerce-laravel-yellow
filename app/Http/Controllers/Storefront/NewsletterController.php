@@ -8,6 +8,7 @@ use App\Models\NewsletterSubscriber;
 use App\Support\Mail\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
 class NewsletterController extends Controller
@@ -15,10 +16,18 @@ class NewsletterController extends Controller
     /** Footer newsletter signup. */
     public function store(Request $request): RedirectResponse
     {
-        $data = $request->validateWithBag('newsletter', [
+        // Validate manually so a failure can redirect back to the newsletter
+        // section (#newsletter) instead of the top of the page.
+        $validator = Validator::make($request->all(), [
             'email' => ['required', 'email', 'max:255'],
             'name' => ['nullable', 'string', 'max:255'],
         ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator, 'newsletter')->withInput()->withFragment('newsletter');
+        }
+
+        $data = $validator->validated();
 
         $subscriber = NewsletterSubscriber::firstOrNew(['email' => $data['email']]);
         $isNew = ! $subscriber->exists;
@@ -39,7 +48,7 @@ class NewsletterController extends Controller
             Notifier::send('admin_new_subscriber', $adminEmail, new NewSubscriberMail($subscriber));
         }
 
-        return back()->with('newsletter_status', 'Thanks for subscribing! Keep an eye on your inbox. 🎉');
+        return back()->with('newsletter_status', 'Thanks for subscribing! Keep an eye on your inbox. 🎉')->withFragment('newsletter');
     }
 
     /** One-click unsubscribe from the link in marketing emails. */

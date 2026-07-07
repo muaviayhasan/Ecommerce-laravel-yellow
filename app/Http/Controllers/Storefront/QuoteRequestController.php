@@ -27,11 +27,14 @@ class QuoteRequestController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'company' => ['nullable', 'string', 'max:255'],
+            // Optional, but must be a valid Pakistani mobile (0300-0000000) when given.
+            'phone' => ['nullable', 'regex:/^03\d{2}-?\d{7}$/'],
+            'company' => ['nullable', 'string', 'max:150'],
             'message' => ['required', 'string', 'max:2000'],
+        ], [
+            'phone.regex' => 'Enter a valid mobile number like 0300-0000000.',
         ]);
 
         $customer = Customer::firstOrCreate(

@@ -38,11 +38,13 @@
                     </a>
                 @endcan
                 @can('quotations.edit')
-                    @foreach (array_diff($statuses, [$quotation->status, 'draft']) as $to)
+                    @foreach ($quotation->allowedTransitions() as $to)
                         <form method="POST" action="{{ route('admin.quotations.status', $quotation) }}">
                             @csrf
                             <input type="hidden" name="status" value="{{ $to }}">
-                            <button type="submit" class="px-3 py-2 text-sm font-semibold text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-high capitalize">Mark {{ $to }}</button>
+                            <button type="submit" class="px-3 py-2 text-sm font-semibold text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-high capitalize">
+                                {{ $to === 'sent' && in_array($quotation->status, ['rejected', 'expired'], true) ? 'Re-send' : 'Mark ' . $to }}
+                            </button>
                         </form>
                     @endforeach
                 @endcan

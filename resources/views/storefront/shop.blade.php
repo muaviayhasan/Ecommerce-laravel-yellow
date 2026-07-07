@@ -114,10 +114,17 @@
                         </div>
                     @endif
 
-                    {{-- Mobile: infinite-scroll sentinel (loads the next page as you scroll) --}}
+                    {{-- Mobile: "Load more" button — loads the next page until every product is shown --}}
                     @if ($products->hasMorePages())
-                        <div id="shop-sentinel" class="lg:hidden flex justify-center py-8">
-                            <span data-spinner class="material-symbols-outlined animate-spin text-outline text-[28px]">progress_activity</span>
+                        <div id="shop-loadmore" class="lg:hidden flex flex-col items-center gap-3 py-8">
+                            <button type="button" data-loadmore-btn
+                                class="inline-flex items-center gap-2 bg-primary-container text-on-primary-container font-bold px-8 py-3 rounded-full shadow-sm hover:brightness-95 active:scale-95 transition-all disabled:opacity-60 disabled:active:scale-100">
+                                <span class="material-symbols-outlined text-[20px]" data-loadmore-icon>expand_more</span>
+                                <span data-loadmore-label>Load more products</span>
+                            </button>
+                            <p class="text-label-sm text-outline">
+                                Showing <span data-loadmore-shown>{{ $products->count() }}</span> of {{ $products->total() }} products
+                            </p>
                         </div>
                     @endif
 
@@ -194,42 +201,62 @@
 
     @push('scripts')
         <script>
-            // Mobile infinite scroll: append the next page of products as the sentinel nears view.
-            document.addEventListener('DOMContentLoaded', () => {
-                const grid = document.getElementById('shop-grid');
-                const list = document.getElementById('shop-list');
-                const sentinel = document.getElementById('shop-sentinel');
-                if (!grid || !sentinel) return;
+            // Mobile "Load more": append the next page of products on each click, until the last page.
+            (function () {
+                const start = () => {
+                    const grid = document.getElementById('shop-grid');
+                    const box = document.getElementById('shop-loadmore');
+                    if (!grid || !box) return; // nothing more to load
 
-                let page = parseInt(grid.dataset.currentPage || '1', 10);
-                const lastPage = parseInt(grid.dataset.lastPage || '1', 10);
-                let loading = false;
+                    const list = document.getElementById('shop-list');
+                    const btn = box.querySelector('[data-loadmore-btn]');
+                    const icon = box.querySelector('[data-loadmore-icon]');
+                    const label = box.querySelector('[data-loadmore-label]');
+                    const shown = box.querySelector('[data-loadmore-shown]');
+                    let page = parseInt(grid.dataset.currentPage || '1', 10);
+                    const lastPage = parseInt(grid.dataset.lastPage || '1', 10);
+                    let loading = false;
 
-                const loadMore = async () => {
-                    if (loading || page >= lastPage) return;
-                    loading = true;
-                    try {
-                        const url = new URL(window.location.href);
-                        url.searchParams.set('page', page + 1);
-                        url.searchParams.set('partial', '1');
-                        const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
-                        if (r.ok) {
+                    const setLoading = (on) => {
+                        loading = on;
+                        btn.disabled = on;
+                        if (icon) { icon.textContent = on ? 'progress_activity' : 'expand_more'; icon.classList.toggle('animate-spin', on); }
+                        if (label) label.textContent = on ? 'Loading…' : 'Load more products';
+                    };
+
+                    const loadMore = async () => {
+                        if (loading || page >= lastPage) return;
+                        setLoading(true);
+                        try {
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('page', page + 1);
+                            url.searchParams.set('partial', '1');
+                            const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                            if (!r.ok) throw new Error('status ' + r.status);
                             const tmp = document.createElement('div');
                             tmp.innerHTML = await r.text();
-                            tmp.querySelectorAll('[data-shop-grid-items] > *').forEach(el => grid.appendChild(el));
-                            if (list) tmp.querySelectorAll('[data-shop-list-items] > *').forEach(el => list.appendChild(el));
+                            tmp.querySelectorAll('[data-shop-grid-items] > *').forEach((el) => grid.appendChild(el));
+                            if (list) tmp.querySelectorAll('[data-shop-list-items] > *').forEach((el) => list.appendChild(el));
                             page++;
+                            if (shown) shown.textContent = grid.children.length;
+                        } catch (e) {
+                            setLoading(false); // keep the button so it can be retried
+                            return;
                         }
-                    } catch (e) {}
-                    loading = false;
-                    if (page >= lastPage) { io.disconnect(); sentinel.remove(); }
+                        setLoading(false);
+                        if (page >= lastPage) box.remove(); // every product is now showing
+                    };
+
+                    btn.addEventListener('click', loadMore);
                 };
 
-                const io = new IntersectionObserver((entries) => {
-                    if (entries[0].isIntersecting) loadMore();
-                }, { rootMargin: '600px' });
-                io.observe(sentinel);
-            });
+                // Run now if the DOM is already parsed, else wait for it.
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', start);
+                } else {
+                    start();
+                }
+            })();
         </script>
     @endpush
 @endsection

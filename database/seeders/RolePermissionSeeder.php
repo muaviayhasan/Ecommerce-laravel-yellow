@@ -51,6 +51,7 @@ class RolePermissionSeeder extends Seeder
         'blog-posts' => ['view', 'create', 'edit', 'delete'],
         'blog-categories' => ['view', 'create', 'edit', 'delete'],
         'blog-tags' => ['view', 'create', 'edit', 'delete'],
+        'blog-comments' => ['view', 'moderate', 'reply', 'delete'],
         // Finance & system
         'ledger' => ['view'],
         'reports' => ['view', 'export'],
@@ -80,7 +81,7 @@ class RolePermissionSeeder extends Seeder
         'sales-rep' => ['dashboard', 'quotations', 'orders', 'customers'],
         'order-manager' => ['dashboard', 'orders', 'customers', 'reports', 'support', 'subscribers', 'campaigns'],
         'accountant' => ['dashboard', 'ledger', 'reports', 'orders', 'purchases'],
-        'editor' => ['dashboard', 'blog-posts', 'blog-categories', 'blog-tags', 'media', 'gallery'],
+        'editor' => ['dashboard', 'blog-posts', 'blog-categories', 'blog-tags', 'blog-comments', 'media', 'gallery'],
         'customer' => [],
     ];
 

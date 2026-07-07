@@ -1,4 +1,4 @@
-<section class="bg-primary-container py-12">
+<section id="newsletter" class="bg-primary-container py-12 scroll-mt-28">
     <div class="app-container flex flex-col md:flex-row items-center justify-between gap-8">
         <div class="flex items-center gap-4">
             <span class="material-symbols-outlined text-4xl">send</span>

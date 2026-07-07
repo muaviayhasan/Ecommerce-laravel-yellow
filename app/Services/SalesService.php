@@ -47,7 +47,8 @@ class SalesService
                 $subtotal += $lineTotal;
                 $cogs += round($cost * $qty, 2);
                 $rows[] = [
-                    'variant' => $variant,
+                    'variant' => $variant, // pulled back out for the stock move, then unset before insert
+                    'product_variant_id' => $variant->id,
                     'name_snapshot' => $variant->product?->name ?? 'Item',
                     'sku_snapshot' => $variant->sku,
                     'attributes_snapshot' => $variant->relationLoaded('attributeValues')

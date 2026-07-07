@@ -152,11 +152,9 @@ class QuotationController extends Controller implements HasMiddleware
     public function status(Request $request, Quotation $quotation): RedirectResponse
     {
         $to = (string) $request->string('status');
-        if (! in_array($to, self::STATUSES, true)) {
-            return back()->with('error', 'Unknown status.');
-        }
-        if ($quotation->status === 'converted') {
-            return back()->with('error', 'Converted quotations are locked.');
+        // Enforce the lifecycle server-side, not just in the UI.
+        if (! $quotation->canTransitionTo($to)) {
+            return back()->with('error', "A {$quotation->status} quotation can't be marked {$to}.");
         }
 
         $quotation->update(['status' => $to]);

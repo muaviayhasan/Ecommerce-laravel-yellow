@@ -12,6 +12,23 @@ class Quotation extends Model
 {
     use HasFactory;
 
+    /**
+     * Allowed status transitions (the "Mark …" actions offered per status). A draft
+     * is sent; a sent quote is accepted / rejected / expired; an accepted quote can
+     * only be converted (no reject); rejected / expired quotes can be re-sent;
+     * converted quotes are locked.
+     *
+     * @var array<string, list<string>>
+     */
+    public const TRANSITIONS = [
+        'draft' => ['sent'],
+        'sent' => ['accepted', 'rejected', 'expired'],
+        'accepted' => [],
+        'rejected' => ['sent'],
+        'expired' => ['sent'],
+        'converted' => [],
+    ];
+
     protected $fillable = [
         'quotation_number', 'customer_id', 'status', 'valid_until', 'price_tier',
         'subtotal', 'discount_type', 'discount_value', 'discount_total', 'tax_total', 'grand_total',
@@ -53,5 +70,21 @@ class Quotation extends Model
     public function scopeStatus(Builder $query, string $status): Builder
     {
         return $query->where('status', $status);
+    }
+
+    /**
+     * Statuses this quotation may move to next (the allowed "Mark …" actions).
+     *
+     * @return list<string>
+     */
+    public function allowedTransitions(): array
+    {
+        return self::TRANSITIONS[$this->status] ?? [];
+    }
+
+    /** Whether the quote may transition to the given status from where it is now. */
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, $this->allowedTransitions(), true);
     }
 }

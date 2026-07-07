@@ -34,23 +34,31 @@
     $wishlistCount = app(\App\Services\WishlistService::class)->count();
 @endphp
 
-<div x-data="{ mobileMenu: false }">
-    {{-- Top bar --}}
-    <div class="bg-surface border-b border-outline-variant">
+<div x-data="{ mobileMenu: false, logoutConfirm: false }">
+    {{-- Top bar (hidden on mobile — its links live in the main header / bottom nav / drawer) --}}
+    <div class="hidden md:block bg-surface border-b border-outline-variant">
         <div class="app-container flex items-center justify-between py-2 text-label-sm text-on-surface-variant">
-            <span class="hidden sm:block">Welcome to {{ config('app.name') }} — Worldwide Electronics Store</span>
-            <nav class="flex items-center gap-6" aria-label="Utility">
-                <a class="flex items-center gap-1 hover:text-primary transition-colors" href="#">
-                    <span class="material-symbols-outlined text-[16px]">location_on</span>
-                    <span class="hidden md:inline">Store Locator</span>
+            <span class="hidden lg:block">Welcome to {{ config('app.name') }} — Home Appliances &amp; Electronics Store</span>
+            <nav class="flex items-center gap-5" aria-label="Utility">
+                <a class="hidden md:flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('quote.request') }}">
+                    <span class="material-symbols-outlined text-[16px]">request_quote</span>
+                    <span>Get Quotation</span>
+                </a>
+                <a class="hidden md:flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('about') }}">
+                    <span class="material-symbols-outlined text-[16px]">info</span>
+                    <span>About Us</span>
+                </a>
+                <a class="hidden md:flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('contact') }}">
+                    <span class="material-symbols-outlined text-[16px]">mail</span>
+                    <span>Contact Us</span>
+                </a>
+                <a class="hidden md:flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('blog') }}">
+                    <span class="material-symbols-outlined text-[16px]">article</span>
+                    <span>Blog</span>
                 </a>
                 <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('track.order') }}">
                     <span class="material-symbols-outlined text-[16px]">local_shipping</span>
-                    <span class="hidden md:inline">Track Your Order</span>
-                </a>
-                <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('shop') }}">
-                    <span class="material-symbols-outlined text-[16px]">shopping_bag</span>
-                    <span class="hidden md:inline">Shop</span>
+                    <span class="hidden md:inline">Track Order</span>
                 </a>
                 @auth
                     @if (auth()->user()->isStaff())
@@ -67,13 +75,10 @@
                         @endif
                         <span class="hidden md:inline">My Account</span>
                     </a>
-                    <form method="POST" action="{{ route('logout') }}" class="contents">
-                        @csrf
-                        <button type="submit" class="flex items-center gap-1 hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined text-[16px]">logout</span>
-                            <span class="hidden md:inline">Logout</span>
-                        </button>
-                    </form>
+                    <button type="button" @click="logoutConfirm = true" class="flex items-center gap-1 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-[16px]">logout</span>
+                        <span class="hidden md:inline">Logout</span>
+                    </button>
                 @else
                     <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('login') }}">
                         <span class="material-symbols-outlined text-[16px]">person</span>
@@ -149,7 +154,7 @@
             </form>
 
             {{-- Actions --}}
-            <div class="flex items-center gap-6 shrink-0">
+            <div class="flex items-center gap-5 sm:gap-6 shrink-0">
                 <div class="hidden lg:flex items-center gap-4">
                     <a class="hover:text-primary transition-colors" href="{{ route('compare') }}" aria-label="Compare">
                         <span class="material-symbols-outlined">sync</span>
@@ -160,7 +165,8 @@
                         <span class="absolute -top-2 -right-2 bg-primary-container text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">{{ $wishlistCount }}</span>
                     </a>
                 </div>
-                <a class="flex items-center gap-3 group" href="{{ route('cart') }}" aria-label="Cart">
+                {{-- Cart: desktop/tablet only — on mobile the bottom nav carries the cart --}}
+                <a class="hidden md:flex items-center gap-3 group" href="{{ route('cart') }}" aria-label="Cart">
                     <div class="relative">
                         <span class="material-symbols-outlined text-3xl">shopping_cart</span>
                         <span class="absolute -top-2 -right-2 bg-primary-container text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">{{ $cartCount }}</span>
@@ -170,6 +176,22 @@
                         <div class="text-body-base font-bold">{{ $cartTotal }}</div>
                     </div>
                 </a>
+                {{-- Mobile: login (guest) / logout (signed in) — replaces the cart on small screens --}}
+                <div class="md:hidden">
+                    @auth
+                        <button type="button" @click="logoutConfirm = true" aria-label="Log out"
+                            class="flex items-center gap-1.5 text-on-surface hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-[28px]">logout</span>
+                            <span class="text-sm font-semibold">Logout</span>
+                        </button>
+                    @else
+                        <a href="{{ route('login') }}" aria-label="Login"
+                            class="flex items-center gap-1.5 text-on-surface hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-[28px]">person</span>
+                            <span class="text-sm font-semibold">Login</span>
+                        </a>
+                    @endauth
+                </div>
             </div>
         </div>
 
@@ -212,12 +234,23 @@
                         <a href="{{ route('home') }}"
                             class="pb-1 border-b-2 {{ request()->routeIs('home') ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">Home</a>
                     </li>
+                    {{-- Root categories (e.g. Electronics) — links to the whole department --}}
+                    @foreach ($rootCategories as $root)
+                        <li class="shrink-0">
+                            <a href="{{ route('shop', ['category' => $root->slug]) }}"
+                                class="pb-1 border-b-2 {{ request('category') == $root->slug ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">{{ $root->name }}</a>
+                        </li>
+                    @endforeach
                     @foreach ($navDepartments as $department)
                         <li class="shrink-0">
                             <a href="{{ route('shop', ['category' => $department->slug]) }}"
                                 class="pb-1 border-b-2 {{ request('category') == $department->slug ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">{{ $department->name }}</a>
                         </li>
                     @endforeach
+                    <li class="shrink-0">
+                        <a href="{{ route('blog') }}"
+                            class="pb-1 border-b-2 {{ request()->routeIs('blog*') ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">Blog</a>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -265,6 +298,14 @@
                     @endforeach
                 @endforeach
             </ul>
+            {{-- Info / action links --}}
+            <ul class="p-2 border-t border-outline-variant">
+                <li><a href="{{ route('quote.request') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">request_quote</span> Get Quotation</a></li>
+                <li><a href="{{ route('about') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">info</span> About Us</a></li>
+                <li><a href="{{ route('contact') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">mail</span> Contact Us</a></li>
+                <li><a href="{{ route('blog') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">article</span> Blog</a></li>
+                <li><a href="{{ route('track.order') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">local_shipping</span> Track Order</a></li>
+            </ul>
             <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
                 @auth
                     @if (auth()->user()->isStaff())
@@ -276,12 +317,33 @@
                 @endauth
                 <a href="{{ route('wishlist') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">favorite</span> Wishlist ({{ $wishlistCount }})</a>
                 @auth
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="flex items-center gap-2 px-4 py-2 hover:text-primary w-full text-left"><span class="material-symbols-outlined">logout</span> Logout</button>
-                    </form>
+                    <button type="button" @click="mobileMenu = false; logoutConfirm = true" class="flex items-center gap-2 px-4 py-2 hover:text-primary w-full text-left"><span class="material-symbols-outlined">logout</span> Logout</button>
                 @endauth
             </div>
         </div>
     </div>
+
+    @auth
+        {{-- Logout confirmation modal (opened from the header, drawer or top bar) --}}
+        <div x-cloak x-show="logoutConfirm" class="fixed inset-0 z-[80] flex items-center justify-center p-4"
+            @keydown.escape.window="logoutConfirm = false" role="dialog" aria-modal="true">
+            <div class="absolute inset-0 bg-black/50" @click="logoutConfirm = false" x-transition.opacity></div>
+            <div class="relative w-full max-w-sm bg-surface-container-lowest rounded-2xl shadow-2xl p-6 text-center"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                <div class="w-14 h-14 mx-auto rounded-full bg-error-container grid place-items-center mb-4">
+                    <span class="material-symbols-outlined text-error text-[28px]">logout</span>
+                </div>
+                <h3 class="text-lg font-bold text-on-surface mb-1">Log out?</h3>
+                <p class="text-body-base text-on-surface-variant mb-6">Do you want to log out of your account?</p>
+                <div class="flex gap-3">
+                    <button type="button" @click="logoutConfirm = false"
+                        class="flex-1 py-2.5 border border-outline text-on-surface font-semibold rounded-full hover:bg-surface-container transition-colors">Cancel</button>
+                    <button type="submit" form="header-logout-form"
+                        class="flex-1 py-2.5 bg-error text-white font-bold rounded-full hover:brightness-110 active:scale-95 transition-all">Log out</button>
+                </div>
+            </div>
+        </div>
+        <form id="header-logout-form" method="POST" action="{{ route('logout') }}" class="hidden">@csrf</form>
+    @endauth
 </div>

@@ -57,7 +57,7 @@ class OrderController extends Controller implements HasMiddleware
     {
         $order->load([
             'customer', 'creator',
-            'items.variant.product.media',
+            'items.variant.image', 'items.variant.product.media',
             'addresses', 'payments.receiver',
             'statusHistory.author',
         ]);

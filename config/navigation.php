@@ -216,6 +216,12 @@ return [
                     'active' => 'admin.blog.tags.*',
                     'permission' => 'blog-tags.view',
                 ],
+                [
+                    'label' => 'Comments',
+                    'route' => 'admin.blog.comments.index',
+                    'active' => 'admin.blog.comments.*',
+                    'permission' => 'blog-comments.view',
+                ],
             ],
         ],
         [

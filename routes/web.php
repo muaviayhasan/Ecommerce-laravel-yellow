@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\BlogCommentController;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\BlogTagController;
 use App\Http\Controllers\Admin\BomController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Admin\LedgerController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PosController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\PromoCardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductionController;
@@ -69,6 +71,8 @@ Route::post('/product/{product:slug}/reviews', [StorefrontReviewController::clas
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::post('/blog/{post:slug}/comments', [BlogController::class, 'storeComment'])
+    ->middleware('throttle:6,1')->name('blog.comments.store');
 
 // SEO — dynamic sitemap + robots
 Route::get('/sitemap.xml', [\App\Http\Controllers\Storefront\SitemapController::class, 'index'])->name('sitemap');
@@ -151,6 +155,7 @@ Route::middleware('auth')->prefix('account')->group(function () {
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.
 $placeholders = [
+    'about' => 'About Us',
     'contact' => 'Contact Us',
 ];
 
@@ -186,6 +191,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Heartbeat — keeps the session alive and hands back a fresh CSRF token so
     // long-open admin forms don't fail with a 419 (see layouts/admin.blade.php).
     Route::get('keep-alive', fn () => response()->json(['token' => csrf_token()]))->name('keep-alive');
+
+    // The signed-in staff member's own profile (details, photo, password).
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 
     // Catalog
     Route::resource('products', AdminProductController::class);
@@ -280,6 +291,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::post('categories/reorder', [BlogCategoryController::class, 'reorder'])->name('categories.reorder');
         Route::resource('categories', BlogCategoryController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
         Route::resource('tags', BlogTagController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
+
+        // Comment moderation + staff replies.
+        Route::get('comments', [BlogCommentController::class, 'index'])->name('comments.index');
+        Route::patch('comments/{comment}/approve', [BlogCommentController::class, 'approve'])->name('comments.approve');
+        Route::post('comments/{comment}/reply', [BlogCommentController::class, 'reply'])->name('comments.reply');
+        Route::delete('comments/{comment}', [BlogCommentController::class, 'destroy'])->name('comments.destroy');
     });
 
     // Ledger — the financial source of truth (read-only): position, trial balance, entries.

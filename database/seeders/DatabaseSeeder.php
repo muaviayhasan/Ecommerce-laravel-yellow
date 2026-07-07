@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             HeroSlideSeeder::class,
             PromoCardSeeder::class,
             InfoBarItemSeeder::class,
+            BlogSeeder::class,
         ]);
     }
 }

@@ -30,8 +30,8 @@
         <div class="flex flex-wrap items-center gap-4 text-on-surface-variant text-label-sm mb-4">
             <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> {{ data_get($post, 'date') }}</span>
             <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">folder</span> {{ data_get($post, 'category') }}</span>
-            @if (data_get($post, 'comments'))
-                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">chat_bubble</span> {{ $post['comments'] }} Comments</span>
+            @if (data_get($post, 'reading_time'))
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> {{ $post['reading_time'] }} min read</span>
             @endif
         </div>
         <h2 class="text-headline-md font-bold mb-4">
