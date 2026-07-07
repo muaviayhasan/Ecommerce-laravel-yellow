@@ -324,26 +324,32 @@
     </div>
 
     @auth
-        {{-- Logout confirmation modal (opened from the header, drawer or top bar) --}}
-        <div x-cloak x-show="logoutConfirm" class="fixed inset-0 z-[80] flex items-center justify-center p-4"
-            @keydown.escape.window="logoutConfirm = false" role="dialog" aria-modal="true">
-            <div class="absolute inset-0 bg-black/50" @click="logoutConfirm = false" x-transition.opacity></div>
-            <div class="relative w-full max-w-sm bg-surface-container-lowest rounded-2xl shadow-2xl p-6 text-center"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
-                <div class="w-14 h-14 mx-auto rounded-full bg-error-container grid place-items-center mb-4">
-                    <span class="material-symbols-outlined text-error text-[28px]">logout</span>
-                </div>
-                <h3 class="text-lg font-bold text-on-surface mb-1">Log out?</h3>
-                <p class="text-body-base text-on-surface-variant mb-6">Do you want to log out of your account?</p>
-                <div class="flex gap-3">
-                    <button type="button" @click="logoutConfirm = false"
-                        class="flex-1 py-2.5 border border-outline text-on-surface font-semibold rounded-full hover:bg-surface-container transition-colors">Cancel</button>
-                    <button type="submit" form="header-logout-form"
-                        class="flex-1 py-2.5 bg-error text-white font-bold rounded-full hover:brightness-110 active:scale-95 transition-all">Log out</button>
+        {{-- Logout confirmation. Teleported to <body> so no sticky/overflow/transform
+             ancestor can clip or mis-stack it; z above the bottom nav + chat widget. --}}
+        <template x-teleport="body">
+            <div x-cloak x-show="logoutConfirm" class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                @keydown.escape.window="logoutConfirm = false" role="dialog" aria-modal="true">
+                <div class="absolute inset-0 bg-black/50" @click="logoutConfirm = false"
+                    x-show="logoutConfirm" x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"></div>
+                <div class="relative w-full max-w-sm bg-surface-container-lowest rounded-2xl shadow-2xl p-6 text-center"
+                    x-show="logoutConfirm"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                    <div class="w-14 h-14 mx-auto rounded-full bg-error-container grid place-items-center mb-4">
+                        <span class="material-symbols-outlined text-error text-[28px]">logout</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-on-surface mb-1">Log out?</h3>
+                    <p class="text-body-base text-on-surface-variant mb-6">Do you want to log out of your account?</p>
+                    <div class="flex gap-3">
+                        <button type="button" @click="logoutConfirm = false"
+                            class="flex-1 py-2.5 border border-outline text-on-surface font-semibold rounded-full hover:bg-surface-container transition-colors">Cancel</button>
+                        <button type="submit" form="header-logout-form"
+                            class="flex-1 py-2.5 bg-error text-white font-bold rounded-full hover:brightness-110 active:scale-95 transition-all">Log out</button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
         <form id="header-logout-form" method="POST" action="{{ route('logout') }}" class="hidden">@csrf</form>
     @endauth
 </div>
