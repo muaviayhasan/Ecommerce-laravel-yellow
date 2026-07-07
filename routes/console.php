@@ -36,3 +36,13 @@ Schedule::job(new SendAbandonedCartRemindersJob)
 if (config('queue.default') === 'redis' && class_exists(\Laravel\Horizon\Horizon::class)) {
     Schedule::command('horizon:snapshot')->everyFiveMinutes();
 }
+
+// Prune resolved error logs past their retention window (Settings → System).
+Schedule::call(function () {
+    $days = (int) setting('system', 'error_log_retention_days', 30);
+    if ($days > 0) {
+        \App\Models\ErrorLog::whereNotNull('resolved_at')
+            ->where('resolved_at', '<=', now()->subDays($days))
+            ->delete();
+    }
+})->daily()->name('prune-error-logs')->withoutOverlapping();

@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ErrorLogController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\InfoBarItemController;
 use App\Http\Controllers\Admin\InventoryController;
@@ -312,6 +313,13 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Activity log — read-only audit trail of admin mutations (§23).
     Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');
+
+    // Error logs — captured application exceptions (view / resolve / prune).
+    Route::get('error-logs', [ErrorLogController::class, 'index'])->name('error-logs.index');
+    Route::delete('error-logs', [ErrorLogController::class, 'clearResolved'])->name('error-logs.clear');
+    Route::get('error-logs/{errorLog}', [ErrorLogController::class, 'show'])->name('error-logs.show');
+    Route::patch('error-logs/{errorLog}/resolve', [ErrorLogController::class, 'resolve'])->name('error-logs.resolve');
+    Route::delete('error-logs/{errorLog}', [ErrorLogController::class, 'destroy'])->name('error-logs.destroy');
 
     // Gallery / media library (Livewire) — guarded; per-action checks live in the component.
     Route::view('/gallery', 'admin.gallery.index')

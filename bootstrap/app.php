@@ -16,6 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn ($request) => $request->is('admin', 'admin/*') ? route('admin.login') : route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Persist unhandled exceptions to the database (Admin → Error Logs) on top
+        // of the normal log channel. ErrorLogger swallows its own failures, so this
+        // can never break the request that raised the exception.
+        $exceptions->report(function (\Throwable $e) {
+            app(\App\Services\ErrorLogger::class)->log($e);
+        });
+
         // A stale CSRF token (e.g. a form left open past the session lifetime)
         // shouldn't dump the bare 419 page. Bounce back to the form with the
         // input preserved and a notice so nothing typed is lost.

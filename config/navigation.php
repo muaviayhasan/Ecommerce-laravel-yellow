@@ -275,6 +275,13 @@ return [
             'permission' => 'audit.view',
         ],
         [
+            'label' => 'Error Logs',
+            'icon' => 'bug_report',
+            'route' => 'admin.error-logs.index',
+            'active' => 'admin.error-logs.*',
+            'permission' => 'error-logs.view',
+        ],
+        [
             'label' => 'Settings',
             'icon' => 'settings',
             'route' => 'admin.settings.index',

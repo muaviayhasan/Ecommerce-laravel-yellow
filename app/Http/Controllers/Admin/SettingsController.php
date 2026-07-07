@@ -502,6 +502,21 @@ class SettingsController extends Controller implements HasMiddleware
                     ],
                 ],
             ],
+
+            'system' => [
+                'label' => 'System',
+                'icon' => 'monitoring',
+                'sections' => [
+                    [
+                        'title' => 'Error logging',
+                        'description' => 'Capture unhandled exceptions to the database so you can review and fix them in Admin → Error Logs.',
+                        'fields' => [
+                            'log_errors' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Store errors in the database', 'default' => true, 'help' => 'Off = exceptions are only written to the normal log files.'],
+                            'error_log_retention_days' => ['type' => 'int', 'input' => 'number', 'label' => 'Auto-delete resolved after (days)', 'rules' => ['nullable', 'integer', 'min:0', 'max:3650'], 'default' => 30, 'help' => 'Resolved errors older than this are pruned automatically. 0 = keep forever.'],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 }

@@ -57,6 +57,7 @@ class RolePermissionSeeder extends Seeder
         'ledger' => ['view'],
         'reports' => ['view', 'export'],
         'audit' => ['view'],
+        'error-logs' => ['view', 'resolve', 'delete'],
         'settings' => ['view', 'edit'],
         'users' => ['view', 'create', 'edit', 'delete'],
         'roles' => ['view', 'create', 'edit', 'delete'],
