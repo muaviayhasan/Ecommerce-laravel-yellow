@@ -68,7 +68,8 @@
                         <div class="grid sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="{{ $label }}" for="email">Email <span class="text-error">*</span></label>
-                                <input id="email" name="email" type="email" value="{{ old('email', $user?->email) }}" placeholder="email@example.com" class="{{ $field }}">
+                                <input id="email" name="email" type="email" value="{{ old('email', $user?->email) }}" placeholder="email@example.com" class="{{ $field }}"
+                                    @guest @blur="captureCart($event.target.value)" @endguest>
                                 {!! $err('email') !!}
                             </div>
                             <div>
@@ -302,6 +303,7 @@
                     country: @js(old('country', 'Pakistan')),
                     phoneRest: '',
                     shipPhoneRest: '',
+                    _captured: null,
                     init() {
                         @if ($errors->any())
                             // Submission failed — open the editable address form (pre-filled with
@@ -344,6 +346,22 @@
                     fmtPhone(v) { const d = (v || '').replace(/\D/g, '').slice(0, 9); return d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d; },
                     fullPhone(rest) { const d = (rest || '').replace(/\D/g, ''); return d ? (d.length > 2 ? '03' + d.slice(0, 2) + '-' + d.slice(2) : '03' + d) : ''; },
                     seedPhone(full) { const d = (full || '').replace(/\D/g, ''); const r = d.startsWith('03') ? d.slice(2) : d; this.phoneRest = this.fmtPhone(r); },
+                    // Save an unfinished guest cart against their email so it can be recovered by mail.
+                    captureCart(email) {
+                        email = (email || '').trim();
+                        if (!email || !email.includes('@') || email === this._captured) return;
+                        this._captured = email;
+                        fetch(@js(route('checkout.capture')), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': this.$root.querySelector('input[name=_token]')?.value || '',
+                            },
+                            body: JSON.stringify({ email, name: (this.$refs.fname?.value || '').trim() }),
+                            keepalive: true,
+                        }).catch(() => {});
+                    },
                     get phoneFull() { return this.fullPhone(this.phoneRest); },
                     get shipPhoneFull() { return this.fullPhone(this.shipPhoneRest); },
                 };

@@ -201,6 +201,10 @@ class EmailSystemTest extends TestCase
 
     public function test_campaign_send_queues_mail_to_active_subscribers_only(): void
     {
+        // Isolate from any subscribers already in the (shared, non-refreshed) DB so
+        // the audience is exactly the three created here. Rolled back with the test.
+        NewsletterSubscriber::query()->delete();
+
         $active1 = NewsletterSubscriber::create(['email' => 'a-' . Str::random(6) . '@test.local']);
         $active2 = NewsletterSubscriber::create(['email' => 'b-' . Str::random(6) . '@test.local']);
         $gone = NewsletterSubscriber::create(['email' => 'c-' . Str::random(6) . '@test.local', 'unsubscribed_at' => now()]);

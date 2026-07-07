@@ -71,7 +71,8 @@ class CheckoutTest extends TestCase
         $this->post(route('cart.add'), ['variant_id' => $variant->id]);
 
         $this->post(route('checkout.store'), ['payment_method' => 'cod'])
-            ->assertSessionHasErrors(['email', 'first_name', 'last_name', 'phone', 'line1', 'city', 'terms']);
+            ->assertSessionHasErrors(['email', 'first_name', 'phone', 'line1', 'city', 'terms'])
+            ->assertSessionDoesntHaveErrors('last_name'); // last name is optional
     }
 
     public function test_success_page_shows_the_order(): void

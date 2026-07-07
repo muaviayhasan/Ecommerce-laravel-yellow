@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\SendAbandonedCartRemindersJob;
 use App\Jobs\SendCampaignJob;
 use App\Models\EmailCampaign;
 use Illuminate\Foundation\Inspiring;
@@ -23,3 +24,15 @@ Schedule::call(function () {
             SendCampaignJob::dispatch($campaign->id);
         });
 })->everyMinute()->name('dispatch-due-campaigns')->withoutOverlapping();
+
+// Sweep abandoned carts and send any reminders that are due. The job self-gates
+// on the "emails.abandoned_cart" toggle, so this is a cheap no-op while off.
+Schedule::job(new SendAbandonedCartRemindersJob)
+    ->everyFifteenMinutes()
+    ->name('abandoned-cart-reminders')
+    ->withoutOverlapping();
+
+// Roll up Horizon queue metrics for the dashboard (only meaningful on Redis).
+if (config('queue.default') === 'redis' && class_exists(\Laravel\Horizon\Horizon::class)) {
+    Schedule::command('horizon:snapshot')->everyFiveMinutes();
+}

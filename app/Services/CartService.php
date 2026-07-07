@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Support\Storefront;
 use Illuminate\Support\Collection;
@@ -103,6 +104,31 @@ class CartService
     public function subtotal(): float
     {
         return round((float) $this->items()->sum('line_total'), 2);
+    }
+
+    /**
+     * Re-add a past order's items to the cart (a "reorder"). Only items whose
+     * variant is still active and sellable are added; returns how many were.
+     */
+    public function addFromOrder(Order $order): int
+    {
+        $order->loadMissing('items');
+
+        $sellable = ProductVariant::query()
+            ->whereIn('id', $order->items->pluck('product_variant_id')->filter())
+            ->where('is_active', true)
+            ->whereHas('product', fn ($p) => $p->where('is_active', true)->where('is_sellable', true))
+            ->pluck('id')->flip();
+
+        $added = 0;
+        foreach ($order->items as $item) {
+            if ($item->product_variant_id && $sellable->has($item->product_variant_id)) {
+                $this->add((int) $item->product_variant_id, max(1, (int) round((float) $item->quantity)));
+                $added++;
+            }
+        }
+
+        return $added;
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Models\AbandonedCart;
 use App\Models\ProductVariant;
 use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
@@ -80,5 +81,35 @@ class CartController extends Controller
         $this->cart->clear();
 
         return redirect()->route('cart')->with('status', 'Cart cleared.');
+    }
+
+    /**
+     * Rebuild the session cart from a saved abandoned-cart snapshot (reached via a
+     * recovery-email link) and drop the shopper back at checkout. Stale/sold-out
+     * variants are silently skipped by CartService on the next read.
+     */
+    public function recover(string $token): RedirectResponse
+    {
+        $saved = AbandonedCart::open()->where('token', $token)->first();
+
+        if (! $saved) {
+            return redirect()->route('cart')->with('error', 'That cart link has expired.');
+        }
+
+        $this->cart->clear();
+
+        foreach ($saved->items as $item) {
+            $variantId = (int) ($item['variant_id'] ?? 0);
+            $qty = (int) round((float) ($item['qty'] ?? 1));
+            if ($variantId > 0 && $qty > 0) {
+                $this->cart->add($variantId, $qty);
+            }
+        }
+
+        if ($this->cart->isEmpty()) {
+            return redirect()->route('shop')->with('error', 'Those items are no longer available.');
+        }
+
+        return redirect()->route('checkout')->with('status', 'Welcome back — your cart is ready.');
     }
 }

@@ -13,7 +13,16 @@
                 <h1 class="text-xl font-bold">Order #{{ $order->order_number }}</h1>
                 <p class="text-label-sm text-on-surface-variant">Placed {{ ($order->placed_at ?? $order->created_at)->format('d M Y, h:i A') }}</p>
             </div>
-            <x-storefront.order-status :status="$order->status" />
+            <div class="flex flex-col items-end gap-2.5">
+                <x-storefront.order-status :status="$order->status" />
+                <form method="POST" action="{{ route('account.orders.reorder', $order) }}">
+                    @csrf
+                    <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-surface font-bold text-label-sm hover:brightness-105 active:scale-[0.98] transition-all">
+                        <span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span> Reorder
+                    </button>
+                </form>
+            </div>
         </div>
 
         {{-- Items --}}

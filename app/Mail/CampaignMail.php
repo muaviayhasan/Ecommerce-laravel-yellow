@@ -33,6 +33,7 @@ class CampaignMail extends Mailable implements ShouldQueue
         $this->unsubscribeUrl = $unsubscribeUrl;
         $this->coupon = $coupon;
         $this->preheader = $preheader;
+        $this->onQueue('low'); // bulk marketing — never ahead of transactional mail
     }
 
     public function envelope(): Envelope
