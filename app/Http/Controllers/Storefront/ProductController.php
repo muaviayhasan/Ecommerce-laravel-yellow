@@ -73,7 +73,9 @@ class ProductController extends Controller
             'url' => route('product.show', $product->slug),
             'sku' => $variant?->sku ?? $product->sku,
             'stock' => (float) ($variant?->stock_quantity ?? 0),
-            'availability' => ($variant && (float) $variant->stock_quantity > 0) ? 'In stock' : 'Out of stock',
+            // Dropship products (not stock-tracked) are sourced per order — always available.
+            'tracked' => (bool) $product->is_stock_tracked,
+            'availability' => (! $product->is_stock_tracked || ($variant && (float) $variant->stock_quantity > 0)) ? 'In stock' : 'Out of stock',
             'rating' => (int) round($avg),
             'avg_rating' => $avg,
             'reviews_count' => $reviewsCount,

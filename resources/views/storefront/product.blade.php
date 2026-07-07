@@ -20,7 +20,7 @@
             'url' => $product['url'],
             'priceCurrency' => $currency,
             'price' => number_format((float) $product['price'], 2, '.', ''),
-            'availability' => 'https://schema.org/' . ((float) $product['stock'] > 0 ? 'InStock' : 'OutOfStock'),
+            'availability' => 'https://schema.org/' . (($product['availability'] ?? '') === 'In stock' ? 'InStock' : 'OutOfStock'),
         ]),
     ]);
     if ((int) ($product['reviews_count'] ?? 0) > 0) {
@@ -157,10 +157,15 @@
                     @endif
 
                     {{-- Availability + price + actions --}}
+                    @php $tracked = (bool) ($product['tracked'] ?? true); $availExpr = $tracked ? 'stock > 0' : 'true'; @endphp
                     <div class="border-t border-outline-variant pt-6 mt-6">
-                        <div class="text-label-sm font-bold mb-2" :class="stock > 0 ? 'text-green-600' : 'text-error'">
-                            <span x-show="stock > 0">Availability: <span x-text="stock"></span> in stock</span>
-                            <span x-show="stock <= 0" x-cloak>Out of stock</span>
+                        <div class="text-label-sm font-bold mb-2" :class="{{ $availExpr }} ? 'text-green-600' : 'text-error'">
+                            @if ($tracked)
+                                <span x-show="stock > 0">Availability: <span x-text="stock"></span> in stock</span>
+                                <span x-show="stock <= 0" x-cloak>Out of stock</span>
+                            @else
+                                <span>In stock</span>
+                            @endif
                         </div>
                         <div class="flex items-end gap-3 mb-6">
                             <span class="text-[40px] leading-none font-black" :class="onSale ? 'text-error' : 'text-on-surface'">Rs <span x-text="money(price)"></span></span>
@@ -180,10 +185,10 @@
                                         class="w-12 text-center border-none focus:ring-0 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
                                     <button type="button" @click="qty++" aria-label="Increase quantity" class="px-4 hover:bg-surface transition-colors">+</button>
                                 </div>
-                                <button type="submit" :class="stock <= 0 ? 'opacity-50 pointer-events-none' : ''"
+                                <button type="submit" :class="!({{ $availExpr }}) ? 'opacity-50 pointer-events-none' : ''"
                                     class="bg-primary-container text-on-primary-container px-10 h-12 font-bold rounded hover:brightness-95 transition-all flex items-center gap-2">
                                     <span class="material-symbols-outlined">shopping_cart</span>
-                                    <span x-text="stock > 0 ? 'Add to Cart' : 'Out of stock'"></span>
+                                    <span x-text="({{ $availExpr }}) ? 'Add to Cart' : 'Out of stock'"></span>
                                 </button>
                             </form>
                         @endif

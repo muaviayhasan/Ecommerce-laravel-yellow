@@ -49,6 +49,8 @@
         'options' => old('variants') !== null ? [['attributeId' => '', 'valueIds' => []]] : $variantState['options'],
         'variants' => old('variants') !== null ? array_values(old('variants')) : $variantState['variants'],
         'defaultIndex' => (int) old('variant_default', $variantState['defaultIndex']),
+        // Dropshipping: false = product sourced per-order from a supplier (no stock held).
+        'trackStock' => (bool) old('is_stock_tracked', $product->exists ? $product->is_stock_tracked : true),
     ];
 
     // Compact field class (the global rule makes it white in admin light mode).
@@ -105,10 +107,26 @@
                         class="px-4 py-1.5 rounded-md text-sm font-semibold transition-colors">Has variants</button>
                 </div>
 
+                {{-- Stock tracking — turn OFF for dropshipping (sourced per order from a supplier). --}}
+                <div class="rounded-lg border border-outline-variant bg-surface-container-low/40 p-3.5">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" name="is_stock_tracked" value="1" x-model="trackStock"
+                            class="mt-0.5 w-4 h-4 rounded border-outline-variant accent-primary shrink-0">
+                        <span>
+                            <span class="block text-sm font-semibold text-on-surface">Track stock in inventory</span>
+                            <span class="block text-xs text-on-surface-variant mt-0.5">Keeps an on-hand count that goes down on each sale and up on purchases.</span>
+                        </span>
+                    </label>
+                    <div x-show="!trackStock" x-cloak class="mt-2 flex items-start gap-2 text-xs text-on-surface-variant bg-tertiary-container/30 rounded-md px-3 py-2">
+                        <span class="material-symbols-outlined text-[16px] text-tertiary shrink-0">local_shipping</span>
+                        <span><strong>Dropshipping mode.</strong> No stock is held or counted, it's never in your stock value, and it always stays available — you source it from the supplier when an order comes in.</span>
+                    </div>
+                </div>
+
                 {{-- SIMPLE: single default variant --}}
                 <div x-show="mode === 'simple'" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                     @foreach ($priceFields as $key => $cfg)
-                        <div class="space-y-1.5">
+                        <div class="space-y-1.5" @if (in_array($key, ['stock_quantity', 'low_stock_threshold'], true)) x-show="trackStock" x-cloak @endif>
                             <label class="block text-sm font-medium text-on-surface-variant">
                                 {{ $cfg['label'] }}@if (! empty($cfg['required'])) <span class="text-error">*</span>@endif
                             </label>
@@ -200,7 +218,7 @@
                                     <th class="px-3 py-2">Price <span class="text-error">*</span></th>
                                     <th class="px-3 py-2">Compare</th>
                                     <th class="px-3 py-2">Cost</th>
-                                    <th class="px-3 py-2">Stock</th>
+                                    <th class="px-3 py-2" x-show="trackStock" x-cloak>Stock</th>
                                     <th class="px-3 py-2 text-center">Default</th>
                                     <th class="px-3 py-2 text-center">Active</th>
                                     <th class="px-3 py-2"></th>
@@ -227,7 +245,7 @@
                                         <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`variants[${idx}][retail_price]`" x-model="v.retail_price" class="{{ $numCell }}"></td>
                                         <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`variants[${idx}][compare_at_price]`" x-model="v.compare_at_price" class="{{ $numCell }}"></td>
                                         <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`variants[${idx}][cost]`" x-model="v.cost" class="{{ $numCell }}"></td>
-                                        <td class="px-3 py-2"><input type="number" step="any" min="0" :name="`variants[${idx}][stock_quantity]`" x-model="v.stock_quantity" class="w-20 {{ $numCell }}"></td>
+                                        <td class="px-3 py-2" x-show="trackStock" x-cloak><input type="number" step="any" min="0" :name="`variants[${idx}][stock_quantity]`" x-model="v.stock_quantity" class="w-20 {{ $numCell }}"></td>
                                         <td class="px-3 py-2 text-center"><input type="radio" name="variant_default" :value="idx" x-model.number="defaultIndex" class="accent-primary w-4 h-4 cursor-pointer"></td>
                                         <td class="px-3 py-2 text-center">
                                             <button type="button" @click="v.is_active = !v.is_active" :class="v.is_active ? 'text-secondary' : 'text-outline'">
@@ -363,6 +381,7 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('productVariants', (state, attributes, media, pricing) => ({
                 mode: state.mode || 'simple',
+                trackStock: state.trackStock === undefined ? true : !!state.trackStock,
                 markup: Number((pricing && pricing.markup) || 0),
                 wholesaleDiscount: Number((pricing && pricing.wholesaleDiscount) || 0),
                 allAttributes: (attributes || []).map(a => ({ id: a.id, name: a.name, values: a.values || [] })),

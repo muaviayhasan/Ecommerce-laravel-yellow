@@ -48,11 +48,14 @@ class CartController extends Controller
         $data = $request->validate(['quantity' => ['required', 'integer', 'min:0', 'max:999']]);
         $qty = (int) $data['quantity'];
 
+        // Dropship products (not stock-tracked) are sourced per order — no stock cap.
+        $tracked = (bool) $variant->product()->value('is_stock_tracked');
+
         // Never let the cart hold more than what's in stock (unless overselling is allowed).
         $allowOversell = (bool) setting('inventory', 'allow_negative_stock', false);
         $stock = max(0, (int) floor((float) $variant->stock_quantity));
 
-        if ($qty > 0 && ! $allowOversell && $qty > $stock) {
+        if ($tracked && $qty > 0 && ! $allowOversell && $qty > $stock) {
             $this->cart->update($variant->id, $stock);
 
             return redirect()->route('cart')->with('error', $stock > 0
