@@ -61,6 +61,8 @@ class RolePermissionSeeder extends Seeder
         'settings' => ['view', 'edit'],
         'users' => ['view', 'create', 'edit', 'delete'],
         'roles' => ['view', 'create', 'edit', 'delete'],
+        // Help
+        'documentation' => ['view'],
     ];
 
     /**
@@ -72,18 +74,18 @@ class RolePermissionSeeder extends Seeder
     public static array $roleGroups = [
         'admin' => ['*'],
         'catalog-manager' => [
-            'dashboard', 'products', 'variants', 'categories', 'brands',
+            'dashboard', 'documentation', 'products', 'variants', 'categories', 'brands',
             'attributes', 'media', 'gallery', 'reviews', 'hero-slides',
             'promo-cards', 'info-bar-items',
         ],
-        'procurement' => ['dashboard', 'suppliers', 'purchases', 'stock'],
-        'production-manager' => ['dashboard', 'boms', 'production', 'stock'],
-        'inventory-manager' => ['dashboard', 'stock', 'products', 'variants'],
-        'cashier' => ['dashboard', 'pos', 'customers', 'orders'],
-        'sales-rep' => ['dashboard', 'quotations', 'orders', 'customers'],
-        'order-manager' => ['dashboard', 'orders', 'customers', 'reports', 'support', 'subscribers', 'campaigns', 'abandoned-carts'],
-        'accountant' => ['dashboard', 'ledger', 'reports', 'orders', 'purchases'],
-        'editor' => ['dashboard', 'blog-posts', 'blog-categories', 'blog-tags', 'blog-comments', 'media', 'gallery'],
+        'procurement' => ['dashboard', 'documentation', 'suppliers', 'purchases', 'stock'],
+        'production-manager' => ['dashboard', 'documentation', 'boms', 'production', 'stock'],
+        'inventory-manager' => ['dashboard', 'documentation', 'stock', 'products', 'variants'],
+        'cashier' => ['dashboard', 'documentation', 'pos', 'customers', 'orders'],
+        'sales-rep' => ['dashboard', 'documentation', 'quotations', 'orders', 'customers'],
+        'order-manager' => ['dashboard', 'documentation', 'orders', 'customers', 'reports', 'support', 'subscribers', 'campaigns', 'abandoned-carts'],
+        'accountant' => ['dashboard', 'documentation', 'ledger', 'reports', 'orders', 'purchases'],
+        'editor' => ['dashboard', 'documentation', 'blog-posts', 'blog-categories', 'blog-tags', 'blog-comments', 'media', 'gallery'],
         'customer' => [],
     ];
 

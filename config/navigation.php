@@ -288,5 +288,14 @@ return [
             'active' => 'admin.settings.*',
             'permission' => 'settings.view',
         ],
+
+        ['heading' => 'Help'],
+        [
+            'label' => 'Documentation',
+            'icon' => 'menu_book',
+            'route' => 'admin.docs.index',
+            'active' => 'admin.docs.*',
+            'permission' => 'documentation.view',
+        ],
     ],
 ];

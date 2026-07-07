@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DocumentationController;
 use App\Http\Controllers\Admin\ErrorLogController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\InfoBarItemController;
@@ -325,6 +326,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::view('/gallery', 'admin.gallery.index')
         ->middleware('can:gallery.view')
         ->name('gallery.index');
+
+    // Documentation — in-app handbook of the whole system (Admin → Help).
+    Route::get('docs', [DocumentationController::class, 'index'])->name('docs.index');
+    Route::get('docs/{page}', [DocumentationController::class, 'show'])->name('docs.show');
 
     // Settings — tabbed groups (CONVENTIONS §6); guards live on the controller.
     Route::get('/settings', fn () => redirect()->route('admin.settings.show', 'general'))->name('settings.index');
