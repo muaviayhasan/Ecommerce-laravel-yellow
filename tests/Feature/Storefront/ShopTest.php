@@ -54,10 +54,16 @@ class ShopTest extends TestCase
 
     public function test_price_minimum_excludes_cheaper_products(): void
     {
-        $this->webProduct('Expensive Unique Widget', retail: 99999);
+        $name = 'Expensive Unique Widget ' . uniqid();
+        $this->webProduct($name, retail: 99999);
 
-        $this->get('/shop?min=99000')->assertOk()->assertSee('Expensive Unique Widget');
-        $this->get('/shop?max=10')->assertOk()->assertDontSee('Expensive Unique Widget');
+        // Scope the listing to this one product by name so the assertions reflect the
+        // price filter alone — not other catalogue products, and not the recommendation
+        // rails, which render regardless of the price filter.
+        $this->get('/shop?q=' . urlencode($name) . '&min=99000')
+            ->assertOk()->assertSee('of 1 results');
+        $this->get('/shop?q=' . urlencode($name) . '&max=10')
+            ->assertOk()->assertSee('No products found');
     }
 
     public function test_unknown_sort_is_safe(): void

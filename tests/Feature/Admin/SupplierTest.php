@@ -32,7 +32,7 @@ class SupplierTest extends TestCase
 
     public function test_guests_are_redirected(): void
     {
-        $this->get(route('admin.suppliers.index'))->assertRedirect(route('login'));
+        $this->get(route('admin.suppliers.index'))->assertRedirect(route('admin.login'));
     }
 
     public function test_users_without_permission_are_forbidden(): void
