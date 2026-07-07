@@ -54,24 +54,35 @@
             @if (array_filter($filters))
                 <a href="{{ route('admin.products.index') }}" class="px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Reset</a>
             @endif
+
+            {{-- Preserve the active sort when filtering; per-page selector auto-submits. --}}
+            <input type="hidden" name="sort" value="{{ $filters['sort'] ?? '' }}">
+            <input type="hidden" name="dir" value="{{ $filters['dir'] ?? '' }}">
+            @php $ppOptions = collect([15, 25, 50, 100])->push($perPage)->unique()->sort()->values(); @endphp
+            <select name="per_page" onchange="this.form.submit()" title="Rows per page"
+                class="ml-auto bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+                @foreach ($ppOptions as $n)
+                    <option value="{{ $n }}" @selected($n === $perPage)>{{ $n }} / page</option>
+                @endforeach
+            </select>
         </form>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/60">
                     <tr>
-                        <th class="px-6 py-3">Product</th>
-                        <th class="px-6 py-3">SKU</th>
-                        <th class="px-6 py-3 text-right">Price</th>
-                        <th class="px-6 py-3 text-center">Stock</th>
-                        <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="name" label="Product" /></th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="sku" label="SKU" /></th>
+                        <th class="px-6 py-3 text-right"><x-admin.sort-header column="price" label="Price" /></th>
+                        <th class="px-6 py-3 text-center"><x-admin.sort-header column="stock" label="Stock" /></th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="status" label="Status" /></th>
                         <th class="px-6 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-outline-variant/40 text-sm">
                     @forelse ($products as $product)
                         @php
-                            $img = $product->media->first()?->url;
+                            $img = $product->media->first()?->url ?? $product->defaultVariant?->image?->url;
                             $variant = $product->defaultVariant;
                             $stock = $variant ? (float) $variant->stock_quantity : null;
                             $low = $variant ? (float) $variant->low_stock_threshold : 0;

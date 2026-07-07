@@ -35,7 +35,7 @@ class ProductController extends Controller implements HasMiddleware
     public function index(Request $request): View
     {
         $products = Product::query()
-            ->with(['category:id,name', 'brand:id,name', 'defaultVariant', 'media:id,disk,path'])
+            ->with(['category:id,name', 'brand:id,name', 'defaultVariant.image', 'media:id,disk,path'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $term = '%' . $request->string('search') . '%';
                 $query->where(fn ($q) => $q
@@ -52,23 +52,56 @@ class ProductController extends Controller implements HasMiddleware
                     'web' => $q->webListed(),
                     default => null,
                 };
-            })
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            });
+
+        $this->applySort($products, (string) $request->string('sort'), (string) $request->string('dir'));
+
+        $perPage = $this->perPageFor($request);
+        $products = $products->paginate($perPage)->withQueryString();
 
         return view('admin.products.index', [
             'products' => $products,
             'categories' => Category::orderBy('name')->pluck('name', 'id'),
             'brands' => Brand::orderBy('name')->pluck('name', 'id'),
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Product::count(),
                 'active' => Product::where('is_active', true)->count(),
                 'web_listed' => Product::webListed()->count(),
                 'featured' => Product::where('is_featured', true)->count(),
             ],
-            'filters' => $request->only('search', 'category', 'brand', 'status'),
+            'filters' => $request->only('search', 'category', 'brand', 'status', 'sort', 'dir', 'per_page'),
         ]);
+    }
+
+    /** Apply an allow-listed sort to the product list (price/stock read the default variant). */
+    private function applySort(\Illuminate\Database\Eloquent\Builder $query, string $sort, string $dir): void
+    {
+        $dir = strtolower($dir) === 'asc' ? 'asc' : 'desc';
+
+        // Price/stock live on the default variant → order by an aliased sub-select
+        // (reliable in both directions, unlike a subquery passed straight to orderBy).
+        $variantCol = fn (string $col) => ProductVariant::select($col)
+            ->whereColumn('product_variants.product_id', 'products.id')
+            ->where('is_default', true)
+            ->limit(1);
+
+        match ($sort) {
+            'name' => $query->orderBy('name', $dir),
+            'sku' => $query->orderBy('sku', $dir),
+            'price' => $query->select('products.*')->selectSub($variantCol('retail_price'), 'sort_value')->orderBy('sort_value', $dir),
+            'stock' => $query->select('products.*')->selectSub($variantCol('stock_quantity'), 'sort_value')->orderBy('sort_value', $dir),
+            'status' => $query->orderBy('is_active', $dir)->orderByDesc('id'),
+            default => $query->latest('id'), // newest first
+        };
+    }
+
+    /** Page size: an allow-listed ?per_page override, else the store default. */
+    private function perPageFor(Request $request): int
+    {
+        $pp = $request->integer('per_page');
+
+        return in_array($pp, [15, 25, 50, 100], true) ? $pp : per_page();
     }
 
     public function show(Product $product): View
