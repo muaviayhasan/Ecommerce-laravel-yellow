@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AbandonedCartController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BlogCategoryController;
@@ -50,11 +51,13 @@ use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\CompareController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\NewsletterController;
+use App\Http\Controllers\Storefront\PageController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\QuoteRequestController;
 use App\Http\Controllers\Storefront\ReviewController as StorefrontReviewController;
 use App\Http\Controllers\Storefront\ShopController;
 use App\Http\Controllers\Storefront\SupportChatController;
+use App\Http\Controllers\Storefront\TrackOrderController;
 use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -84,6 +87,8 @@ Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
 Route::patch('/cart/{variant}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{variant}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
+// Rehydrate a saved cart from an abandoned-cart reminder link, then send them to checkout.
+Route::get('/cart/recover/{token}', [CartController::class, 'recover'])->name('cart.recover');
 
 // Wishlist + Compare (session-based)
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
@@ -98,6 +103,8 @@ Route::delete('/compare', [CompareController::class, 'clear'])->name('compare.cl
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+// Progressive email capture for abandoned-cart recovery (guests, on email entry).
+Route::post('/checkout/capture', [CheckoutController::class, 'capture'])->name('checkout.capture');
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
 
 // Authentication (login + register are functional)
@@ -143,6 +150,7 @@ Route::middleware('auth')->prefix('account')->group(function () {
     Route::get('/', [AccountController::class, 'dashboard'])->name('account');
     Route::get('/orders', [AccountController::class, 'orders'])->name('account.orders');
     Route::get('/orders/{order}', [AccountController::class, 'showOrder'])->name('account.orders.show');
+    Route::post('/orders/{order}/reorder', [AccountController::class, 'reorder'])->name('account.orders.reorder');
     Route::get('/addresses', [AccountController::class, 'addresses'])->name('account.addresses');
     Route::post('/addresses', [AccountController::class, 'storeAddress'])->name('account.addresses.store');
     Route::put('/addresses/{address}', [AccountController::class, 'updateAddress'])->name('account.addresses.update');
@@ -152,18 +160,15 @@ Route::middleware('auth')->prefix('account')->group(function () {
     Route::put('/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
 });
 
-// Placeholder routes — these pages are built in later modules. They keep the
-// theme's navigation working (no 404s) and render a "coming soon" page.
-$placeholders = [
-    'about' => 'About Us',
-    'contact' => 'Contact Us',
-];
+// Informational pages
+Route::get('/about', [PageController::class, 'about'])->name('about');
+Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+Route::post('/contact', [PageController::class, 'sendContact'])->name('contact.send');
 
-foreach ($placeholders as $uri => $title) {
-    Route::get("/{$uri}", fn () => app(HomeController::class)->placeholder($title))->name($uri);
-}
-
-Route::get('/track-order', fn () => app(HomeController::class)->placeholder('Track Your Order'))->name('track.order');
+// Track an order — guest-friendly lookup by order number + email.
+Route::get('/track-order', [TrackOrderController::class, 'index'])->name('track.order');
+Route::post('/track-order', [TrackOrderController::class, 'lookup'])->name('track.order.lookup');
+Route::post('/track-order/reorder', [TrackOrderController::class, 'reorder'])->name('track.order.reorder');
 
 // Newsletter subscribe (footer) + one-click unsubscribe from marketing emails.
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'store'])->name('newsletter.subscribe');
@@ -171,6 +176,7 @@ Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'uns
 
 // Request a quote (storefront → draft quotation + staff alert).
 Route::get('/request-quote', [QuoteRequestController::class, 'create'])->name('quote.request');
+Route::get('/request-quote/search', [QuoteRequestController::class, 'search'])->name('quote.search');
 Route::post('/request-quote', [QuoteRequestController::class, 'store'])->name('quote.store');
 
 // Support chat widget (public — works for guests and logged-in customers).
@@ -217,6 +223,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('subscribers/{subscriber}', [SubscriberController::class, 'destroy'])->name('subscribers.destroy');
     Route::post('campaigns/{campaign}/send', [CampaignController::class, 'send'])->name('campaigns.send');
     Route::resource('campaigns', CampaignController::class)->except('show');
+    Route::get('abandoned-carts', [AbandonedCartController::class, 'index'])->name('abandoned-carts.index');
+    Route::delete('abandoned-carts/{abandonedCart}', [AbandonedCartController::class, 'destroy'])->name('abandoned-carts.destroy');
 
     // People & access
     Route::resource('customers', CustomerController::class)->except('show');

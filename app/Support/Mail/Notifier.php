@@ -32,6 +32,14 @@ class Notifier
             return false;
         }
 
+        // Transactional mail rides the high-priority queue so a marketing/recovery
+        // batch never delays an order confirmation. A mailable that already chose a
+        // queue (e.g. AbandonedCartMail → "low") keeps its own choice. The
+        // method_exists guard skips mailables that aren't Queueable.
+        if (method_exists($mailable, 'onQueue') && empty($mailable->queue)) {
+            $mailable->onQueue('high');
+        }
+
         Mail::to($recipients)->queue($mailable);
 
         return true;

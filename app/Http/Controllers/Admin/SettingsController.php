@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -128,6 +129,10 @@ class SettingsController extends Controller implements HasMiddleware
             ->mapWithKeys(fn ($f) => [$f => $now->format($f) . '  ·  ' . $f])->all();
         $timeOptions = collect(['h:i A', 'g:i A', 'H:i', 'h:i:s A', 'H:i:s'])
             ->mapWithKeys(fn ($f) => [$f => $now->format($f) . '  ·  ' . $f])->all();
+
+        // Active coupons offered as an optional incentive in abandoned-cart reminders.
+        $couponOptions = ['0' => '— No coupon —'] + Coupon::where('is_active', true)
+            ->orderBy('code')->pluck('code', 'id')->all();
 
         return [
             'general' => [
@@ -317,6 +322,17 @@ class SettingsController extends Controller implements HasMiddleware
                         ],
                     ],
                     [
+                        'title' => 'Cart recovery',
+                        'description' => 'Automatically remind shoppers who reach checkout but don’t complete their order. Reminders only go to people who gave an email and haven’t unsubscribed.',
+                        'fields' => [
+                            'abandoned_cart' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Send abandoned-cart reminders', 'default' => false, 'help' => 'Master switch. Off = no carts are stored and no reminders are sent.'],
+                            'abandoned_cart_first_delay_hours' => ['type' => 'int', 'input' => 'number', 'label' => 'First reminder after (hours)', 'rules' => ['nullable', 'integer', 'min:0', 'max:168'], 'default' => 1, 'help' => 'How long an unfinished cart sits idle before the first reminder.'],
+                            'abandoned_cart_followup_delay_hours' => ['type' => 'int', 'input' => 'number', 'label' => 'Space follow-ups by (hours)', 'rules' => ['nullable', 'integer', 'min:1', 'max:336'], 'default' => 20, 'help' => 'Gap between each reminder after the first.'],
+                            'abandoned_cart_max_reminders' => ['type' => 'int', 'input' => 'number', 'label' => 'Maximum reminders per cart', 'rules' => ['nullable', 'integer', 'min:1', 'max:5'], 'default' => 2, 'help' => 'Total reminders before we stop nudging a cart.'],
+                            'abandoned_cart_coupon_id' => ['type' => 'int', 'input' => 'select', 'label' => 'Incentive coupon (optional)', 'options' => $couponOptions, 'rules' => ['nullable', 'integer'], 'default' => 0, 'help' => 'Included in the reminder as a gentle push to complete the order.'],
+                        ],
+                    ],
+                    [
                         'title' => 'Quotations',
                         'fields' => [
                             'quotation_sent' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Quotation sent to customer', 'default' => true, 'help' => 'Emailed when a quotation is marked as “sent”.'],
@@ -329,6 +345,7 @@ class SettingsController extends Controller implements HasMiddleware
                             'admin_new_order' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'New order received', 'default' => true, 'help' => 'Notify staff whenever a customer places an order.'],
                             'admin_new_subscriber' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'New newsletter signup', 'default' => true, 'help' => 'Notify staff when someone subscribes to the newsletter.'],
                             'admin_new_quote_request' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'New quote request', 'default' => true, 'help' => 'Notify staff when a customer submits the “Request a quote” form.'],
+                            'admin_new_contact' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'New contact message', 'default' => true, 'help' => 'Notify staff when someone submits the “Contact us” form.'],
                         ],
                     ],
                 ],

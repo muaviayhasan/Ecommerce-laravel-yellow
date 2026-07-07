@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerAddress;
 use App\Models\Order;
+use App\Services\CartService;
 use App\Services\WishlistService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,6 +47,18 @@ class AccountController extends Controller
         $order->load(['items', 'shippingAddress', 'billingAddress']);
 
         return view('storefront.account.order', ['order' => $order]);
+    }
+
+    /** Re-add this order's still-available items to the cart. */
+    public function reorder(Request $request, Order $order, CartService $cart): RedirectResponse
+    {
+        abort_unless($order->user_id === $request->user()->id, 404);
+
+        if ($cart->addFromOrder($order) === 0) {
+            return redirect()->route('shop')->with('error', 'None of those items are available to reorder right now.');
+        }
+
+        return redirect()->route('cart')->with('status', "We’ve added the available items from order {$order->order_number} to your cart.");
     }
 
     public function addresses(Request $request): View

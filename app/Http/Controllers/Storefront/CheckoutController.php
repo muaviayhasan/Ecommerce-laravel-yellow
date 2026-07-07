@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Services\AbandonedCartService;
 use App\Services\CartService;
 use App\Services\SalesService;
 use App\Services\SupportBot;
@@ -17,6 +18,7 @@ use App\Support\Storefront;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Throwable;
 
 class CheckoutController extends Controller
@@ -39,6 +41,8 @@ class CheckoutController extends Controller
         // Remember they reached checkout so the support bot can nudge if they don't finish.
         if (auth()->check()) {
             session(['co_pending_at' => now()->timestamp, 'co_nudged' => false]);
+            // Snapshot the cart for email recovery — we already know a signed-in shopper's address.
+            $this->captureAbandoned(auth()->user()->email, auth()->user()->name);
         }
 
         return view('storefront.checkout', [
@@ -173,10 +177,69 @@ class CheckoutController extends Controller
         $adminEmail = setting('store', 'support_email') ?: setting('mail', 'from_address') ?: config('mail.from.address');
         Notifier::send('admin_new_order', $adminEmail, new NewOrderMail($order, route('admin.orders.show', $order)));
 
+        // The sale closes any open recovery reminder for this shopper.
+        app(AbandonedCartService::class)->markRecovered($customer->email, auth()->id());
+
         $this->cart->clear();
         session(['last_order_id' => $order->id]);
 
         return redirect()->route('checkout.success');
+    }
+
+    /**
+     * Progressive capture for guests: the checkout page posts here once a valid
+     * email is entered, so an unfinished guest cart can still be recovered.
+     */
+    public function capture(Request $request): Response
+    {
+        // Only store anything while the feature is switched on (opt-in).
+        if (! Notifier::enabled('abandoned_cart') || ! (bool) setting('emails', 'abandoned_cart', false)) {
+            return response()->noContent();
+        }
+
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $this->captureAbandoned($data['email'], $data['name'] ?? null);
+
+        return response()->noContent();
+    }
+
+    /**
+     * Snapshot the current session cart against an email so the recovery
+     * scheduler can remind them. No-ops when the feature is off or the cart is
+     * empty.
+     */
+    private function captureAbandoned(string $email, ?string $name = null): void
+    {
+        if (! Notifier::enabled('abandoned_cart') || ! (bool) setting('emails', 'abandoned_cart', false)) {
+            return;
+        }
+
+        $items = $this->cart->items();
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        $snapshot = $items->map(fn ($item) => [
+            'variant_id' => $item->variant_id,
+            'name' => $item->name,
+            'sku' => $item->sku,
+            'qty' => $item->qty,
+            'price' => $item->price,
+            'image' => $item->image,
+            'url' => $item->url,
+        ])->all();
+
+        app(AbandonedCartService::class)->capture(
+            email: $email,
+            items: $snapshot,
+            subtotal: $this->cart->subtotal(),
+            name: $name,
+            userId: auth()->id(),
+        );
     }
 
     public function success(): View|RedirectResponse

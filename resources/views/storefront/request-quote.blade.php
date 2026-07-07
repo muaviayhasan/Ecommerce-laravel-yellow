@@ -8,7 +8,7 @@
         <div class="max-w-2xl mx-auto">
             <div class="text-center mb-8">
                 <h1 class="text-headline-md font-bold mb-2">Request a quote</h1>
-                <p class="text-body-base text-on-surface-variant">Tell us what you’re looking for — quantities, products or a custom requirement — and our team will get back to you with pricing.</p>
+                <p class="text-body-base text-on-surface-variant">Add the products you’re interested in and/or describe your requirement — our team will get back to you with pricing.</p>
             </div>
 
             @if (session('quote_status'))
@@ -61,14 +61,66 @@
                     </div>
                 </div>
 
+                {{-- Products the customer wants quoted --}}
+                <div class="space-y-2">
+                    <label class="block text-product-title font-semibold text-on-surface-variant">Products</label>
+                    <div class="relative" @click.away="open = false">
+                        <div class="flex h-12 rounded border border-outline-variant bg-surface focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all overflow-hidden">
+                            <span class="grid place-items-center pl-3 text-outline"><span class="material-symbols-outlined text-[20px]">search</span></span>
+                            <input type="text" x-model="search" @input.debounce.300ms="searchProducts()" @focus="if (results.length) open = true"
+                                placeholder="Search products by name or SKU…"
+                                class="flex-1 min-w-0 px-3 outline-none bg-transparent text-body-base">
+                            <span x-show="loading" class="grid place-items-center pr-3 text-outline"><span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span></span>
+                        </div>
+                        {{-- Results dropdown --}}
+                        <div x-show="open && results.length" x-cloak
+                            class="absolute z-20 left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                            <template x-for="r in results" :key="r.id">
+                                <button type="button" @click="addItem(r)"
+                                    class="w-full text-left px-4 py-2.5 hover:bg-surface-container-low flex items-center justify-between gap-3 border-b border-outline-variant/40 last:border-0">
+                                    <span class="min-w-0">
+                                        <span class="block font-medium truncate" x-text="r.name"></span>
+                                        <span class="block text-label-sm text-on-surface-variant" x-text="r.sku"></span>
+                                    </span>
+                                    <span class="material-symbols-outlined text-[20px] text-primary shrink-0">add_circle</span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- Selected items --}}
+                    <div x-show="items.length" x-cloak class="space-y-2 pt-1">
+                        <template x-for="(it, i) in items" :key="it.id">
+                            <div class="flex items-center gap-3 bg-surface-container-low rounded-lg border border-outline-variant/40 px-3 py-2">
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium truncate" x-text="it.name"></div>
+                                    <div class="text-label-sm text-on-surface-variant" x-text="it.sku"></div>
+                                </div>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <span class="text-label-sm text-on-surface-variant mr-1">Qty</span>
+                                    <input type="number" min="1" max="9999999" x-model.number="it.qty"
+                                        :name="`items[${i}][quantity]`"
+                                        class="w-20 h-9 px-2 rounded border border-outline-variant bg-surface text-center text-body-base focus:outline-none focus:ring-1 focus:ring-primary">
+                                    <input type="hidden" :name="`items[${i}][product_variant_id]`" :value="it.id">
+                                    <button type="button" @click="removeItem(i)" aria-label="Remove"
+                                        class="w-9 h-9 grid place-items-center rounded text-on-surface-variant hover:text-error hover:bg-surface-container transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <p class="text-label-sm text-outline" x-show="!items.length">Search above to add the items you’d like priced. This is optional — you can also just describe what you need below.</p>
+                </div>
+
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between">
-                        <label for="message" class="block text-product-title font-semibold text-on-surface-variant">What do you need? <span class="text-error">*</span></label>
+                        <label for="message" class="block text-product-title font-semibold text-on-surface-variant">Anything else?</label>
                         <span class="text-[11px] text-outline"><span x-text="messageLen">0</span>/2000</span>
                     </div>
-                    <textarea id="message" name="message" required rows="5" maxlength="2000"
+                    <textarea id="message" name="message" rows="4" maxlength="2000"
                         @input="messageLen = $event.target.value.length"
-                        placeholder="List the products and quantities, or describe your requirement."
+                        placeholder="Quantities, delivery location, a custom requirement, or anything not in the catalogue."
                         class="w-full px-4 py-3 rounded border bg-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-body-base @error('message') border-error @else border-outline-variant @enderror">{{ old('message', $product ? "I'd like a quote for: {$product}" : '') }}</textarea>
                     @error('message')<p class="text-error text-label-sm">{{ $message }}</p>@enderror
                 </div>
@@ -89,9 +141,33 @@
                     nameLen: {{ mb_strlen((string) old('name', auth()->user()->name ?? '')) }},
                     companyLen: {{ mb_strlen((string) old('company', '')) }},
                     messageLen: {{ mb_strlen((string) old('message', $product ? "I'd like a quote for: {$product}" : '')) }},
+                    // Item picker
+                    search: '',
+                    results: [],
+                    open: false,
+                    loading: false,
+                    items: @js($oldItems ?? []),
                     init() {
                         @if (old('phone')) this.seedPhone(@js(old('phone'))); @endif
                     },
+                    async searchProducts() {
+                        const q = this.search.trim();
+                        if (!q) { this.results = []; this.open = false; return; }
+                        this.loading = true;
+                        try {
+                            const res = await fetch(`{{ route('quote.search') }}?q=${encodeURIComponent(q)}`, { headers: { 'Accept': 'application/json' } });
+                            this.results = res.ok ? await res.json() : [];
+                            this.open = true;
+                        } catch (e) { this.results = []; }
+                        this.loading = false;
+                    },
+                    addItem(p) {
+                        if (!this.items.some((i) => i.id === p.id)) {
+                            this.items.push({ id: p.id, name: p.name, sku: p.sku, qty: 1 });
+                        }
+                        this.search = ''; this.results = []; this.open = false;
+                    },
+                    removeItem(i) { this.items.splice(i, 1); },
                     // Same 03-prefix phone handling as the checkout page.
                     fmtPhone(v) { const d = (v || '').replace(/\D/g, '').slice(0, 9); return d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d; },
                     fullPhone(rest) { const d = (rest || '').replace(/\D/g, ''); return d ? (d.length > 2 ? '03' + d.slice(0, 2) + '-' + d.slice(2) : '03' + d) : ''; },

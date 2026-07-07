@@ -150,6 +150,12 @@ return [
                     'active' => 'admin.subscribers.*',
                     'permission' => 'subscribers.view',
                 ],
+                [
+                    'label' => 'Abandoned carts',
+                    'route' => 'admin.abandoned-carts.index',
+                    'active' => 'admin.abandoned-carts.*',
+                    'permission' => 'abandoned-carts.view',
+                ],
             ],
         ],
         [

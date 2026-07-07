@@ -26,7 +26,10 @@ class SendCampaignJob implements ShouldQueue
 
     public int $timeout = 0;
 
-    public function __construct(public int $campaignId) {}
+    public function __construct(public int $campaignId)
+    {
+        $this->onQueue('low'); // the fan-out itself is bulk work
+    }
 
     public function handle(): void
     {
