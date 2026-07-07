@@ -39,8 +39,11 @@ class AttributeSeeder extends Seeder
 
         $this->seedAttribute(
             ['name' => 'Color', 'code' => 'color', 'type' => 'swatch', 'sort_order' => 0],
-            collect($colors)->map(fn ($c, $i) => [
-                'value' => $c[0], 'label' => $c[1], 'color_hex' => $c[2], 'sort_order' => $i,
+            collect($colors)->map(fn($c, $i) => [
+                'value' => $c[0],
+                'label' => $c[1],
+                'color_hex' => $c[2],
+                'sort_order' => $i,
             ])->all(),
         );
 
@@ -56,8 +59,11 @@ class AttributeSeeder extends Seeder
 
         $this->seedAttribute(
             ['name' => 'Size', 'code' => 'size', 'type' => 'select', 'sort_order' => 1],
-            collect($sizes)->map(fn ($s, $i) => [
-                'value' => $s[0], 'label' => $s[1], 'color_hex' => null, 'sort_order' => $i,
+            collect($sizes)->map(fn($s, $i) => [
+                'value' => $s[0],
+                'label' => $s[1],
+                'color_hex' => null,
+                'sort_order' => $i,
             ])->all(),
         );
 
@@ -70,8 +76,11 @@ class AttributeSeeder extends Seeder
 
         $this->seedAttribute(
             ['name' => 'Capacity', 'code' => 'capacity', 'type' => 'select', 'sort_order' => 2],
-            collect($capacities)->map(fn ($litres, $i) => [
-                'value' => $litres.'l', 'label' => $litres.' Liters', 'color_hex' => null, 'sort_order' => $i,
+            collect($capacities)->map(fn($litres, $i) => [
+                'value' => $litres . 'l',
+                'label' => $litres . ' Liters',
+                'color_hex' => null,
+                'sort_order' => $i,
             ])->all(),
         );
     }
