@@ -18,17 +18,6 @@
         <p class="text-sm text-on-surface-variant mt-1">Update your personal details, photo and password.</p>
     </div>
 
-    @if (session('status'))
-        <div class="flex items-center gap-2 bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-sm font-medium">
-            <span class="material-symbols-outlined text-[18px]">check_circle</span> {{ session('status') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="flex items-center gap-2 bg-error-container/50 text-on-surface px-4 py-3 rounded-lg text-sm font-medium">
-            <span class="material-symbols-outlined text-error text-[18px]">error</span> {{ session('error') }}
-        </div>
-    @endif
-
     <div class="grid grid-cols-12 gap-6 items-start">
         {{-- Details --}}
         <div class="col-span-12 lg:col-span-7">
