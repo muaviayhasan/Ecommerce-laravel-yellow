@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SupplierRequest;
 use App\Models\Purchase;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class SupplierController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -40,22 +43,29 @@ class SupplierController extends Controller implements HasMiddleware
                     ->orWhere('phone', 'like', $term)
                     ->orWhere('email', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'))
-            ->orderBy('name')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+
+        $this->applyTableSort($suppliers, $request, [
+            'name' => 'name',
+            'purchases' => 'purchases_count',
+            'status' => 'is_active',
+        ], fn ($q) => $q->orderBy('name'));
+
+        $perPage = $this->perPageFor($request);
+        $suppliers = $suppliers->paginate($perPage)->withQueryString();
 
         $outstanding = (float) Purchase::where('status', 'received')->sum(DB::raw('grand_total - paid_total'))
             + (float) Supplier::sum('opening_balance');
 
         return view('admin.suppliers.index', [
             'suppliers' => $suppliers,
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Supplier::count(),
                 'active' => Supplier::where('is_active', true)->count(),
                 'payable' => $outstanding,
             ],
-            'filters' => $request->only('search', 'status'),
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
         ]);
     }
 

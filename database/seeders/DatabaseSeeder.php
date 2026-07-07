@@ -20,7 +20,12 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             SettingsSeeder::class,
             UnitSeeder::class,
+            AttributeSeeder::class,
             CatalogSeeder::class,
+            HeroSlideSeeder::class,
+            PromoCardSeeder::class,
+            InfoBarItemSeeder::class,
+            BlogSeeder::class,
         ]);
     }
 }

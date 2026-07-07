@@ -69,7 +69,7 @@
                             class="w-4 h-4 rounded border-outline-variant accent-primary-container cursor-pointer">
                         <span class="text-label-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Remember me</span>
                     </label>
-                    <a href="{{ route('login') }}" class="text-label-sm text-primary hover:underline font-medium">Forgot password?</a>
+                    <a href="{{ route('password.request') }}" class="text-label-sm text-primary hover:underline font-medium">Forgot password?</a>
                 </div>
 
                 {{-- Submit --}}

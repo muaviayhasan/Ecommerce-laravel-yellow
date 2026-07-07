@@ -23,7 +23,10 @@
     </style>
 @endonce
 
-<nav class="md:hidden fixed inset-x-0 bottom-0 z-40 bg-surface-container-lowest/90 backdrop-blur-lg border-t border-outline-variant/40 shadow-[0_-4px_24px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)] print:hidden"
+{{-- Opaque background (no backdrop-blur): a translucent backdrop-filter on a
+     position:fixed bar makes iOS Safari detach it and float it to mid-screen while
+     scrolling. Solid bg keeps it pinned to the bottom. --}}
+<nav class="md:hidden fixed inset-x-0 bottom-0 z-40 bg-surface-container-lowest border-t border-outline-variant/40 shadow-[0_-4px_24px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)] print:hidden"
     aria-label="Primary mobile">
     <div class="grid grid-cols-5 h-16">
         @foreach ($items as $item)

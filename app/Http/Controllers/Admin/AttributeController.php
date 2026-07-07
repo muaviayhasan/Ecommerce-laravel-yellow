@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AttributeRequest;
 use App\Models\Attribute;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class AttributeController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     private const TYPES = ['select' => 'Dropdown', 'swatch' => 'Colour swatch', 'radio' => 'Radio buttons'];
 
     public static function middleware(): array
@@ -37,21 +40,28 @@ class AttributeController extends Controller implements HasMiddleware
                 $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('code', 'like', $term));
             })
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
-            ->when($request->filled('variation'), fn ($q) => $q->where('is_variation', $request->string('variation') === 'yes'))
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('variation'), fn ($q) => $q->where('is_variation', $request->string('variation') === 'yes'));
+
+        $this->applyTableSort($attributes, $request, [
+            'name' => 'name',
+            'type' => 'type',
+            'values' => 'values_count',
+            'variants' => 'is_variation',
+        ], fn ($q) => $q->orderBy('sort_order')->orderBy('name'));
+
+        $perPage = $this->perPageFor($request);
+        $attributes = $attributes->paginate($perPage)->withQueryString();
 
         return view('admin.attributes.index', [
             'attributes' => $attributes,
             'types' => self::TYPES,
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Attribute::count(),
                 'variation' => Attribute::where('is_variation', true)->count(),
                 'values' => \App\Models\AttributeValue::count(),
             ],
-            'filters' => $request->only('search', 'type', 'variation'),
+            'filters' => $request->only('search', 'type', 'variation', 'sort', 'dir', 'per_page'),
         ]);
     }
 

@@ -41,6 +41,11 @@ class PurchaseService
                     continue;
                 }
 
+                // Dropship (non-tracked) products aren't held in stock — skip cost/stock updates.
+                if (! (bool) ($variant->product()->value('is_stock_tracked') ?? true)) {
+                    continue;
+                }
+
                 // Order matters: cost first (moving average uses the OLD quantity), then stock-in.
                 $this->costing->recordPurchaseCost($variant, (float) $item->quantity, (float) $item->unit_cost);
                 $this->stock->move(

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CustomerRequest;
 use App\Models\Customer;
@@ -13,6 +14,8 @@ use Illuminate\View\View;
 
 class CustomerController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -35,19 +38,29 @@ class CustomerController extends Controller implements HasMiddleware
                     ->orWhere('phone', 'like', $term));
             })
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+
+        $this->applyTableSort($customers, $request, [
+            'name' => 'name',
+            'phone' => 'phone',
+            'type' => 'type',
+            'orders' => 'orders_count',
+            'balance' => 'opening_balance',
+            'status' => 'is_active',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $customers = $customers->paginate($perPage)->withQueryString();
 
         return view('admin.customers.index', [
             'customers' => $customers,
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Customer::count(),
                 'active' => Customer::where('is_active', true)->count(),
                 'wholesale' => Customer::where('type', 'wholesale')->count(),
             ],
-            'filters' => $request->only('search', 'type', 'status'),
+            'filters' => $request->only('search', 'type', 'status', 'sort', 'dir', 'per_page'),
         ]);
     }
 

@@ -79,6 +79,24 @@ return [
                     'permission' => 'brands.view',
                 ],
                 [
+                    'label' => 'Hero Slides',
+                    'route' => 'admin.hero-slides.index',
+                    'active' => 'admin.hero-slides.*',
+                    'permission' => 'hero-slides.view',
+                ],
+                [
+                    'label' => 'Promo Cards',
+                    'route' => 'admin.promo-cards.index',
+                    'active' => 'admin.promo-cards.*',
+                    'permission' => 'promo-cards.view',
+                ],
+                [
+                    'label' => 'Info Bar',
+                    'route' => 'admin.info-bar-items.index',
+                    'active' => 'admin.info-bar-items.*',
+                    'permission' => 'info-bar-items.view',
+                ],
+                [
                     'label' => 'Attributes',
                     'route' => 'admin.attributes.index',
                     'active' => 'admin.attributes.*',
@@ -113,6 +131,24 @@ return [
                     'route' => 'admin.customers.index',
                     'active' => 'admin.customers.*',
                     'permission' => 'customers.view',
+                ],
+            ],
+        ],
+        [
+            'label' => 'Marketing',
+            'icon' => 'campaign',
+            'children' => [
+                [
+                    'label' => 'Campaigns',
+                    'route' => 'admin.campaigns.index',
+                    'active' => 'admin.campaigns.*',
+                    'permission' => 'campaigns.view',
+                ],
+                [
+                    'label' => 'Subscribers',
+                    'route' => 'admin.subscribers.index',
+                    'active' => 'admin.subscribers.*',
+                    'permission' => 'subscribers.view',
                 ],
             ],
         ],
@@ -179,6 +215,12 @@ return [
                     'route' => 'admin.blog.tags.index',
                     'active' => 'admin.blog.tags.*',
                     'permission' => 'blog-tags.view',
+                ],
+                [
+                    'label' => 'Comments',
+                    'route' => 'admin.blog.comments.index',
+                    'active' => 'admin.blog.comments.*',
+                    'permission' => 'blog-comments.view',
                 ],
             ],
         ],

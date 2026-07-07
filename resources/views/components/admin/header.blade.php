@@ -44,8 +44,8 @@
                         {{ $user?->getRoleNames()->first() ?? 'Admin' }}
                     </div>
                 </div>
-                @if ($user?->avatar)
-                    <img src="{{ $user->avatar }}" alt="{{ $user->name }}"
+                @if ($user?->avatar_url)
+                    <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}"
                         class="w-10 h-10 rounded-full object-cover border border-outline-variant">
                 @else
                     <span class="w-10 h-10 rounded-full bg-primary-container text-white grid place-items-center font-bold">
@@ -63,7 +63,7 @@
                     class="flex items-center gap-3 px-4 py-2 text-sm text-on-surface-variant hover:bg-surface-container">
                     <span class="material-symbols-outlined text-base">storefront</span> View Store
                 </a>
-                <a href="#"
+                <a href="{{ route('admin.profile.edit') }}"
                     class="flex items-center gap-3 px-4 py-2 text-sm text-on-surface-variant hover:bg-surface-container">
                     <span class="material-symbols-outlined text-base">person</span> Profile
                 </a>

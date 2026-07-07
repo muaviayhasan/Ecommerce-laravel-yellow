@@ -51,6 +51,44 @@
 
     <x-storefront.mobile-nav />
 
+    {{-- Keep your place: cart / wishlist / compare actions reload the page, so we save the
+         scroll position on submit and restore it after the reload — you land back on the
+         same item instead of at the top of the page. --}}
+    <script>
+        (function () {
+            var KEY = 'sf:keepScroll';
+            // Add-to-cart, wishlist and compare toggles/removes all POST and redirect back here.
+            var WATCH = /\/(cart|wishlist|compare)(\/|$)/;
+            function here() { return location.pathname + location.search; }
+
+            // Record where we are the moment one of those forms is submitted.
+            document.addEventListener('submit', function (e) {
+                var f = e.target;
+                if (!(f instanceof HTMLFormElement) || f.hasAttribute('data-no-keep-scroll')) return;
+                if (!WATCH.test(f.getAttribute('action') || '')) return;
+                try { sessionStorage.setItem(KEY, JSON.stringify({ u: here(), y: window.scrollY, t: Date.now() })); } catch (err) {}
+            }, true);
+
+            // After the reload, if we're back on the same page, jump to where we were.
+            function restore() {
+                var s;
+                try { s = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch (err) { s = null; }
+                if (!s || s.u !== here() || (Date.now() - s.t) > 10000) {
+                    try { sessionStorage.removeItem(KEY); } catch (err) {}
+                    return;
+                }
+                try { sessionStorage.removeItem(KEY); } catch (err) {}
+                var y = s.y || 0;
+                window.scrollTo(0, y);
+                // Re-apply once late layout shifts (images, fonts) settle.
+                requestAnimationFrame(function () { window.scrollTo(0, y); });
+                window.addEventListener('load', function () { window.scrollTo(0, y); }, { once: true });
+            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restore);
+            else restore();
+        })();
+    </script>
+
     @livewireScripts
     @stack('scripts')
 </body>

@@ -23,6 +23,12 @@
                 {{ session('settings_status') }}
             </div>
         @endif
+        @if (session('settings_error'))
+            <div class="flex items-start gap-2 bg-error-container text-on-error-container px-4 py-2.5 rounded-lg text-sm font-medium">
+                <span class="material-symbols-outlined text-[18px]">error</span>
+                <span class="break-words">{{ session('settings_error') }}</span>
+            </div>
+        @endif
 
         {{-- Tabs --}}
         <div class="flex gap-1 overflow-x-auto no-scrollbar border-b border-outline-variant">
@@ -72,5 +78,33 @@
                 </button>
             </div>
         </form>
+
+        {{-- Mail: send a test email to verify the SMTP settings above. --}}
+        @if ($group === 'mail')
+            <x-settings.section title="Send test email"
+                description="Save your SMTP settings first, then send a test message to confirm delivery works.">
+                <form method="POST" action="{{ route('admin.settings.mail.test') }}"
+                    class="flex flex-col sm:flex-row sm:items-start gap-3">
+                    @csrf
+                    <div class="flex-1 space-y-1.5">
+                        <label for="test_email" class="sr-only">Recipient email</label>
+                        <input type="email" id="test_email" name="test_email" required maxlength="255"
+                            value="{{ old('test_email', auth()->user()->email ?? '') }}"
+                            placeholder="you@example.com"
+                            class="w-full rounded-lg border border-outline-variant bg-surface-container-lowest dark:bg-surface-container px-3.5 py-2.5 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary">
+                        @error('test_email')
+                            <p class="text-xs text-error flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                    <button type="submit"
+                        class="px-5 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg flex items-center justify-center gap-2 hover:bg-surface-container transition-colors shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">send</span>
+                        Send test
+                    </button>
+                </form>
+            </x-settings.section>
+        @endif
     </div>
 @endsection

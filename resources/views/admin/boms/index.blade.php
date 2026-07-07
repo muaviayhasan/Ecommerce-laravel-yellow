@@ -39,17 +39,18 @@
             </select>
             <button type="submit" class="px-4 py-2 bg-primary-container text-white text-sm font-semibold rounded-lg hover:brightness-110 transition-all">Filter</button>
             @if (array_filter($filters))<a href="{{ route('admin.boms.index') }}" class="px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Reset</a>@endif
+            <x-admin.per-page :per-page="$perPage" />
         </form>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/60">
                     <tr>
-                        <th class="px-6 py-3">Product</th>
-                        <th class="px-6 py-3 text-right">Output qty</th>
-                        <th class="px-6 py-3 text-center">Components</th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="product" label="Product" /></th>
+                        <th class="px-6 py-3 text-right"><x-admin.sort-header column="output" label="Output qty" /></th>
+                        <th class="px-6 py-3 text-center"><x-admin.sort-header column="components" label="Components" /></th>
                         <th class="px-6 py-3 text-right">Unit cost</th>
-                        <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="status" label="Status" /></th>
                         <th class="px-6 py-3 text-right">Actions</th>
                     </tr>
                 </thead>

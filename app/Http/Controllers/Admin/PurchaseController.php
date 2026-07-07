@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PurchaseRequest;
 use App\Http\Requests\Admin\SupplierPaymentRequest;
@@ -21,6 +22,8 @@ use Throwable;
 
 class PurchaseController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -46,13 +49,21 @@ class PurchaseController extends Controller implements HasMiddleware
                     ->orWhereHas('supplier', fn ($s) => $s->where('name', 'like', $term)));
             })
             ->when($request->filled('supplier'), fn ($q) => $q->where('supplier_id', $request->integer('supplier')))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')));
+
+        $this->applyTableSort($purchases, $request, [
+            'purchase' => 'purchase_number',
+            'items' => 'items_count',
+            'total' => 'grand_total',
+            'status' => 'status',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $purchases = $purchases->paginate($perPage)->withQueryString();
 
         return view('admin.purchases.index', [
             'purchases' => $purchases,
+            'perPage' => $perPage,
             'suppliers' => Supplier::orderBy('name')->pluck('name', 'id'),
             'stats' => [
                 'total' => Purchase::count(),
@@ -60,7 +71,7 @@ class PurchaseController extends Controller implements HasMiddleware
                 'received' => Purchase::where('status', 'received')->count(),
                 'payable' => (float) Purchase::where('status', 'received')->sum(DB::raw('grand_total - paid_total')),
             ],
-            'filters' => $request->only('search', 'supplier', 'status'),
+            'filters' => $request->only('search', 'supplier', 'status', 'sort', 'dir', 'per_page'),
         ]);
     }
 

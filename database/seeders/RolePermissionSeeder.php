@@ -23,6 +23,9 @@ class RolePermissionSeeder extends Seeder
         'variants' => ['edit'],
         'categories' => ['view', 'create', 'edit', 'delete'],
         'brands' => ['view', 'create', 'edit', 'delete'],
+        'hero-slides' => ['view', 'create', 'edit', 'delete'],
+        'promo-cards' => ['view', 'create', 'edit', 'delete'],
+        'info-bar-items' => ['view', 'create', 'edit', 'delete'],
         'attributes' => ['view', 'create', 'edit', 'delete'],
         'media' => ['view', 'create', 'edit', 'delete'],
         'gallery' => ['view', 'create', 'edit', 'delete'],
@@ -41,10 +44,14 @@ class RolePermissionSeeder extends Seeder
         'reviews' => ['view', 'moderate'],
         'wishlists' => ['view'],
         'support' => ['view', 'reply'],
+        // Marketing
+        'subscribers' => ['view', 'delete', 'export'],
+        'campaigns' => ['view', 'create', 'edit', 'delete', 'send'],
         // Content
         'blog-posts' => ['view', 'create', 'edit', 'delete'],
         'blog-categories' => ['view', 'create', 'edit', 'delete'],
         'blog-tags' => ['view', 'create', 'edit', 'delete'],
+        'blog-comments' => ['view', 'moderate', 'reply', 'delete'],
         // Finance & system
         'ledger' => ['view'],
         'reports' => ['view', 'export'],
@@ -64,16 +71,17 @@ class RolePermissionSeeder extends Seeder
         'admin' => ['*'],
         'catalog-manager' => [
             'dashboard', 'products', 'variants', 'categories', 'brands',
-            'attributes', 'media', 'gallery', 'reviews',
+            'attributes', 'media', 'gallery', 'reviews', 'hero-slides',
+            'promo-cards', 'info-bar-items',
         ],
         'procurement' => ['dashboard', 'suppliers', 'purchases', 'stock'],
         'production-manager' => ['dashboard', 'boms', 'production', 'stock'],
         'inventory-manager' => ['dashboard', 'stock', 'products', 'variants'],
         'cashier' => ['dashboard', 'pos', 'customers', 'orders'],
         'sales-rep' => ['dashboard', 'quotations', 'orders', 'customers'],
-        'order-manager' => ['dashboard', 'orders', 'customers', 'reports', 'support'],
+        'order-manager' => ['dashboard', 'orders', 'customers', 'reports', 'support', 'subscribers', 'campaigns'],
         'accountant' => ['dashboard', 'ledger', 'reports', 'orders', 'purchases'],
-        'editor' => ['dashboard', 'blog-posts', 'blog-categories', 'blog-tags', 'media', 'gallery'],
+        'editor' => ['dashboard', 'blog-posts', 'blog-categories', 'blog-tags', 'blog-comments', 'media', 'gallery'],
         'customer' => [],
     ];
 

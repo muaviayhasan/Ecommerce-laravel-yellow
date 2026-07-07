@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BrandRequest;
 use App\Models\Brand;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class BrandController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -34,18 +37,25 @@ class BrandController extends Controller implements HasMiddleware
                 $term = '%' . $request->string('search') . '%';
                 $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('slug', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'))
-            ->orderBy('name')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+
+        $this->applyTableSort($brands, $request, [
+            'name' => 'name',
+            'products' => 'products_count',
+            'status' => 'is_active',
+        ], fn ($q) => $q->orderBy('name'));
+
+        $perPage = $this->perPageFor($request);
+        $brands = $brands->paginate($perPage)->withQueryString();
 
         return view('admin.brands.index', [
             'brands' => $brands,
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Brand::count(),
                 'active' => Brand::where('is_active', true)->count(),
             ],
-            'filters' => $request->only('search', 'status'),
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
         ]);
     }
 

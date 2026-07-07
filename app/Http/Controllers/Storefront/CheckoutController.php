@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Mail\Admin\NewOrderMail;
+use App\Mail\OrderConfirmationMail;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -10,6 +12,7 @@ use App\Models\User;
 use App\Services\CartService;
 use App\Services\SalesService;
 use App\Services\SupportBot;
+use App\Support\Mail\Notifier;
 use App\Support\Storefront;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -62,7 +65,7 @@ class CheckoutController extends Controller
         $data = $request->validate([
             'email' => ['required', 'email', 'max:255'],
             'first_name' => ['required', 'string', 'max:100'],
-            'last_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
             'company' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', self::PHONE_RULE],
             'line1' => ['required', 'string', 'max:255'],
@@ -108,7 +111,7 @@ class CheckoutController extends Controller
             return redirect()->route('cart')->with('error', 'Your cart is empty.');
         }
 
-        $name = trim($data['first_name'] . ' ' . $data['last_name']);
+        $name = trim($data['first_name'] . ' ' . ($data['last_name'] ?? ''));
         $customer = Customer::firstOrCreate(
             ['email' => $data['email']],
             ['name' => $name, 'phone' => $data['phone'], 'type' => 'retail', 'price_tier' => 'retail', 'is_active' => true, 'user_id' => auth()->id()],
@@ -161,6 +164,14 @@ class CheckoutController extends Controller
                 . 'Track it here: ' . route('account.orders.show', $order));
             session()->forget(['co_pending_at', 'co_nudged']);
         }
+
+        // Email the customer their confirmation and alert staff of the new order.
+        $order->loadMissing('items', 'customer');
+        $customerUrl = auth()->check() ? route('account.orders.show', $order) : null;
+        Notifier::send('order_confirmation', $customer->email, new OrderConfirmationMail($order, $customerUrl));
+
+        $adminEmail = setting('store', 'support_email') ?: setting('mail', 'from_address') ?: config('mail.from.address');
+        Notifier::send('admin_new_order', $adminEmail, new NewOrderMail($order, route('admin.orders.show', $order)));
 
         $this->cart->clear();
         session(['last_order_id' => $order->id]);

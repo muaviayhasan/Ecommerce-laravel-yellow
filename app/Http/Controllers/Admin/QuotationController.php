@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\QuotationRequest;
 use App\Models\Customer;
@@ -18,6 +19,8 @@ use Throwable;
 
 class QuotationController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     /** Statuses a quote can be moved to from the show page (not "converted"). */
     private const STATUSES = ['draft', 'sent', 'accepted', 'rejected', 'expired'];
 
@@ -42,14 +45,23 @@ class QuotationController extends Controller implements HasMiddleware
                 $query->where(fn ($q) => $q->where('quotation_number', 'like', $term)
                     ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', $term)));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')));
+
+        $this->applyTableSort($quotations, $request, [
+            'quotation' => 'quotation_number',
+            'items' => 'items_count',
+            'total' => 'grand_total',
+            'valid' => 'valid_until',
+            'status' => 'status',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $quotations = $quotations->paginate($perPage)->withQueryString();
 
         return view('admin.quotations.index', [
             'quotations' => $quotations,
-            'filters' => $request->only('search', 'status'),
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
+            'perPage' => $perPage,
             'statuses' => self::STATUSES,
             'stats' => [
                 'total' => Quotation::count(),
@@ -152,14 +164,18 @@ class QuotationController extends Controller implements HasMiddleware
     public function status(Request $request, Quotation $quotation): RedirectResponse
     {
         $to = (string) $request->string('status');
-        if (! in_array($to, self::STATUSES, true)) {
-            return back()->with('error', 'Unknown status.');
-        }
-        if ($quotation->status === 'converted') {
-            return back()->with('error', 'Converted quotations are locked.');
+        // Enforce the lifecycle server-side, not just in the UI.
+        if (! $quotation->canTransitionTo($to)) {
+            return back()->with('error', "A {$quotation->status} quotation can't be marked {$to}.");
         }
 
         $quotation->update(['status' => $to]);
+
+        // Email the quote to the customer when it's marked as "sent".
+        if ($to === 'sent') {
+            $quotation->loadMissing('items', 'customer');
+            \App\Support\Mail\Notifier::send('quotation_sent', $quotation->customer?->email, new \App\Mail\QuotationSentMail($quotation));
+        }
 
         return back()->with('status', "Quotation marked {$to}.");
     }

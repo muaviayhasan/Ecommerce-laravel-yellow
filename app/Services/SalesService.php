@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
@@ -32,10 +33,19 @@ class SalesService
         return DB::transaction(function () use ($channel, $customer, $lines, $opts) {
             $tier = ($channel === Order::CHANNEL_VENDOR || $customer?->price_tier === 'wholesale') ? 'wholesale' : 'retail';
 
+            // Which products track stock? Dropship products (is_stock_tracked = false) are
+            // sourced from a supplier per order: no stock is held or moved, and their cost
+            // is a payable to the supplier rather than a draw-down of our inventory.
+            $trackedByProduct = Product::whereIn('id', collect($lines)->map(fn ($l) => $l['variant']->product_id)->unique())
+                ->pluck('is_stock_tracked', 'id');
+            $tracks = fn (ProductVariant $variant): bool => (bool) ($trackedByProduct[$variant->product_id] ?? true);
+
             // 1) Build line items (priced + cost-snapshotted).
             $rows = [];
             $subtotal = 0.0;
-            $cogs = 0.0;
+            $cogs = 0.0;          // total cost of goods sold
+            $cogsInventory = 0.0; // portion drawn from our own (stock-tracked) inventory
+            $cogsDropship = 0.0;  // portion owed to suppliers (dropship)
             foreach ($lines as $line) {
                 $variant = $line['variant'];
                 $qty = (float) $line['quantity'];
@@ -43,11 +53,14 @@ class SalesService
                 $unitPrice = isset($line['unit_price']) ? (float) $line['unit_price'] : $this->price($variant, $tier);
                 $lineTotal = round($unitPrice * $qty, 2);
                 $cost = (float) $variant->cost;
+                $lineCogs = round($cost * $qty, 2);
 
                 $subtotal += $lineTotal;
-                $cogs += round($cost * $qty, 2);
+                $cogs += $lineCogs;
+                $tracks($variant) ? $cogsInventory += $lineCogs : $cogsDropship += $lineCogs;
                 $rows[] = [
-                    'variant' => $variant,
+                    'variant' => $variant, // pulled back out for the stock move, then unset before insert
+                    'product_variant_id' => $variant->id,
                     'name_snapshot' => $variant->product?->name ?? 'Item',
                     'sku_snapshot' => $variant->sku,
                     'attributes_snapshot' => $variant->relationLoaded('attributeValues')
@@ -99,12 +112,15 @@ class SalesService
                 'created_by' => auth()->id(),
             ]);
 
-            // 3) Items + stock out (cost snapshot at sale time).
+            // 3) Items + stock out (cost snapshot at sale time). Dropship (non-tracked)
+            //    items never move stock — nothing is held on hand for them.
             foreach ($rows as $row) {
                 $variant = $row['variant'];
                 unset($row['variant']);
                 $order->items()->create($row);
-                $this->stock->move($variant, StockMovement::TYPE_SALE_OUT, -(float) $row['quantity'], (float) $row['cost_snapshot'], $order, "Sale {$order->order_number}");
+                if ($tracks($variant)) {
+                    $this->stock->move($variant, StockMovement::TYPE_SALE_OUT, -(float) $row['quantity'], (float) $row['cost_snapshot'], $order, "Sale {$order->order_number}");
+                }
             }
 
             // 4) Payment (skip pure credit/unpaid).
@@ -134,7 +150,13 @@ class SalesService
             }
             if ($cogs > 0) {
                 $lines[] = ['account' => 'cogs', 'debit' => $cogs];
-                $lines[] = ['account' => 'inventory', 'credit' => $cogs];
+                // Stock-tracked cost draws down inventory; dropship cost is owed to the supplier.
+                if ($cogsInventory > 0) {
+                    $lines[] = ['account' => 'inventory', 'credit' => round($cogsInventory, 2)];
+                }
+                if ($cogsDropship > 0) {
+                    $lines[] = ['account' => 'accounts_payable', 'credit' => round($cogsDropship, 2)];
+                }
             }
             $this->ledger->post($lines, $order, "Sale {$order->order_number}");
 

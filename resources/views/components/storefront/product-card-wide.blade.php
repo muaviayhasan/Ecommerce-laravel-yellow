@@ -20,9 +20,12 @@
 
     <div class="flex-1 min-w-0 pl-4 flex flex-col">
         <p class="text-label-sm text-secondary mb-1 line-clamp-1 min-h-4">{{ $category }}</p>
-        <h4 class="text-product-title text-primary mb-2 line-clamp-2 min-h-9">
+        <h4 class="text-product-title text-primary mb-1 line-clamp-2 min-h-9">
             <a href="{{ $url }}" class="hover:underline">{{ $name }}</a>
         </h4>
+        @if ($variantLabel = data_get($product, 'variant_label'))
+            <p class="text-label-sm text-on-surface-variant mb-2 line-clamp-1">{{ $variantLabel }}</p>
+        @endif
 
         <div class="mt-auto flex items-center justify-between gap-2">
             <div>

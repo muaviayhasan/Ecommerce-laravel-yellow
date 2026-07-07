@@ -4,44 +4,9 @@
 @section('meta_description', 'Shop the latest electronics — phones, laptops, cameras, audio and more at ' . config('app.name') . '.')
 
 @section('content')
-    {{-- Hero slider --}}
-    @php
-        // Hero uses transparent PNG product cut-outs (object-contain), so the product
-        // shows in full on both desktop and mobile.
-        $heroSlides = [
-            [
-                'kicker' => 'Power meets portability',
-                'line1' => 'NEXT-GEN LAPTOPS',
-                'line2' => 'BUILT FOR SPEED',
-                'tail' => 'SAVE UP TO',
-                'highlight' => '30% OFF',
-                'cta' => 'Shop Laptops',
-                'image' => '/assets/images/banner-laptops.png',
-                'alt' => 'Next-gen laptop',
-            ],
-            [
-                'kicker' => 'Capture every moment',
-                'line1' => 'PRO-GRADE',
-                'line2' => 'CAMERAS',
-                'tail' => 'UP TO',
-                'highlight' => '40% OFF',
-                'cta' => 'Shop Cameras',
-                'image' => '/images/promos/promo-1.png',
-                'alt' => '4K camera',
-            ],
-            [
-                'kicker' => 'Hear every detail',
-                'line1' => 'IMMERSIVE AUDIO',
-                'line2' => 'WIRELESS FREEDOM',
-                'tail' => 'STARTING AT',
-                'highlight' => 'Rs 4,999',
-                'cta' => 'Shop Audio',
-                'image' => '/assets/images/banner-smartg3.png',
-                'alt' => 'Wireless audio device',
-            ],
-        ];
-    @endphp
-
+    {{-- Hero slider — slides are managed in Admin → Ecommerce → Hero Slides.
+         Images use transparent PNG product cut-outs (object-contain), so the
+         product shows in full on both desktop and mobile. --}}
     <section class="group relative bg-surface overflow-hidden"
         x-data="{
             current: 0,
@@ -66,16 +31,20 @@
                              regardless of text length; content is vertically centered. --}}
                         <div class="app-container relative flex items-center h-[480px] lg:h-[500px] overflow-hidden">
                             <div class="w-3/5 md:w-1/2 z-10 py-4">
-                                <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-3 md:mb-4">{{ $slide['kicker'] }}</p>
+                                @if ($slide->kicker)
+                                    <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-3 md:mb-4">{{ $slide->kicker }}</p>
+                                @endif
                                 <h1 class="text-3xl sm:text-4xl lg:text-display-hero font-light leading-tight tracking-tight mb-6 md:mb-8">
-                                    {{ $slide['line1'] }}<br>
-                                    <span class="font-bold">{{ $slide['line2'] }}</span><br>
-                                    {{ $slide['tail'] }} <span class="font-bold text-primary">{{ $slide['highlight'] }}</span>
+                                    {{ $slide->line1 }}
+                                    @if ($slide->line2)<br><span class="font-bold">{{ $slide->line2 }}</span>@endif
+                                    @if ($slide->tail || $slide->highlight)<br>{{ $slide->tail }} <span class="font-bold text-primary">{{ $slide->highlight }}</span>@endif
                                 </h1>
-                                <a href="{{ route('shop') }}"
-                                    class="inline-block bg-primary-container px-10 py-4 rounded-full font-bold text-on-surface hover:opacity-90 transition-all shadow-lg">
-                                    {{ $slide['cta'] }}
-                                </a>
+                                @if ($slide->cta_label)
+                                    <a href="{{ $slide->cta_link }}"
+                                        class="inline-block bg-primary-container px-10 py-4 rounded-full font-bold text-on-surface hover:opacity-90 transition-all shadow-lg">
+                                        {{ $slide->cta_label }}
+                                    </a>
+                                @endif
                                 {{-- Dots --}}
                                 <div class="flex gap-2 mt-8 md:mt-12">
                                     @foreach ($heroSlides as $di => $dslide)
@@ -87,11 +56,13 @@
                             </div>
                             {{-- PNG product cut-out, contained. Floated on the right on all
                                  screens (the text may overlap it on small screens — that's fine). --}}
-                            <div class="absolute right-0 top-0 bottom-0 w-2/5 md:w-1/2 flex items-center justify-center p-3 md:p-8">
-                                <img class="max-w-full max-h-full w-auto object-contain"
-                                    src="{{ $slide['image'] }}" alt="{{ $slide['alt'] }}"
-                                    @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
-                            </div>
+                            @if ($slide->image_url)
+                                <div class="absolute right-0 top-0 bottom-0 w-2/5 md:w-1/2 flex items-center justify-center p-3 md:p-8">
+                                    <img class="max-w-full max-h-full w-auto object-contain"
+                                        src="{{ $slide->image_url }}" alt="{{ $slide->image_alt }}"
+                                        @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -111,40 +82,36 @@
     </section>
 
     {{-- Promo grid --}}
+    {{-- Promo grid — cards managed in Admin → Ecommerce → Promo Cards. --}}
+    @if ($promoCards->isNotEmpty())
     <section class="py-12 bg-white">
         <div class="app-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            @php
-                // Product images pulled from the electro design (public/images/promos).
-                $promos = [
-                    ['kicker' => 'Catch the hottest', 'title' => 'Deals', 'subtitle' => 'In Cameras', 'type' => 'shop', 'image' => '/images/promos/promo-1.png'],
-                    ['kicker' => 'The New', 'title' => '360 Cameras', 'type' => 'price', 'prefix' => 'From', 'currency' => '$', 'amount' => '749', 'cents' => '99', 'image' => '/images/promos/promo-2.png'],
-                    ['kicker' => 'Tablets, Smartphones', 'title' => 'And More', 'type' => 'percent', 'prefix' => 'Up to', 'amount' => '70', 'image' => '/images/promos/promo-3.png'],
-                    ['kicker' => 'The New', 'title' => '360 Cameras', 'type' => 'percent', 'prefix' => 'Up to', 'amount' => '70', 'image' => '/images/promos/promo-4.png'],
-                ];
-            @endphp
-
-            @foreach ($promos as $promo)
-                <a href="{{ route('shop') }}"
+            @foreach ($promoCards as $promo)
+                <a href="{{ $promo->link }}"
                     class="bg-surface-container-low p-6 flex items-center gap-4 group transition-shadow hover:shadow-md">
                     {{-- Image first (left), text second (right) --}}
-                    <img src="{{ $promo['image'] }}" alt="{{ $promo['title'] }}" loading="lazy"
-                        class="w-24 h-24 object-contain shrink-0">
+                    @if ($promo->image_url)
+                        <img src="{{ $promo->image_url }}" alt="{{ $promo->image_alt ?: $promo->title }}" loading="lazy"
+                            class="w-24 h-24 object-contain shrink-0">
+                    @endif
                     <div class="flex-1 min-w-0">
-                        <p class="text-label-sm font-bold uppercase text-secondary">{{ $promo['kicker'] }}</p>
-                        <h3 class="font-bold text-headline-md leading-tight uppercase text-on-surface">{{ $promo['title'] }}</h3>
-                        @isset($promo['subtitle'])
-                            <p class="text-label-sm font-bold uppercase text-secondary">{{ $promo['subtitle'] }}</p>
-                        @endisset
+                        @if ($promo->kicker)
+                            <p class="text-label-sm font-bold uppercase text-secondary">{{ $promo->kicker }}</p>
+                        @endif
+                        <h3 class="font-bold text-headline-md leading-tight uppercase text-on-surface">{{ $promo->title }}</h3>
+                        @if ($promo->subtitle)
+                            <p class="text-label-sm font-bold uppercase text-secondary">{{ $promo->subtitle }}</p>
+                        @endif
 
                         <div class="flex items-center gap-2 mt-2">
-                            @if ($promo['type'] === 'shop')
-                                <span class="font-bold text-on-surface">Shop now</span>
-                            @elseif ($promo['type'] === 'price')
-                                <span class="text-label-sm uppercase text-secondary">{{ $promo['prefix'] }}</span>
-                                <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo['currency'] }}{{ $promo['amount'] }}<sup class="text-[0.55em] align-super">{{ $promo['cents'] }}</sup></span>
+                            @if ($promo->display_type === \App\Models\PromoCard::TYPE_SHOP)
+                                <span class="font-bold text-on-surface">{{ $promo->prefix ?: 'Shop now' }}</span>
+                            @elseif ($promo->display_type === \App\Models\PromoCard::TYPE_PRICE)
+                                <span class="text-label-sm uppercase text-secondary">{{ $promo->prefix }}</span>
+                                <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo->currency }}{{ $promo->amount }}<sup class="text-[0.55em] align-super">{{ $promo->cents }}</sup></span>
                             @else
-                                <span class="text-label-sm uppercase text-secondary leading-tight">{{ $promo['prefix'] }}</span>
-                                <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo['amount'] }}<sup class="text-[0.55em] align-super">%</sup></span>
+                                <span class="text-label-sm uppercase text-secondary leading-tight">{{ $promo->prefix }}</span>
+                                <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo->amount }}<sup class="text-[0.55em] align-super">%</sup></span>
                             @endif
                             <span class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
                                 <span class="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
@@ -155,29 +122,26 @@
             @endforeach
         </div>
     </section>
+    @endif
 
-    {{-- Info bar --}}
+    {{-- Info bar — items managed in Admin → Ecommerce → Info Bar. --}}
+    @if ($infoBarItems->isNotEmpty())
     <section class="pb-12 bg-white">
         <div class="app-container">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 rounded-lg border border-outline-variant divide-y lg:divide-y-0 lg:divide-x divide-outline-variant">
-                @foreach ([
-                    ['icon' => 'local_shipping', 'title' => 'Free Delivery', 'sub' => 'from Rs 5,000'],
-                    ['icon' => 'thumb_up', 'title' => '99% Positive', 'sub' => 'Feedbacks'],
-                    ['icon' => 'cached', 'title' => '365 days', 'sub' => 'for free return'],
-                    ['icon' => 'account_balance_wallet', 'title' => 'Payment', 'sub' => 'Secure System'],
-                    ['icon' => 'sell', 'title' => 'Only Best', 'sub' => 'Brands'],
-                ] as $info)
+                @foreach ($infoBarItems as $info)
                     <div class="flex items-center justify-center gap-4 px-6 py-6">
-                        <span class="material-symbols-outlined text-primary-container text-4xl">{{ $info['icon'] }}</span>
+                        <span class="material-symbols-outlined text-primary-container text-4xl">{{ $info->icon }}</span>
                         <div>
-                            <p class="text-body-base font-bold">{{ $info['title'] }}</p>
-                            <p class="text-label-sm text-on-surface-variant">{{ $info['sub'] }}</p>
+                            <p class="text-body-base font-bold">{{ $info->title }}</p>
+                            <p class="text-label-sm text-on-surface-variant">{{ $info->subtitle }}</p>
                         </div>
                     </div>
                 @endforeach
             </div>
         </div>
     </section>
+    @endif
 
     {{-- Featured tabs --}}
     <section class="py-12 bg-white" x-data="{ tab: 'featured' }">
@@ -213,36 +177,47 @@
     </section>
 
     {{-- Television Entertainment — full-width textured background + product slider --}}
-    @php $tvSlides = $tvProducts->chunk(4)->values(); @endphp
-    <section class="bg-cover bg-center bg-no-repeat"
-        style="background-image: url('/assets/images/television-entertainment-bg.webp')">
-        <div class="app-container py-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            {{-- Left: TV visual --}}
-            <div class="flex justify-center">
-                <img src="/assets/images/television-entertainment-tv.png" alt="Television Entertainment"
-                    class="w-full max-w-xl object-contain">
-            </div>
+    @if ($spotlights->isNotEmpty())
+        @php
+            $spotPrimary = $spotlights->first();
+            $spotCategory = $spotPrimary['category'];
+            $tvSlides = collect($spotPrimary['products'])->chunk(4)->values();
+        @endphp
+        <section class="bg-cover bg-center bg-no-repeat"
+            style="background-image: url('/assets/images/television-entertainment-bg.webp')">
+            <div class="app-container py-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                {{-- Left: category visual (uses the category's admin image; falls back to a placeholder) --}}
+                <div class="flex justify-center">
+                    <img src="{{ $spotCategory->image?->url ?: '/assets/images/television-entertainment-tv.png' }}"
+                        alt="{{ $spotCategory->name }}" class="w-full max-w-xl object-contain">
+                </div>
 
-            {{-- Right: slider --}}
-            <x-storefront.carousel title="Television Entertainment" :count="$tvSlides->count()">
-                @foreach ($tvSlides as $slide)
-                    <div class="w-full shrink-0">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            @foreach ($slide as $product)
-                                <x-storefront.product-card-wide :product="$product" />
-                            @endforeach
+                {{-- Right: slider --}}
+                <x-storefront.carousel :title="$spotCategory->name" :count="$tvSlides->count()">
+                    @foreach ($tvSlides as $slide)
+                        <div class="w-full shrink-0">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                @foreach ($slide as $product)
+                                    <x-storefront.product-card-wide :product="$product" />
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
-                @endforeach
-            </x-storefront.carousel>
-        </div>
-    </section>
+                    @endforeach
+                </x-storefront.carousel>
+            </div>
+        </section>
+    @endif
 
-    {{-- Laptops & Computers --}}
-    @php $laptopSlides = $laptops->chunk(6)->values(); @endphp
+    {{-- Second category spotlight (falls back to the latest products) --}}
+    @php
+        $spotSecondary = $spotlights->get(1);
+        $laptopTitle = $spotSecondary['category']->name ?? 'Popular Products';
+        $laptopSlides = collect($spotSecondary['products'] ?? $latestFallback)->chunk(6)->values();
+    @endphp
+    @if ($laptopSlides->isNotEmpty())
     <section class="py-12 bg-white">
         <div class="app-container">
-            <x-storefront.carousel title="Laptops & Computers" :count="$laptopSlides->count()">
+            <x-storefront.carousel :title="$laptopTitle" :count="$laptopSlides->count()">
                 @foreach ($laptopSlides as $slide)
                     <div class="w-full shrink-0">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -256,6 +231,7 @@
             </x-storefront.carousel>
         </div>
     </section>
+    @endif
 
     {{-- Trending Products (single row of 4) --}}
     @php $trendingSlides = $trending->chunk(4)->values(); @endphp
@@ -300,45 +276,40 @@
         </div>
     </section>
 
-    {{-- Top categories — 4x2 grid of horizontal category cards --}}
-    @php
-        $topCategories = [
-            ['name' => 'Accessories', 'image' => 'https://picsum.photos/seed/cat-acc/200/200', 'subs' => ['Cases', 'Chargers', 'Headphone Accessories', 'Headphone Cases', 'Headphones', 'Pendrives']],
-            ['name' => 'Laptops & Computers', 'image' => 'https://picsum.photos/seed/cat-lap/200/200', 'subs' => ['Laptops', 'Desktops', 'Monitors', 'Keyboards']],
-            ['name' => 'TV & Audio', 'image' => 'https://picsum.photos/seed/cat-tv/200/200', 'subs' => []],
-            ['name' => 'All in One', 'image' => 'https://picsum.photos/seed/cat-aio/200/200', 'subs' => []],
-            ['name' => 'Audio Speakers', 'image' => 'https://picsum.photos/seed/cat-spk/200/200', 'subs' => []],
-            ['name' => 'Bluetooth Speakers', 'image' => 'https://picsum.photos/seed/cat-bt/200/200', 'subs' => []],
-            ['name' => 'Cameras', 'image' => 'https://picsum.photos/seed/cat-cam/200/200', 'subs' => []],
-            ['name' => 'Cameras & Photography', 'image' => 'https://picsum.photos/seed/cat-photo/200/200', 'subs' => ['Cameras', 'Photo Cameras', 'Video Cameras']],
-        ];
-    @endphp
+    {{-- Top categories — real category departments (managed in Admin → Categories) --}}
+    @if ($topCategories->isNotEmpty())
     <section class="py-12 bg-white">
         <div class="app-container">
             <x-storefront.section-title title="Top Categories this Month" />
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:[&>*]:border-gray-200 lg:[&>*:not(:nth-child(4n+1))]:border-l">
-                @foreach ($topCategories as $cat)
+                @foreach ($topCategories->take(8) as $cat)
                     <div class="flex items-start gap-4 px-6 py-4">
-                        <a href="{{ route('shop') }}" class="w-20 h-20 shrink-0">
-                            <img src="{{ $cat['image'] }}" alt="{{ $cat['name'] }}" loading="lazy"
-                                class="w-full h-full object-contain">
+                        <a href="{{ route('shop', ['category' => $cat->slug]) }}" class="w-20 h-20 shrink-0">
+                            @if ($cat->image?->url)
+                                <img src="{{ $cat->image->url }}" alt="{{ $cat->name }}" loading="lazy"
+                                    class="w-full h-full object-contain">
+                            @else
+                                <span class="w-full h-full rounded-lg bg-surface-container-low border border-outline-variant/40 grid place-items-center">
+                                    <span class="material-symbols-outlined text-outline">category</span>
+                                </span>
+                            @endif
                         </a>
                         <div class="flex-1 flex flex-col min-h-[170px]">
                             <h4 class="text-base font-semibold text-on-surface mb-3">
-                                <a href="{{ route('shop') }}" class="hover:text-primary transition-colors">{{ $cat['name'] }}</a>
+                                <a href="{{ route('shop', ['category' => $cat->slug]) }}" class="hover:text-primary transition-colors">{{ $cat->name }}</a>
                             </h4>
-                            @if (count($cat['subs']))
+                            @if ($cat->children->isNotEmpty())
                                 <ul class="space-y-1.5 mb-3">
-                                    @foreach ($cat['subs'] as $sub)
+                                    @foreach ($cat->children as $sub)
                                         <li>
-                                            <a href="{{ route('shop') }}"
-                                                class="text-label-sm text-on-surface-variant hover:text-primary transition-colors">{{ $sub }}</a>
+                                            <a href="{{ route('shop', ['category' => $sub->slug]) }}"
+                                                class="text-label-sm text-on-surface-variant hover:text-primary transition-colors">{{ $sub->name }}</a>
                                         </li>
                                     @endforeach
                                 </ul>
                             @endif
-                            <a href="{{ route('shop') }}"
+                            <a href="{{ route('shop', ['category' => $cat->slug]) }}"
                                 class="mt-auto self-end text-label-sm font-bold text-on-surface-variant hover:text-primary transition-colors">See all</a>
                         </div>
                     </div>
@@ -346,39 +317,40 @@
             </div>
         </div>
     </section>
+    @endif
 
     {{-- Promo banners --}}
     <section class="py-12 bg-white">
         <div class="app-container grid grid-cols-1 md:grid-cols-2 gap-8">
-            {{-- G9 Laptops --}}
-            <a href="{{ route('shop') }}"
+            {{-- Inverter coolers --}}
+            <a href="{{ route('shop', ['category' => 'coolers']) }}"
                 class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
                 <div class="max-w-[55%]">
-                    <h3 class="text-headline-md font-bold mb-2 text-on-surface">G9 Laptops with Ultra 4K</h3>
-                    <p class="text-body-base text-on-surface-variant">and the fastest Intel Core i7 processor ever</p>
+                    <h3 class="text-headline-md font-bold mb-2 text-on-surface">Inverter Air Coolers</h3>
+                    <p class="text-body-base text-on-surface-variant">powerful cooling that saves on your electricity bill</p>
                 </div>
-                <img src="/assets/images/banner-laptops.png" alt="G9 Laptops"
+                <img src="/assets/images/banner-laptops.png" alt="Inverter air coolers"
                     class="w-40 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
             </a>
 
-            {{-- smartG3 --}}
-            <a href="{{ route('shop') }}"
+            {{-- SolarMax --}}
+            <a href="{{ route('shop', ['category' => 'solar-plates']) }}"
                 class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
                 <div class="flex items-center gap-5">
                     <div>
                         <p class="text-2xl leading-none">
-                            <span class="font-bold text-on-surface">smart</span><span class="font-bold text-[#29b6f6]">G3</span>
+                            <span class="font-bold text-on-surface">Solar</span><span class="font-bold text-primary-container">Max</span>
                         </p>
-                        <p class="text-label-sm text-on-surface-variant mt-1">Now with 4G</p>
+                        <p class="text-label-sm text-on-surface-variant mt-1">550W Mono PERC</p>
                     </div>
                     <div class="border-l border-outline-variant pl-5">
                         <p class="text-label-sm text-on-surface-variant">from</p>
                         <p class="text-2xl font-bold text-on-surface leading-none">
-                            <span class="text-base align-top">$</span>129<sup class="text-[0.6em] align-super">99</sup>
+                            <span class="text-base align-top">Rs</span> 21,999
                         </p>
                     </div>
                 </div>
-                <img src="/assets/images/banner-smartg3.png" alt="smartG3"
+                <img src="/assets/images/banner-smartg3.png" alt="SolarMax solar panels"
                     class="w-36 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
             </a>
         </div>

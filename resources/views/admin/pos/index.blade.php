@@ -55,7 +55,7 @@
                                     </div>
                                     <div class="text-right shrink-0">
                                         <p class="text-sm font-semibold text-on-surface" x-text="money(p.price)"></p>
-                                        <p class="text-[11px]" :class="p.stock > 0 ? 'text-secondary' : 'text-error'" x-text="p.stock > 0 ? (num(p.stock) + ' in stock') : 'Out of stock'"></p>
+                                        <p class="text-[11px]" :class="(!p.tracked || p.stock > 0) ? 'text-secondary' : 'text-error'" x-text="!p.tracked ? 'Available (dropship)' : (p.stock > 0 ? (num(p.stock) + ' in stock') : 'Out of stock')"></p>
                                     </div>
                                 </button>
                             </template>

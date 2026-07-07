@@ -22,8 +22,25 @@ class SettingsController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('can:settings.view', only: ['show']),
-            new Middleware('can:settings.edit', only: ['update']),
+            new Middleware('can:settings.edit', only: ['update', 'sendTestMail']),
         ];
+    }
+
+    /**
+     * Send a one-off test email to verify the configured SMTP settings. Sent
+     * synchronously so any transport error surfaces immediately in the flash.
+     */
+    public function sendTestMail(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['test_email' => ['required', 'email', 'max:255']]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($data['test_email'])->send(new \App\Mail\TestMail);
+
+            return back()->with('settings_status', 'Test email sent to ' . $data['test_email'] . '. Check the inbox (and spam).');
+        } catch (\Throwable $e) {
+            return back()->with('settings_error', 'Could not send: ' . $e->getMessage());
+        }
     }
 
     public function show(string $group = 'general'): View
@@ -256,10 +273,61 @@ class SettingsController extends Controller implements HasMiddleware
                 'sections' => [
                     [
                         'title' => 'Outgoing mail',
-                        'description' => 'The “from” identity on transactional emails.',
+                        'description' => 'The “from” identity shown on every email the store sends.',
                         'fields' => [
-                            'from_name' => ['input' => 'text', 'label' => 'From name', 'max' => 255, 'rules' => ['required', 'string', 'max:255']],
-                            'from_address' => ['input' => 'email', 'label' => 'From address', 'max' => 255, 'rules' => ['required', 'email', 'max:255']],
+                            'from_name' => ['input' => 'text', 'label' => 'From name', 'max' => 255, 'rules' => ['required', 'string', 'max:255'], 'default' => (string) config('mail.from.name')],
+                            'from_address' => ['input' => 'email', 'label' => 'From address', 'max' => 255, 'rules' => ['required', 'email', 'max:255'], 'default' => (string) config('mail.from.address')],
+                        ],
+                    ],
+                    [
+                        'title' => 'SMTP server',
+                        'description' => 'Credentials from your email provider (e.g. Gmail, Mailgun, SES, Zoho). Leave the host blank to fall back to the server’s .env configuration. Use “Send test email” below to verify.',
+                        'fields' => [
+                            'host' => ['input' => 'text', 'label' => 'SMTP host', 'max' => 255, 'rules' => ['nullable', 'string', 'max:255'], 'placeholder' => 'smtp.mailgun.org', 'help' => 'Your provider’s outgoing mail server.'],
+                            'port' => ['type' => 'int', 'input' => 'number', 'label' => 'Port', 'rules' => ['nullable', 'integer', 'min:1', 'max:65535'], 'placeholder' => '587', 'help' => '587 for TLS, 465 for SSL.'],
+                            'encryption' => ['input' => 'select', 'label' => 'Encryption', 'options' => ['tls' => 'TLS (recommended)', 'ssl' => 'SSL', 'none' => 'None'], 'default' => 'tls', 'rules' => ['nullable', 'in:tls,ssl,none']],
+                            'username' => ['input' => 'text', 'label' => 'Username', 'max' => 255, 'rules' => ['nullable', 'string', 'max:255'], 'help' => 'Usually your full email address.'],
+                            'password' => ['type' => 'encrypted', 'input' => 'secret', 'label' => 'Password', 'rules' => ['nullable', 'string', 'max:255'], 'help' => 'Stored encrypted. Leave blank to keep the current password.'],
+                        ],
+                    ],
+                ],
+            ],
+
+            'emails' => [
+                'label' => 'Email Notifications',
+                'icon' => 'mark_email_read',
+                'sections' => [
+                    [
+                        'title' => 'Customer account',
+                        'description' => 'Emails sent to customers around their account. Switch any off to stop sending it.',
+                        'fields' => [
+                            'registration_welcome' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Welcome email on registration', 'default' => true, 'help' => 'A greeting when a new account is created.'],
+                            'email_verification' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Verify email address', 'default' => true, 'help' => 'Sends a confirmation link to verify the address. Turning this off means addresses are never verified.'],
+                            'password_reset' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Password reset link', 'default' => true, 'help' => 'Required for “forgot password” to work. Off = customers cannot reset their password by email.'],
+                            'password_changed' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Password changed confirmation', 'default' => true, 'help' => 'A security notice after the password changes.'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Orders',
+                        'description' => 'Order lifecycle emails to the customer who placed the order.',
+                        'fields' => [
+                            'order_confirmation' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Order confirmation', 'default' => true, 'help' => 'Sent right after an order is placed, with the full summary.'],
+                            'order_status_update' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Order status updates', 'default' => true, 'help' => 'Sent when the order moves to processing, shipped, delivered, etc.'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Quotations',
+                        'fields' => [
+                            'quotation_sent' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Quotation sent to customer', 'default' => true, 'help' => 'Emailed when a quotation is marked as “sent”.'],
+                        ],
+                    ],
+                    [
+                        'title' => 'Admin alerts',
+                        'description' => 'Internal notifications sent to your support email (Settings → General).',
+                        'fields' => [
+                            'admin_new_order' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'New order received', 'default' => true, 'help' => 'Notify staff whenever a customer places an order.'],
+                            'admin_new_subscriber' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'New newsletter signup', 'default' => true, 'help' => 'Notify staff when someone subscribes to the newsletter.'],
+                            'admin_new_quote_request' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'New quote request', 'default' => true, 'help' => 'Notify staff when a customer submits the “Request a quote” form.'],
                         ],
                     ],
                 ],

@@ -55,6 +55,7 @@
             @if (array_filter($filters))
                 <a href="{{ route('admin.attributes.index') }}" class="px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Reset</a>
             @endif
+            <x-admin.per-page :per-page="$perPage" />
         </form>
 
         {{-- Table --}}
@@ -62,10 +63,10 @@
             <table class="w-full text-left">
                 <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/60">
                     <tr>
-                        <th class="px-6 py-3">Attribute</th>
-                        <th class="px-6 py-3">Type</th>
-                        <th class="px-6 py-3">Values</th>
-                        <th class="px-6 py-3">Variants</th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="name" label="Attribute" /></th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="type" label="Type" /></th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="values" label="Values" /></th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="variants" label="Variants" /></th>
                         <th class="px-6 py-3 text-right">Actions</th>
                     </tr>
                 </thead>

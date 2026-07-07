@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\ResetPasswordMail;
+use App\Mail\VerifyEmailMail;
+use App\Support\Mail\Notifier;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\URL;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, HasRoles, Notifiable, SoftDeletes;
@@ -60,6 +64,31 @@ class User extends Authenticatable
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted',
         ];
+    }
+
+    // Notifications -----------------------------------------------------------
+
+    /** Send the branded email-verification message (gated by the settings toggle). */
+    public function sendEmailVerificationNotification(): void
+    {
+        $minutes = (int) config('auth.verification.expire', 60);
+
+        $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes($minutes), [
+            'id' => $this->getKey(),
+            'hash' => sha1($this->getEmailForVerification()),
+        ]);
+
+        Notifier::send('email_verification', $this->email, new VerifyEmailMail($this, $url, $minutes));
+    }
+
+    /** Send the branded password-reset message (gated by the settings toggle). */
+    public function sendPasswordResetNotification($token): void
+    {
+        $minutes = (int) config('auth.passwords.' . config('auth.defaults.passwords') . '.expire', 60);
+
+        $url = route('password.reset', ['token' => $token, 'email' => $this->getEmailForPasswordReset()]);
+
+        Notifier::send('password_reset', $this->email, new ResetPasswordMail($this, $url, $minutes));
     }
 
     // Authorisation -----------------------------------------------------------

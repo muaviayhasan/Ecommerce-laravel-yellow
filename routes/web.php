@@ -3,18 +3,25 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AttributeController;
 use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\BlogCommentController;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\BlogTagController;
 use App\Http\Controllers\Admin\BomController;
 use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\HeroSlideController;
+use App\Http\Controllers\Admin\InfoBarItemController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\LedgerController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PosController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\PromoCardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductionController;
 use App\Http\Controllers\Admin\PurchaseController;
@@ -23,12 +30,16 @@ use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VendorSaleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Support\SocialLogin;
@@ -38,7 +49,9 @@ use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\CompareController;
 use App\Http\Controllers\Storefront\HomeController;
+use App\Http\Controllers\Storefront\NewsletterController;
 use App\Http\Controllers\Storefront\ProductController;
+use App\Http\Controllers\Storefront\QuoteRequestController;
 use App\Http\Controllers\Storefront\ReviewController as StorefrontReviewController;
 use App\Http\Controllers\Storefront\ShopController;
 use App\Http\Controllers\Storefront\SupportChatController;
@@ -58,6 +71,8 @@ Route::post('/product/{product:slug}/reviews', [StorefrontReviewController::clas
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+Route::post('/blog/{post:slug}/comments', [BlogController::class, 'storeComment'])
+    ->middleware('throttle:6,1')->name('blog.comments.store');
 
 // SEO — dynamic sitemap + robots
 Route::get('/sitemap.xml', [\App\Http\Controllers\Storefront\SitemapController::class, 'index'])->name('sitemap');
@@ -92,6 +107,21 @@ Route::get('/register', [RegisterController::class, 'create'])->name('register')
 Route::post('/register', [RegisterController::class, 'store']);
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
+// Password reset (forgot → emailed link → set new password).
+Route::middleware('guest')->group(function () {
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
+});
+
+// Email verification.
+Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->middleware('auth')->name('verification.notice');
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
+Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])
+    ->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
 // Storefront social sign-in (customers) — Google/Facebook enabled from admin settings.
 Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect'])
     ->whereIn('provider', SocialLogin::PROVIDERS)->name('social.redirect');
@@ -125,6 +155,7 @@ Route::middleware('auth')->prefix('account')->group(function () {
 // Placeholder routes — these pages are built in later modules. They keep the
 // theme's navigation working (no 404s) and render a "coming soon" page.
 $placeholders = [
+    'about' => 'About Us',
     'contact' => 'Contact Us',
 ];
 
@@ -133,6 +164,14 @@ foreach ($placeholders as $uri => $title) {
 }
 
 Route::get('/track-order', fn () => app(HomeController::class)->placeholder('Track Your Order'))->name('track.order');
+
+// Newsletter subscribe (footer) + one-click unsubscribe from marketing emails.
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'store'])->name('newsletter.subscribe');
+Route::get('/newsletter/unsubscribe/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+
+// Request a quote (storefront → draft quotation + staff alert).
+Route::get('/request-quote', [QuoteRequestController::class, 'create'])->name('quote.request');
+Route::post('/request-quote', [QuoteRequestController::class, 'store'])->name('quote.store');
 
 // Support chat widget (public — works for guests and logged-in customers).
 Route::get('/support/messages', [SupportChatController::class, 'state'])->name('support.state');
@@ -153,12 +192,31 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // long-open admin forms don't fail with a 419 (see layouts/admin.blade.php).
     Route::get('keep-alive', fn () => response()->json(['token' => csrf_token()]))->name('keep-alive');
 
+    // The signed-in staff member's own profile (details, photo, password).
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
+
     // Catalog
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('brands', BrandController::class)->except('show');
+    Route::resource('hero-slides', HeroSlideController::class)->except('show');
+    Route::resource('promo-cards', PromoCardController::class)->except('show');
+    Route::resource('info-bar-items', InfoBarItemController::class)->except('show');
     Route::resource('attributes', AttributeController::class)->except('show');
     Route::resource('coupons', CouponController::class)->except('show');
+
+    // Gallery media feed for the image pickers (paginated, newest first).
+    Route::get('media/browse', [MediaController::class, 'browse'])->name('media.browse');
+
+    // Marketing — newsletter subscribers + email campaigns.
+    Route::get('subscribers', [SubscriberController::class, 'index'])->name('subscribers.index');
+    Route::get('subscribers/export', [SubscriberController::class, 'export'])->name('subscribers.export');
+    Route::delete('subscribers/{subscriber}', [SubscriberController::class, 'destroy'])->name('subscribers.destroy');
+    Route::post('campaigns/{campaign}/send', [CampaignController::class, 'send'])->name('campaigns.send');
+    Route::resource('campaigns', CampaignController::class)->except('show');
 
     // People & access
     Route::resource('customers', CustomerController::class)->except('show');
@@ -233,6 +291,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::post('categories/reorder', [BlogCategoryController::class, 'reorder'])->name('categories.reorder');
         Route::resource('categories', BlogCategoryController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
         Route::resource('tags', BlogTagController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
+
+        // Comment moderation + staff replies.
+        Route::get('comments', [BlogCommentController::class, 'index'])->name('comments.index');
+        Route::patch('comments/{comment}/approve', [BlogCommentController::class, 'approve'])->name('comments.approve');
+        Route::post('comments/{comment}/reply', [BlogCommentController::class, 'reply'])->name('comments.reply');
+        Route::delete('comments/{comment}', [BlogCommentController::class, 'destroy'])->name('comments.destroy');
     });
 
     // Ledger — the financial source of truth (read-only): position, trial balance, entries.
@@ -250,4 +314,5 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/settings', fn () => redirect()->route('admin.settings.show', 'general'))->name('settings.index');
     Route::get('/settings/{group}', [SettingsController::class, 'show'])->name('settings.show');
     Route::put('/settings/{group}', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/mail/test', [SettingsController::class, 'sendTestMail'])->name('settings.mail.test');
 });

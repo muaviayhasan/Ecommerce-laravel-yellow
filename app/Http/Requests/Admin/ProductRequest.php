@@ -22,6 +22,7 @@ class ProductRequest extends FormRequest
         $this->merge([
             'is_active' => $this->boolean('is_active'),
             'is_web_listed' => $this->boolean('is_web_listed'),
+            'is_stock_tracked' => $this->boolean('is_stock_tracked'),
             'is_featured' => $this->boolean('is_featured'),
             'is_trending' => $this->boolean('is_trending'),
             'is_bestseller' => $this->boolean('is_bestseller'),
@@ -52,6 +53,22 @@ class ProductRequest extends FormRequest
 
         // Ignore the input block belonging to the mode that isn't active.
         $this->merge($mode === Product::VARIANT_VARIABLE ? ['variant' => []] : ['variants' => []]);
+
+        // Dropship (non-tracked) products never hold stock — force on-hand to zero.
+        if (! $this->boolean('is_stock_tracked')) {
+            $variant = (array) $this->input('variant', []);
+            if ($variant !== []) {
+                $variant['stock_quantity'] = 0;
+                $this->merge(['variant' => $variant]);
+            }
+            $variants = (array) $this->input('variants', []);
+            foreach ($variants as $i => $v) {
+                $variants[$i]['stock_quantity'] = 0;
+            }
+            if ($variants !== []) {
+                $this->merge(['variants' => $variants]);
+            }
+        }
 
         // Specifications: flat [group, label, value] rows → grouped ['Group' => ['Label' => 'Value']].
         $grouped = [];
@@ -85,6 +102,7 @@ class ProductRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($productId)],
             'sku' => ['required', 'string', 'max:255', Rule::unique('products', 'sku')->ignore($productId)],
+            'is_stock_tracked' => ['boolean'],
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'brand_id' => ['nullable', Rule::exists('brands', 'id')],
             'unit_id' => ['nullable', Rule::exists('units', 'id')],

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -59,6 +60,61 @@ class Storefront
     public static function cards($products): Collection
     {
         return $products->map(fn (Product $product) => self::card($product))->values();
+    }
+
+    // --- Per-variant listing (shop grid shows one card per active variant) -------
+
+    /** Active variants of storefront-visible products, with everything a card needs. */
+    public static function variantQuery(): Builder
+    {
+        return ProductVariant::query()
+            ->where('product_variants.is_active', true)
+            ->whereHas('product', fn ($p) => $p->webListed())
+            ->with([
+                'product:id,name,slug,category_id',
+                'product.category:id,name,slug',
+                'product.media',
+                'image',
+                'attributeValues:id,attribute_id,value,label,sort_order',
+            ]);
+    }
+
+    /**
+     * @return array{id:int, variant_id:int, name:string, variant_label:?string, category:?string, price:float, compare:?float, image:string, url:string, slug:string}
+     */
+    public static function variantCard(ProductVariant $variant): array
+    {
+        $product = $variant->product;
+        $retail = (float) $variant->retail_price;
+        $compareRaw = $variant->compare_at_price;
+        $compare = $compareRaw !== null && (float) $compareRaw > $retail ? (float) $compareRaw : null;
+
+        // e.g. "White" or "White / Large" — distinguishes cards of the same product.
+        $label = $variant->attributeValues
+            ->map(fn ($v) => $v->label ?: $v->value)
+            ->filter()->implode(' / ');
+
+        return [
+            'id' => $product->id,
+            'variant_id' => $variant->id,
+            'name' => $product->name,
+            'variant_label' => $label ?: null,
+            'category' => $product->category?->name,
+            'price' => $retail,
+            'compare' => $compare,
+            'image' => $variant->image?->url ?? $product->media->first()?->url ?? self::placeholder(),
+            'url' => route('product.show', $product->slug) . '?variant=' . $variant->id,
+            'slug' => $product->slug,
+        ];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, ProductVariant>|\Illuminate\Database\Eloquent\Collection<int, ProductVariant>  $variants
+     * @return Collection<int, array<string, mixed>>
+     */
+    public static function variantCards($variants): Collection
+    {
+        return $variants->map(fn (ProductVariant $v) => self::variantCard($v))->values();
     }
 
     public static function placeholder(): string

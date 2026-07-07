@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BlogTagRequest;
 use App\Models\BlogTag;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
 
 class BlogTagController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -22,10 +26,23 @@ class BlogTagController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $tags = BlogTag::query()->withCount('posts');
+
+        $this->applyTableSort($tags, $request, [
+            'name' => 'name',
+            'slug' => 'slug',
+            'posts' => 'posts_count',
+        ], fn ($q) => $q->orderBy('name'));
+
+        $perPage = $this->perPageFor($request);
+        $tags = $tags->paginate($perPage)->withQueryString();
+
         return view('admin.blog.tags.index', [
-            'tags' => BlogTag::withCount('posts')->orderBy('name')->get(),
+            'tags' => $tags,
+            'perPage' => $perPage,
+            'filters' => $request->only('sort', 'dir', 'per_page'),
         ]);
     }
 
