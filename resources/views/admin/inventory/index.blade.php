@@ -46,18 +46,19 @@
                 @if (array_filter($filters))
                     <a href="{{ route('admin.inventory.index') }}" class="px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Reset</a>
                 @endif
+                <x-admin.per-page :per-page="$perPage" />
             </form>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/60">
                         <tr>
-                            <th class="px-6 py-3">Variant</th>
-                            <th class="px-6 py-3 text-right">On hand</th>
-                            <th class="px-6 py-3 text-right">Reserved</th>
-                            <th class="px-6 py-3 text-right">Available</th>
-                            <th class="px-6 py-3 text-right">Cost</th>
-                            <th class="px-6 py-3 text-right">Value</th>
+                            <th class="px-6 py-3"><x-admin.sort-header column="variant" label="Variant" /></th>
+                            <th class="px-6 py-3 text-right"><x-admin.sort-header column="onhand" label="On hand" /></th>
+                            <th class="px-6 py-3 text-right"><x-admin.sort-header column="reserved" label="Reserved" /></th>
+                            <th class="px-6 py-3 text-right"><x-admin.sort-header column="available" label="Available" /></th>
+                            <th class="px-6 py-3 text-right"><x-admin.sort-header column="cost" label="Cost" /></th>
+                            <th class="px-6 py-3 text-right"><x-admin.sort-header column="value" label="Value" /></th>
                             <th class="px-6 py-3">Level</th>
                             <th class="px-6 py-3 text-right">Actions</th>
                         </tr>

@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PromoCardRequest;
 use App\Models\Media;
 use App\Models\PromoCard;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
 
 class PromoCardController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -23,15 +27,25 @@ class PromoCardController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $cards = PromoCard::query()->with('image:id,disk,path')->ordered()->get();
+        $cards = PromoCard::query()->with('image:id,disk,path');
+
+        $this->applyTableSort($cards, $request, [
+            'title' => 'title',
+            'sort' => 'sort_order',
+            'status' => 'is_active',
+        ], fn ($q) => $q->orderBy('sort_order')->orderBy('id'));
+
+        $perPage = $this->perPageFor($request);
+        $cards = $cards->paginate($perPage)->withQueryString();
 
         return view('admin.promo-cards.index', [
             'cards' => $cards,
+            'perPage' => $perPage,
             'stats' => [
-                'total' => $cards->count(),
-                'active' => $cards->where('is_active', true)->count(),
+                'total' => PromoCard::count(),
+                'active' => PromoCard::where('is_active', true)->count(),
             ],
         ]);
     }

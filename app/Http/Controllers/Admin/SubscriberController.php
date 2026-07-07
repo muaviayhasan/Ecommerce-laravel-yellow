@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Models\NewsletterSubscriber;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SubscriberController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -30,14 +33,23 @@ class SubscriberController extends Controller implements HasMiddleware
                 $query->where(fn ($q) => $q->where('email', 'like', $term)->orWhere('name', 'like', $term));
             })
             ->when($request->input('status') === 'active', fn ($q) => $q->whereNull('unsubscribed_at'))
-            ->when($request->input('status') === 'unsubscribed', fn ($q) => $q->whereNotNull('unsubscribed_at'))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->input('status') === 'unsubscribed', fn ($q) => $q->whereNotNull('unsubscribed_at'));
+
+        $this->applyTableSort($subscribers, $request, [
+            'email' => 'email',
+            'name' => 'name',
+            'status' => 'unsubscribed_at',
+            'subscribed' => 'subscribed_at',
+            'source' => 'source',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $subscribers = $subscribers->paginate($perPage)->withQueryString();
 
         return view('admin.subscribers.index', [
             'subscribers' => $subscribers,
-            'filters' => $request->only('search', 'status'),
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
+            'perPage' => $perPage,
             'stats' => [
                 'total' => NewsletterSubscriber::count(),
                 'active' => NewsletterSubscriber::whereNull('unsubscribed_at')->count(),

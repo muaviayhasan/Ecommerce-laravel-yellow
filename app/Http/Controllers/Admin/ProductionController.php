@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ProductionRequest;
 use App\Models\Bom;
@@ -17,6 +18,8 @@ use Throwable;
 
 class ProductionController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -37,19 +40,27 @@ class ProductionController extends Controller implements HasMiddleware
                 $q->where('production_number', 'like', $term)
                     ->orWhereHas('variant.product', fn ($p) => $p->where('name', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')));
+
+        $this->applyTableSort($orders, $request, [
+            'run' => 'production_number',
+            'quantity' => 'quantity',
+            'cost' => 'unit_cost',
+            'status' => 'status',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $orders = $orders->paginate($perPage)->withQueryString();
 
         return view('admin.production.index', [
             'orders' => $orders,
+            'perPage' => $perPage,
             'stats' => [
                 'total' => ProductionOrder::count(),
                 'draft' => ProductionOrder::where('status', 'draft')->count(),
                 'completed' => ProductionOrder::where('status', 'completed')->count(),
             ],
-            'filters' => $request->only('search', 'status'),
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
         ]);
     }
 

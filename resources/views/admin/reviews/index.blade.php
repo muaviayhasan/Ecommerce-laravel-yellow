@@ -35,8 +35,18 @@
                 <option value="">Any rating</option>
                 @for ($r = 5; $r >= 1; $r--)<option value="{{ $r }}" @selected((string) ($filters['rating'] ?? '') === (string) $r)>{{ $r }} star{{ $r > 1 ? 's' : '' }}</option>@endfor
             </select>
+            <select name="sort" onchange="this.form.submit()" title="Sort" class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+                <option value="" @selected(! ($filters['sort'] ?? ''))>Newest first</option>
+                <option value="oldest" @selected(($filters['sort'] ?? '') === 'oldest')>Oldest first</option>
+                <option value="rating_high" @selected(($filters['sort'] ?? '') === 'rating_high')>Highest rating</option>
+                <option value="rating_low" @selected(($filters['sort'] ?? '') === 'rating_low')>Lowest rating</option>
+            </select>
             <button type="submit" class="px-4 py-2 bg-primary-container text-white text-sm font-semibold rounded-lg hover:brightness-110 transition-all">Filter</button>
             @if (array_filter($filters))<a href="{{ route('admin.reviews.index') }}" class="px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Reset</a>@endif
+            @php $ppOptions = collect([15, 25, 50, 100])->push((int) $perPage)->unique()->sort()->values(); @endphp
+            <select name="per_page" onchange="this.form.submit()" title="Rows per page" class="ml-auto bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+                @foreach ($ppOptions as $n)<option value="{{ $n }}" @selected($n === (int) $perPage)>{{ $n }} / page</option>@endforeach
+            </select>
         </form>
 
         <div class="divide-y divide-outline-variant/40">

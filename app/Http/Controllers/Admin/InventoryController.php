@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StockAdjustmentRequest;
 use App\Models\Category;
@@ -18,6 +19,8 @@ use Throwable;
 
 class InventoryController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -47,11 +50,19 @@ class InventoryController extends Controller implements HasMiddleware
                     'in' => $q->whereColumn('product_variants.stock_quantity', '>', 'product_variants.low_stock_threshold'),
                     default => null,
                 };
-            })
-            ->orderBy('products.name')
-            ->orderBy('product_variants.id')
-            ->paginate(per_page())
-            ->withQueryString();
+            });
+
+        $this->applyTableSort($variants, $request, [
+            'variant' => 'products.name',
+            'onhand' => 'product_variants.stock_quantity',
+            'reserved' => 'product_variants.reserved_quantity',
+            'available' => fn ($q, $d) => $q->orderByRaw('(product_variants.stock_quantity - product_variants.reserved_quantity) ' . $d),
+            'cost' => 'product_variants.cost',
+            'value' => fn ($q, $d) => $q->orderByRaw('(product_variants.stock_quantity * product_variants.cost) ' . $d),
+        ], fn ($q) => $q->orderBy('products.name')->orderBy('product_variants.id'));
+
+        $perPage = $this->perPageFor($request);
+        $variants = $variants->paginate($perPage)->withQueryString();
 
         // KPI base: active, stock-tracked variants.
         $base = fn () => ProductVariant::where('is_active', true)
@@ -59,6 +70,7 @@ class InventoryController extends Controller implements HasMiddleware
 
         return view('admin.inventory.index', [
             'variants' => $variants,
+            'perPage' => $perPage,
             'categories' => Category::orderBy('name')->pluck('name', 'id'),
             'stats' => [
                 'variants' => $base()->count(),
@@ -66,7 +78,7 @@ class InventoryController extends Controller implements HasMiddleware
                 'out' => $base()->where('stock_quantity', '<=', 0)->count(),
                 'value' => (float) $base()->sum(DB::raw('stock_quantity * cost')),
             ],
-            'filters' => $request->only('search', 'category', 'status'),
+            'filters' => $request->only('search', 'category', 'status', 'sort', 'dir', 'per_page'),
         ]);
     }
 

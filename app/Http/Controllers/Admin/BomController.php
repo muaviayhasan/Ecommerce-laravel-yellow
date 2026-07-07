@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BomRequest;
 use App\Models\Bom;
@@ -17,6 +18,8 @@ use Illuminate\View\View;
 
 class BomController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -36,20 +39,28 @@ class BomController extends Controller implements HasMiddleware
                 $term = '%' . $request->string('search') . '%';
                 $q->where('name', 'like', $term)->orWhereHas('product', fn ($p) => $p->where('name', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+
+        $this->applyTableSort($boms, $request, [
+            'product' => fn ($q, $d) => $q->orderBy(Product::select('name')->whereColumn('products.id', 'boms.product_id'), $d),
+            'output' => 'output_quantity',
+            'components' => 'items_count',
+            'status' => 'is_active',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $boms = $boms->paginate($perPage)->withQueryString();
 
         $boms->each(fn (Bom $b) => $b->computed_cost = $service->unitCost($b));
 
         return view('admin.boms.index', [
             'boms' => $boms,
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Bom::count(),
                 'active' => Bom::where('is_active', true)->count(),
             ],
-            'filters' => $request->only('search', 'status'),
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
         ]);
     }
 

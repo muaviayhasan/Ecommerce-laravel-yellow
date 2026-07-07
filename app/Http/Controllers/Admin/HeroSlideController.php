@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HeroSlideRequest;
 use App\Models\HeroSlide;
 use App\Models\Media;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
 
 class HeroSlideController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -23,15 +27,25 @@ class HeroSlideController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $slides = HeroSlide::query()->with('image:id,disk,path')->ordered()->get();
+        $slides = HeroSlide::query()->with('image:id,disk,path');
+
+        $this->applyTableSort($slides, $request, [
+            'headline' => 'line1',
+            'sort' => 'sort_order',
+            'status' => 'is_active',
+        ], fn ($q) => $q->orderBy('sort_order')->orderBy('id'));
+
+        $perPage = $this->perPageFor($request);
+        $slides = $slides->paginate($perPage)->withQueryString();
 
         return view('admin.hero-slides.index', [
             'slides' => $slides,
+            'perPage' => $perPage,
             'stats' => [
-                'total' => $slides->count(),
-                'active' => $slides->where('is_active', true)->count(),
+                'total' => HeroSlide::count(),
+                'active' => HeroSlide::where('is_active', true)->count(),
             ],
         ]);
     }

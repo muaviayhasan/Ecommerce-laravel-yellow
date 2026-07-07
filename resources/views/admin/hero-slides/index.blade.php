@@ -28,15 +28,18 @@
     </div>
 
     <x-admin.panel class="!p-0 overflow-hidden">
+        <form method="GET" class="p-4 border-b border-outline-variant/60 flex items-center">
+            <x-admin.per-page :per-page="$perPage" />
+        </form>
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/60">
                     <tr>
-                        <th class="px-6 py-3">Slide</th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="headline" label="Slide" /></th>
                         <th class="px-6 py-3">Highlight</th>
                         <th class="px-6 py-3">Button</th>
-                        <th class="px-6 py-3 text-center">Sort</th>
-                        <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3 text-center"><x-admin.sort-header column="sort" label="Sort" /></th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="status" label="Status" /></th>
                         <th class="px-6 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -105,5 +108,11 @@
                 </tbody>
             </table>
         </div>
+
+        @if ($slides->hasPages())
+            <div class="px-6 py-4 border-t border-outline-variant/60">
+                <x-admin.pagination :paginator="$slides" />
+            </div>
+        @endif
     </x-admin.panel>
 @endsection

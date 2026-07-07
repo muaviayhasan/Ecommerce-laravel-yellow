@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,8 @@ use Illuminate\View\View;
 
 class OrderController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     /** Fulfilment statuses an order moves through. */
     public const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'refunded'];
 
@@ -36,20 +39,29 @@ class OrderController extends Controller implements HasMiddleware
                     ->orWhereHas('customer', fn ($c) => $c->where('name', 'like', $term)));
             })
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('payment'), fn ($q) => $q->where('payment_status', $request->string('payment')))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('payment'), fn ($q) => $q->where('payment_status', $request->string('payment')));
+
+        $this->applyTableSort($orders, $request, [
+            'order' => 'order_number',
+            'items' => 'items_count',
+            'total' => 'grand_total',
+            'payment' => 'payment_status',
+            'status' => 'status',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $orders = $orders->paginate($perPage)->withQueryString();
 
         return view('admin.orders.index', [
             'orders' => $orders,
             'statuses' => self::STATUSES,
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Order::count(),
                 'to_fulfil' => Order::whereIn('status', ['pending', 'processing'])->count(),
                 'revenue' => (float) Order::paid()->sum('paid_total'),
             ],
-            'filters' => $request->only('search', 'status', 'payment'),
+            'filters' => $request->only('search', 'status', 'payment', 'sort', 'dir', 'per_page'),
         ]);
     }
 

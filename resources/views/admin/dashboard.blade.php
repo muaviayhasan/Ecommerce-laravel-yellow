@@ -82,17 +82,18 @@
         <x-admin.panel class="col-span-12 lg:col-span-6" title="Top Customers"
             :view-all="\Illuminate\Support\Facades\Route::has('admin.customers.index') ? route('admin.customers.index') : '#'">
             <div class="overflow-x-auto">
-                <table class="w-full text-left">
+                <table class="w-full text-left" x-data="sortableTable">
                     <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/40">
                         <tr>
-                            <th class="pb-4 px-2">Customer</th>
-                            <th class="pb-4 px-2">Type</th>
-                            <th class="pb-4 px-2 text-right">Total Spent</th>
+                            <th class="pb-4 px-2"><x-admin.sort-th col="name" label="Customer" /></th>
+                            <th class="pb-4 px-2"><x-admin.sort-th col="type" label="Type" /></th>
+                            <th class="pb-4 px-2 text-right"><x-admin.sort-th col="spent" label="Total Spent" type="num" /></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-outline-variant/30 text-sm">
                         @forelse ($topCustomers as $customer)
-                            <tr class="hover:bg-surface-container-low transition-colors group">
+                            <tr data-sortable data-name="{{ $customer->name }}" data-type="{{ $customer->type }}" data-spent="{{ (float) ($customer->total_spent ?? 0) }}"
+                                class="hover:bg-surface-container-low transition-colors group">
                                 <td class="py-4 px-2">
                                     <div class="flex items-center gap-3">
                                         <span class="w-9 h-9 rounded-full bg-primary-container text-white grid place-items-center font-bold text-xs shrink-0">
@@ -119,19 +120,22 @@
         <x-admin.panel class="col-span-12 lg:col-span-6" title="Product Overview"
             :view-all="\Illuminate\Support\Facades\Route::has('admin.products.index') ? route('admin.products.index') : '#'">
             <div class="overflow-x-auto">
-                <table class="w-full text-left">
+                <table class="w-full text-left" x-data="sortableTable">
                     <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/40">
                         <tr>
-                            <th class="pb-4 px-2">Name</th>
-                            <th class="pb-4 px-2">SKU</th>
-                            <th class="pb-4 px-2">Price</th>
-                            <th class="pb-4 px-2">Status</th>
+                            <th class="pb-4 px-2"><x-admin.sort-th col="name" label="Name" /></th>
+                            <th class="pb-4 px-2"><x-admin.sort-th col="sku" label="SKU" /></th>
+                            <th class="pb-4 px-2"><x-admin.sort-th col="price" label="Price" type="num" /></th>
+                            <th class="pb-4 px-2"><x-admin.sort-th col="status" label="Status" /></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-outline-variant/30 text-sm">
                         @forelse ($recentProducts as $product)
-                            @php $variant = $product->defaultVariant; @endphp
-                            <tr>
+                            @php
+                                $variant = $product->defaultVariant;
+                                $statusLabel = ($variant && $variant->isOnSale()) ? 'On sale' : ($product->is_active ? 'Active' : 'Draft');
+                            @endphp
+                            <tr data-sortable data-name="{{ $product->name }}" data-sku="{{ $product->sku }}" data-price="{{ (float) ($variant?->retail_price ?? 0) }}" data-status="{{ $statusLabel }}">
                                 <td class="py-4 px-2">
                                     <span class="font-bold text-on-surface">{{ $product->name }}</span>
                                 </td>

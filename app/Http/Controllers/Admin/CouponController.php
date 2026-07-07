@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CouponRequest;
 use App\Models\Coupon;
@@ -13,6 +14,8 @@ use Illuminate\View\View;
 
 class CouponController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -31,14 +34,23 @@ class CouponController extends Controller implements HasMiddleware
                 $term = '%' . $request->string('search') . '%';
                 $query->where(fn ($q) => $q->where('code', 'like', $term)->orWhere('description', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+
+        $this->applyTableSort($coupons, $request, [
+            'code' => 'code',
+            'min' => 'min_subtotal',
+            'usage' => 'used_count',
+            'validity' => 'expires_at',
+            'status' => 'is_active',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $coupons = $coupons->paginate($perPage)->withQueryString();
 
         return view('admin.coupons.index', [
             'coupons' => $coupons,
-            'filters' => $request->only('search', 'status'),
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Coupon::count(),
                 'active' => Coupon::where('is_active', true)->count(),

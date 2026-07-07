@@ -48,6 +48,37 @@
     @livewireScripts
     @stack('scripts')
 
+    {{-- Reusable client-side table sort: <table x-data="sortableTable"> with
+         <tr data-sortable data-<col>="…"> rows and <x-admin.sort-th col="…"> headers. --}}
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('sortableTable', () => ({
+                sortCol: null,
+                sortDir: 'asc',
+                sortBy(col, type = 'text') {
+                    if (this.sortCol === col) {
+                        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.sortCol = col;
+                        this.sortDir = 'asc';
+                    }
+                    const tbody = this.$root.querySelector('tbody'); // $root = the <table> (x-data), not the clicked button
+                    if (!tbody) return;
+                    const rows = Array.from(tbody.querySelectorAll('tr[data-sortable]'));
+                    rows.sort((a, b) => {
+                        let av = a.dataset[col] ?? '';
+                        let bv = b.dataset[col] ?? '';
+                        if (type === 'num') { av = parseFloat(av) || 0; bv = parseFloat(bv) || 0; }
+                        else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+                        const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+                        return this.sortDir === 'asc' ? cmp : -cmp;
+                    });
+                    rows.forEach((r) => tbody.appendChild(r));
+                },
+            }));
+        });
+    </script>
+
     {{-- Keep the session + CSRF token fresh so long-open forms don't 419 on submit. --}}
     <script>
         (function () {

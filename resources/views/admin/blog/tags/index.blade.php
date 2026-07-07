@@ -38,10 +38,14 @@
 
         <div class="col-span-12 {{ auth()->user()->can('blog-tags.create') ? 'lg:col-span-8' : '' }}">
             <x-admin.panel class="!p-0 overflow-hidden">
+                <form method="GET" class="p-3 border-b border-outline-variant/60 flex items-center gap-3">
+                    <span class="text-xs font-semibold text-on-surface-variant">{{ number_format($tags->total()) }} tags</span>
+                    <x-admin.per-page :per-page="$perPage" />
+                </form>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/60">
-                            <tr><th class="px-6 py-3">Name</th><th class="px-6 py-3">Slug</th><th class="px-6 py-3 text-center">Posts</th><th class="px-6 py-3 text-right">Actions</th></tr>
+                            <tr><th class="px-6 py-3"><x-admin.sort-header column="name" label="Name" /></th><th class="px-6 py-3"><x-admin.sort-header column="slug" label="Slug" /></th><th class="px-6 py-3 text-center"><x-admin.sort-header column="posts" label="Posts" /></th><th class="px-6 py-3 text-right">Actions</th></tr>
                         </thead>
                         <tbody class="divide-y divide-outline-variant/40 text-sm">
                             @forelse ($tags as $tag)
@@ -64,6 +68,7 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($tags->hasPages())<div class="px-6 py-4 border-t border-outline-variant/60"><x-admin.pagination :paginator="$tags" /></div>@endif
             </x-admin.panel>
         </div>
     </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CampaignRequest;
 use App\Jobs\SendCampaignJob;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class CampaignController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -31,14 +34,22 @@ class CampaignController extends Controller implements HasMiddleware
         $campaigns = EmailCampaign::query()
             ->with('coupon:id,code')
             ->when($request->filled('search'), fn ($q) => $q->where('subject', 'like', '%' . $request->string('search') . '%'))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')));
+
+        $this->applyTableSort($campaigns, $request, [
+            'subject' => 'subject',
+            'audience' => 'audience',
+            'status' => 'status',
+            'sent' => 'sent_count',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $campaigns = $campaigns->paginate($perPage)->withQueryString();
 
         return view('admin.campaigns.index', [
             'campaigns' => $campaigns,
-            'filters' => $request->only('search', 'status'),
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
+            'perPage' => $perPage,
             'stats' => [
                 'total' => EmailCampaign::count(),
                 'sent' => EmailCampaign::where('status', 'sent')->count(),

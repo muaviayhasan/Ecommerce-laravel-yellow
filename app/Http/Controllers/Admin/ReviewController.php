@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Models\Review;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class ReviewController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -32,14 +35,21 @@ class ReviewController extends Controller implements HasMiddleware
             })
             ->when($request->filled('rating'), fn ($q) => $q->where('rating', (int) $request->integer('rating')))
             ->when($request->input('status') === 'pending', fn ($q) => $q->where('is_approved', false))
-            ->when($request->input('status') === 'approved', fn ($q) => $q->where('is_approved', true))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->input('status') === 'approved', fn ($q) => $q->where('is_approved', true));
+
+        $this->applyTableSort($reviews, $request, [
+            'oldest' => fn ($q) => $q->orderBy('id'),
+            'rating_high' => fn ($q) => $q->orderByDesc('rating')->latest('id'),
+            'rating_low' => fn ($q) => $q->orderBy('rating')->latest('id'),
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $reviews = $reviews->paginate($perPage)->withQueryString();
 
         return view('admin.reviews.index', [
             'reviews' => $reviews,
-            'filters' => $request->only('search', 'status', 'rating'),
+            'filters' => $request->only('search', 'status', 'rating', 'sort', 'per_page'),
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Review::count(),
                 'pending' => Review::where('is_approved', false)->count(),

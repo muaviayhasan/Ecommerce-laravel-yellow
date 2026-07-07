@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Models\Category;
@@ -14,6 +15,8 @@ use Illuminate\View\View;
 
 class CategoryController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -34,21 +37,28 @@ class CategoryController extends Controller implements HasMiddleware
                 $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('slug', 'like', $term));
             })
             ->when($request->filled('parent'), fn ($q) => $q->where('parent_id', $request->integer('parent')))
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'))
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+
+        $this->applyTableSort($categories, $request, [
+            'name' => 'name',
+            'products' => 'products_count',
+            'sort' => 'sort_order',
+            'status' => 'is_active',
+        ], fn ($q) => $q->orderBy('sort_order')->orderBy('name'));
+
+        $perPage = $this->perPageFor($request);
+        $categories = $categories->paginate($perPage)->withQueryString();
 
         return view('admin.categories.index', [
             'categories' => $categories,
             'parents' => Category::orderBy('name')->pluck('name', 'id'),
+            'perPage' => $perPage,
             'stats' => [
                 'total' => Category::count(),
                 'active' => Category::where('is_active', true)->count(),
                 'roots' => Category::whereNull('parent_id')->count(),
             ],
-            'filters' => $request->only('search', 'parent', 'status'),
+            'filters' => $request->only('search', 'parent', 'status', 'sort', 'dir', 'per_page'),
         ]);
     }
 

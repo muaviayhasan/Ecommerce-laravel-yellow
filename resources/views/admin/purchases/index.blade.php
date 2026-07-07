@@ -58,18 +58,19 @@
             @if (array_filter($filters))
                 <a href="{{ route('admin.purchases.index') }}" class="px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Reset</a>
             @endif
+            <x-admin.per-page :per-page="$perPage" />
         </form>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="text-[10px] font-bold text-outline uppercase tracking-widest border-b border-outline-variant/60">
                     <tr>
-                        <th class="px-6 py-3">Purchase</th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="purchase" label="Purchase" /></th>
                         <th class="px-6 py-3">Supplier</th>
-                        <th class="px-6 py-3 text-center">Items</th>
-                        <th class="px-6 py-3 text-right">Total</th>
+                        <th class="px-6 py-3 text-center"><x-admin.sort-header column="items" label="Items" /></th>
+                        <th class="px-6 py-3 text-right"><x-admin.sort-header column="total" label="Total" /></th>
                         <th class="px-6 py-3 text-right">Payable</th>
-                        <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3"><x-admin.sort-header column="status" label="Status" /></th>
                         <th class="px-6 py-3 text-right">Actions</th>
                     </tr>
                 </thead>

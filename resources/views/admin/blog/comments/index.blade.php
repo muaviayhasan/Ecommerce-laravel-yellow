@@ -29,9 +29,9 @@
 
     <x-admin.panel class="!p-0 overflow-hidden">
         {{-- Status tabs --}}
-        <div class="flex items-center gap-1 p-3 border-b border-outline-variant/60">
+        <div class="flex flex-wrap items-center gap-1 p-3 border-b border-outline-variant/60">
             @foreach ($tabs as $key => $label)
-                <a href="{{ route('admin.blog.comments.index', array_filter(['status' => $key])) }}"
+                <a href="{{ route('admin.blog.comments.index', array_filter(['status' => $key, 'sort' => request('sort'), 'per_page' => request('per_page')])) }}"
                     class="px-4 py-1.5 rounded-full text-sm font-semibold transition-colors {{ $active === $key ? 'bg-primary-container text-white' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
                     {{ $label }}
                     @if ($key === 'pending' && $stats['pending'] > 0)
@@ -39,6 +39,17 @@
                     @endif
                 </a>
             @endforeach
+            <form method="GET" class="ml-auto flex items-center gap-2">
+                <input type="hidden" name="status" value="{{ $active }}">
+                <select name="sort" onchange="this.form.submit()" title="Sort" class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+                    <option value="" @selected(! request('sort'))>Newest first</option>
+                    <option value="oldest" @selected(request('sort') === 'oldest')>Oldest first</option>
+                </select>
+                @php $ppOptions = collect([15, 25, 50, 100])->push((int) $perPage)->unique()->sort()->values(); @endphp
+                <select name="per_page" onchange="this.form.submit()" title="Rows per page" class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+                    @foreach ($ppOptions as $n)<option value="{{ $n }}" @selected($n === (int) $perPage)>{{ $n }} / page</option>@endforeach
+                </select>
+            </form>
         </div>
 
         <div class="divide-y divide-outline-variant/40">

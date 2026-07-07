@@ -40,17 +40,18 @@
             </select>
             <button type="submit" class="px-4 py-2 bg-primary-container text-white text-sm font-semibold rounded-lg hover:brightness-110 transition-all">Filter</button>
             @if (array_filter($filters))<a href="{{ route('admin.subscribers.index') }}" class="px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Reset</a>@endif
+            <x-admin.per-page :per-page="$perPage" />
         </form>
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="text-left text-on-surface-variant border-b border-outline-variant/60">
-                        <th class="px-5 py-3 font-semibold">Email</th>
-                        <th class="px-5 py-3 font-semibold">Name</th>
-                        <th class="px-5 py-3 font-semibold">Status</th>
-                        <th class="px-5 py-3 font-semibold">Subscribed</th>
-                        <th class="px-5 py-3 font-semibold">Source</th>
+                        <th class="px-5 py-3 font-semibold"><x-admin.sort-header column="email" label="Email" /></th>
+                        <th class="px-5 py-3 font-semibold"><x-admin.sort-header column="name" label="Name" /></th>
+                        <th class="px-5 py-3 font-semibold"><x-admin.sort-header column="status" label="Status" /></th>
+                        <th class="px-5 py-3 font-semibold"><x-admin.sort-header column="subscribed" label="Subscribed" /></th>
+                        <th class="px-5 py-3 font-semibold"><x-admin.sort-header column="source" label="Source" /></th>
                         <th class="px-5 py-3 font-semibold text-right">Actions</th>
                     </tr>
                 </thead>

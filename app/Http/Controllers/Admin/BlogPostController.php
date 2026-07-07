@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BlogPostRequest;
 use App\Models\BlogCategory;
@@ -17,6 +18,8 @@ use Illuminate\View\View;
 
 class BlogPostController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -33,14 +36,22 @@ class BlogPostController extends Controller implements HasMiddleware
             ->with('author:id,name', 'cover:id,disk,path')
             ->withCount('categories')
             ->when($request->filled('search'), fn ($q) => $q->where('title', 'like', '%' . $request->string('search') . '%'))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->latest('id')
-            ->paginate(per_page())
-            ->withQueryString();
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')));
+
+        $this->applyTableSort($posts, $request, [
+            'post' => 'title',
+            'categories' => 'categories_count',
+            'status' => 'status',
+            'published' => 'published_at',
+        ], fn ($q) => $q->latest('id'));
+
+        $perPage = $this->perPageFor($request);
+        $posts = $posts->paginate($perPage)->withQueryString();
 
         return view('admin.blog.posts.index', [
             'posts' => $posts,
-            'filters' => $request->only('search', 'status'),
+            'perPage' => $perPage,
+            'filters' => $request->only('search', 'status', 'sort', 'dir', 'per_page'),
             'stats' => [
                 'total' => BlogPost::count(),
                 'published' => BlogPost::where('status', 'published')->count(),

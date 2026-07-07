@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\InfoBarItemRequest;
 use App\Models\InfoBarItem;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\View\View;
 
 class InfoBarItemController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -22,15 +26,26 @@ class InfoBarItemController extends Controller implements HasMiddleware
         ];
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $items = InfoBarItem::query()->ordered()->get();
+        $items = InfoBarItem::query();
+
+        $this->applyTableSort($items, $request, [
+            'title' => 'title',
+            'icon' => 'icon',
+            'sort' => 'sort_order',
+            'status' => 'is_active',
+        ], fn ($q) => $q->orderBy('sort_order')->orderBy('id'));
+
+        $perPage = $this->perPageFor($request);
+        $items = $items->paginate($perPage)->withQueryString();
 
         return view('admin.info-bar-items.index', [
             'items' => $items,
+            'perPage' => $perPage,
             'stats' => [
-                'total' => $items->count(),
-                'active' => $items->where('is_active', true)->count(),
+                'total' => InfoBarItem::count(),
+                'active' => InfoBarItem::where('is_active', true)->count(),
             ],
         ]);
     }

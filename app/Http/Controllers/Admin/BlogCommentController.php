@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Models\BlogComment;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class BlogCommentController extends Controller implements HasMiddleware
 {
+    use HandlesTableSort;
+
     public static function middleware(): array
     {
         return [
@@ -30,13 +33,18 @@ class BlogCommentController extends Controller implements HasMiddleware
             ->topLevel()
             ->with(['post:id,title,slug', 'replies' => fn ($q) => $q->oldest()])
             ->when($status === 'pending', fn ($q) => $q->where('is_approved', false))
-            ->when($status === 'approved', fn ($q) => $q->where('is_approved', true))
-            ->latest()
-            ->paginate(15)
-            ->withQueryString();
+            ->when($status === 'approved', fn ($q) => $q->where('is_approved', true));
+
+        $this->applyTableSort($comments, $request, [
+            'oldest' => fn ($q, $d) => $q->oldest(),
+        ], fn ($q) => $q->latest());
+
+        $perPage = $this->perPageFor($request);
+        $comments = $comments->paginate($perPage)->withQueryString();
 
         return view('admin.blog.comments.index', [
             'comments' => $comments,
+            'perPage' => $perPage,
             'filters' => ['status' => $status],
             'stats' => [
                 'total' => BlogComment::topLevel()->count(),
