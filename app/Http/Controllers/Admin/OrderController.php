@@ -175,6 +175,51 @@ class OrderController extends Controller implements HasMiddleware
         return $body . "\nView it: " . route('account.orders.show', $order);
     }
 
+    /** Friendly support-chat message telling the customer who's delivering their order. */
+    private function deliveryMessage(Order $order): string
+    {
+        $num = $order->order_number;
+        $handler = $order->courier;         // rider / courier name
+        $contact = $order->tracking_number; // phone or tracking reference
+
+        $body = match ($order->shipping_method) {
+            'own_rider' => "🛵 Your order {$num} is out for delivery!"
+                . ($handler ? " Our rider {$handler} will bring it to you." : '')
+                . ($contact ? " You can reach them at {$contact} to coordinate the handover." : ''),
+            'courier' => "🚚 Your order {$num} has been handed over for delivery"
+                . ($handler ? " via {$handler}" : '') . '.'
+                . ($contact ? " Tracking: {$contact}." : ''),
+            'pickup' => "🏬 Your order {$num} is ready for pickup."
+                . ($contact ? " Any questions? Contact: {$contact}." : ''),
+            default => "📦 Delivery update for your order {$num}."
+                . ($handler ? " Handled by {$handler}." : '')
+                . ($contact ? " Contact/tracking: {$contact}." : ''),
+        };
+
+        return $body . "\nView it: " . route('account.orders.show', $order);
+    }
+
+    /** Plain-text delivery line for the email body (no chat link / emoji). */
+    private function deliveryEmailLine(Order $order): string
+    {
+        $num = $order->order_number;
+        $handler = $order->courier;
+        $contact = $order->tracking_number;
+
+        return match ($order->shipping_method) {
+            'own_rider' => "Your order {$num} is out for delivery."
+                . ($handler ? " Our rider {$handler} will deliver it." : '')
+                . ($contact ? " You can contact them at {$contact} to coordinate the handover." : ''),
+            'courier' => "Your order {$num} has been handed over for delivery"
+                . ($handler ? " via {$handler}" : '') . '.'
+                . ($contact ? " Tracking: {$contact}." : ''),
+            'pickup' => "Your order {$num} is ready for pickup." . ($contact ? " Contact: {$contact}." : ''),
+            default => "Delivery update for your order {$num}."
+                . ($handler ? " Handled by {$handler}." : '')
+                . ($contact ? " Contact/tracking: {$contact}." : ''),
+        };
+    }
+
     /** Record a customer payment (COD collected / bank transfer received) against the order. */
     public function recordPayment(Request $request, Order $order, \App\Services\SalesService $sales): RedirectResponse
     {
@@ -208,6 +253,25 @@ class OrderController extends Controller implements HasMiddleware
             'tracking_number' => $data['tracking_number'] ?? null,
         ]);
 
-        return back()->with('status', 'Delivery details updated.');
+        // Tell the customer who's bringing their order (and how to reach them) when a
+        // rider/courier is assigned or their details change — support chat + email.
+        $notified = $order->wasChanged(['shipping_method', 'courier', 'tracking_number'])
+            && (filled($order->courier) || filled($order->tracking_number));
+
+        if ($notified) {
+            if ($order->user) {
+                app(\App\Services\SupportBot::class)->notifyUser($order->user, $this->deliveryMessage($order));
+            }
+
+            $order->loadMissing('customer');
+            $customerUrl = $order->user ? route('account.orders.show', $order) : null;
+            \App\Support\Mail\Notifier::send(
+                'order_status_update',
+                $order->customer?->email,
+                new \App\Mail\OrderStatusUpdatedMail($order, $this->deliveryEmailLine($order), $customerUrl),
+            );
+        }
+
+        return back()->with('status', 'Delivery details updated.' . ($notified ? ' The customer has been notified.' : ''));
     }
 }
