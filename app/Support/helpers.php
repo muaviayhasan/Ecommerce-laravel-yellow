@@ -47,6 +47,29 @@ if (! function_exists('setting')) {
     }
 }
 
+if (! function_exists('favicon_url')) {
+    /**
+     * URL of the admin-configured favicon (Settings → General), or null when none
+     * is set so callers can fall back to the bundled default. Resolved once per
+     * request; the stored value is the picked media's id.
+     */
+    function favicon_url(): ?string
+    {
+        static $resolved = false;
+        static $url = null;
+
+        if ($resolved) {
+            return $url;
+        }
+
+        $resolved = true;
+        $id = setting('general', 'favicon');
+        $url = $id ? \App\Models\Media::find($id)?->url : null;
+
+        return $url;
+    }
+}
+
 if (! function_exists('format_money')) {
     /**
      * Format an amount using the configured currency symbol, position, decimals

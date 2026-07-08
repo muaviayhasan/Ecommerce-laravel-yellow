@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    @include('partials.favicon')
+
     {{-- SEO: title, description, canonical, robots, Open Graph, Twitter + global JSON-LD.
          Pages override via @section('title'|'meta_description'|'canonical'|'robots'|'og_image'|'og_type')
          and add page-specific structured data with @push('schema'). --}}

@@ -55,7 +55,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                         @foreach ($section['fields'] as $name => $meta)
                             <div @class([
-                                'md:col-span-2' => in_array($meta['input'] ?? 'text', ['toggle', 'textarea'], true),
+                                'md:col-span-2' => in_array($meta['input'] ?? 'text', ['toggle', 'textarea', 'media'], true),
                             ])>
                                 <x-settings.field :group="$group" :name="$name" :meta="$meta"
                                     :value="$values[$name] ?? ($meta['default'] ?? null)" />

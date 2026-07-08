@@ -8,6 +8,8 @@
 
     <title>@yield('title', 'Dashboard') · {{ setting('general', 'app_name', config('app.name')) }}</title>
 
+    @include('partials.favicon')
+
     {{-- Apply the saved theme before paint to avoid a flash of the wrong mode. --}}
     <script>
         (function () {

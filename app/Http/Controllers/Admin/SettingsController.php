@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
+use App\Models\Media;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,8 @@ class SettingsController extends Controller implements HasMiddleware
         $schema = $this->schema();
         abort_unless(isset($schema[$group]), 404);
 
+        $values = Setting::groupWithDefaults($group, $this->defaults($schema[$group]));
+
         return view('admin.settings.show', [
             'tabs' => collect($schema)->map(fn ($g, $key) => [
                 'key' => $key,
@@ -56,8 +59,8 @@ class SettingsController extends Controller implements HasMiddleware
                 'icon' => $g['icon'],
             ])->values()->all(),
             'group' => $group,
-            'config' => $schema[$group],
-            'values' => Setting::groupWithDefaults($group, $this->defaults($schema[$group])),
+            'config' => $this->hydrateMedia($schema[$group], $values),
+            'values' => $values,
         ]);
     }
 
@@ -115,6 +118,28 @@ class SettingsController extends Controller implements HasMiddleware
     }
 
     /**
+     * Inject the currently-selected Media into any 'media' field so its picker can
+     * preview the existing image (the browse grid itself lazy-loads from the gallery).
+     */
+    private function hydrateMedia(array $config, array $values): array
+    {
+        foreach ($config['sections'] as $si => $section) {
+            foreach ($section['fields'] as $key => $meta) {
+                if (($meta['input'] ?? '') !== 'media' || empty($values[$key])) {
+                    continue;
+                }
+                if ($m = Media::find((int) $values[$key])) {
+                    $config['sections'][$si]['fields'][$key]['media'] = [
+                        ['id' => $m->id, 'url' => $m->url, 'title' => $m->title ?: basename($m->path)],
+                    ];
+                }
+            }
+        }
+
+        return $config;
+    }
+
+    /**
      * The full settings schema: group → label/icon → sections → fields.
      * Field meta: type (storage), input (UI control), rules, options, help, max,
      * default, rows. Keys mirror SettingsSeeder so values round-trip.
@@ -144,6 +169,7 @@ class SettingsController extends Controller implements HasMiddleware
                         'fields' => [
                             'app_name' => ['input' => 'text', 'label' => 'Store name', 'max' => 255, 'rules' => ['required', 'string', 'max:255']],
                             'theme' => ['input' => 'select', 'label' => 'Default theme', 'options' => ['light' => 'Light', 'dark' => 'Dark'], 'rules' => ['required', 'in:light,dark']],
+                            'favicon' => ['input' => 'media', 'label' => 'Favicon', 'rules' => ['nullable', 'integer', 'exists:media,id'], 'help' => 'The small icon shown in the browser tab, for the storefront and admin. A square image (PNG, 256×256 or larger) works best — upload it in the Gallery, then pick it here. Leave empty for the default icon.'],
                         ],
                     ],
                     [
@@ -245,29 +271,6 @@ class SettingsController extends Controller implements HasMiddleware
                             'enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Charge tax', 'help' => 'Apply tax to orders at checkout.'],
                             'rate' => ['type' => 'int', 'input' => 'number', 'label' => 'Tax rate (%)', 'rules' => ['required', 'integer', 'min:0', 'max:100']],
                             'inclusive' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Prices include tax', 'help' => 'Product prices already contain the tax amount.'],
-                        ],
-                    ],
-                ],
-            ],
-
-            'seo' => [
-                'label' => 'SEO',
-                'icon' => 'travel_explore',
-                'sections' => [
-                    [
-                        'title' => 'Meta defaults',
-                        'fields' => [
-                            'title_suffix' => ['input' => 'text', 'label' => 'Title suffix', 'max' => 255, 'rules' => ['nullable', 'string', 'max:255'], 'help' => 'Appended to page titles, e.g. “… | Usman Ecommerce”.'],
-                            'organization_name' => ['input' => 'text', 'label' => 'Organization name', 'max' => 255, 'rules' => ['nullable', 'string', 'max:255']],
-                            'default_meta_description' => ['input' => 'textarea', 'label' => 'Default meta description', 'rows' => 3, 'max' => 500, 'rules' => ['nullable', 'string', 'max:500']],
-                            'default_og_image' => ['input' => 'url', 'label' => 'Default social image URL', 'max' => 2048, 'rules' => ['nullable', 'url', 'max:2048']],
-                        ],
-                    ],
-                    [
-                        'title' => 'Verification & analytics',
-                        'fields' => [
-                            'google_analytics_id' => ['input' => 'text', 'label' => 'Google Analytics ID', 'max' => 50, 'rules' => ['nullable', 'string', 'max:50'], 'help' => 'e.g. G-XXXXXXX'],
-                            'google_site_verification' => ['input' => 'text', 'label' => 'Google site verification', 'max' => 255, 'rules' => ['nullable', 'string', 'max:255']],
                         ],
                     ],
                 ],
