@@ -7,10 +7,14 @@
         'min_subtotal' => $coupon->min_subtotal,
         'max_uses' => $coupon->max_uses,
         'usage_limit_per_customer' => $coupon->usage_limit_per_customer,
+        'first_order_only' => $coupon->first_order_only ?? false,
         'starts_at' => $coupon->starts_at?->format('Y-m-d\TH:i'),
         'expires_at' => $coupon->expires_at?->format('Y-m-d\TH:i'),
         'is_active' => $coupon->is_active ?? true,
     ];
+
+    // Customers this coupon is already restricted to (edit screen); empty on create.
+    $selectedCustomerIds = ($coupon->exists ? $coupon->customers->pluck('id')->all() : []);
 
     $sections = [
         [
@@ -28,7 +32,8 @@
             'fields' => [
                 'min_subtotal' => ['input' => 'number', 'label' => 'Minimum subtotal', 'help' => 'Cart subtotal required to use it (blank = none).'],
                 'max_uses' => ['input' => 'number', 'label' => 'Total redemptions', 'help' => 'Overall cap across all customers (blank = unlimited).'],
-                'usage_limit_per_customer' => ['input' => 'number', 'label' => 'Per-customer limit', 'help' => 'Times one customer may use it (blank = unlimited).'],
+                'usage_limit_per_customer' => ['input' => 'number', 'label' => 'Per-customer limit', 'help' => 'How many times each customer may use it. Set to 1 for once-per-customer. Blank = unlimited.'],
+                'first_order_only' => ['input' => 'toggle', 'label' => 'First order only', 'help' => 'Only customers with no previous orders (a new-customer coupon) — separate from the per-customer limit above.'],
             ],
         ],
         [
@@ -53,4 +58,17 @@
             </div>
         </x-settings.section>
     @endforeach
+
+    <x-settings.section title="Who can use it">
+        <label for="customer_ids" class="block text-sm font-medium text-on-surface-variant mb-1.5">Restrict to specific customers</label>
+        <select id="customer_ids" name="customer_ids[]" multiple data-placeholder="Leave empty for a public coupon"
+            class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-2.5 px-4 text-sm text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none transition">
+            @foreach ($customers as $c)
+                <option value="{{ $c->id }}" @selected(in_array($c->id, old('customer_ids', $selectedCustomerIds)))>{{ $c->name }} — {{ $c->email }}</option>
+            @endforeach
+        </select>
+        <p class="text-xs text-outline mt-1.5">Leave empty for a <span class="font-medium">public</span> coupon (anyone can use it). Selected customers are matched by the email they check out with.</p>
+        @error('customer_ids')<p class="text-xs text-error mt-1">{{ $message }}</p>@enderror
+        @error('customer_ids.*')<p class="text-xs text-error mt-1">One of the selected customers is invalid.</p>@enderror
+    </x-settings.section>
 </div>

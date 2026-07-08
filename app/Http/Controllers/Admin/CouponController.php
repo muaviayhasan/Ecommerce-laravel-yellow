@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CouponRequest;
 use App\Models\Coupon;
+use App\Models\Customer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -64,26 +65,38 @@ class CouponController extends Controller implements HasMiddleware
     {
         return view('admin.coupons.create', [
             'coupon' => new Coupon(['type' => 'percent', 'is_active' => true]),
+            'customers' => $this->customerOptions(),
         ]);
     }
 
     public function store(CouponRequest $request): RedirectResponse
     {
-        Coupon::create($request->validated());
+        $coupon = Coupon::create($request->safe()->except('customer_ids'));
+        $coupon->customers()->sync($request->input('customer_ids', []));
 
         return redirect()->route('admin.coupons.index')->with('status', 'Coupon created.');
     }
 
     public function edit(Coupon $coupon): View
     {
-        return view('admin.coupons.edit', ['coupon' => $coupon]);
+        return view('admin.coupons.edit', [
+            'coupon' => $coupon->load('customers:id'),
+            'customers' => $this->customerOptions(),
+        ]);
     }
 
     public function update(CouponRequest $request, Coupon $coupon): RedirectResponse
     {
-        $coupon->update($request->validated());
+        $coupon->update($request->safe()->except('customer_ids'));
+        $coupon->customers()->sync($request->input('customer_ids', []));
 
         return redirect()->route('admin.coupons.index')->with('status', 'Coupon updated.');
+    }
+
+    /** Customers available to target a coupon at (searchable multi-select). */
+    private function customerOptions()
+    {
+        return Customer::orderBy('name')->get(['id', 'name', 'email']);
     }
 
     public function destroy(Coupon $coupon): RedirectResponse
