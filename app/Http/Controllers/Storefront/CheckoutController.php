@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Events\OrderPlaced;
 use App\Http\Controllers\Controller;
 use App\Mail\Admin\NewOrderMail;
 use App\Mail\OrderConfirmationMail;
@@ -163,6 +164,13 @@ class CheckoutController extends Controller
             Coupon::whereKey($couponOpts['coupon_id'])->increment('used_count');
         }
         session()->forget([self::COUPON_KEY, 'checkout_email']);
+
+        // Realtime ping to the admin header bell. Best-effort — never fail the order.
+        try {
+            broadcast(new OrderPlaced($order->loadMissing('customer')));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $address = [
             'name' => $name, 'company' => $data['company'] ?? null, 'phone' => $data['phone'], 'email' => $data['email'],

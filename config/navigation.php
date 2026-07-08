@@ -107,6 +107,7 @@ return [
                     'route' => 'admin.orders.index',
                     'active' => 'admin.orders.*',
                     'permission' => 'orders.view',
+                    'badge' => 'orders',
                 ],
                 [
                     'label' => 'Quotations',

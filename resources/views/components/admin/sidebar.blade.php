@@ -16,6 +16,25 @@
     $supportUnread = $canSupport
         ? \App\Models\SupportMessage::where('from_admin', false)->whereNull('read_at')->count()
         : 0;
+
+    /** New (pending) online orders, for the Orders nav badge + the header notification bell. */
+    $canOrders = auth()->check() && auth()->user()->can('orders.view');
+    $pendingOrders = $canOrders
+        ? \App\Models\Order::where('channel', 'web')->where('status', 'pending')->count()
+        : 0;
+    $recentOrders = $canOrders
+        ? \App\Models\Order::with('customer:id,name')
+            ->where('channel', 'web')->where('status', 'pending')
+            ->latest('id')->take(6)->get()
+            ->map(fn ($o) => [
+                'id' => $o->id,
+                'number' => $o->order_number,
+                'total' => format_money($o->grand_total),
+                'customer' => $o->customer?->name ?? 'Customer',
+                'url' => route('admin.orders.show', $o),
+                'at' => $o->created_at?->format('M j, H:i'),
+            ])->all()
+        : [];
 @endphp
 
 {{-- Shared off-canvas state for mobile (toggled from the header hamburger). --}}
@@ -62,10 +81,12 @@
                     <div x-data="{ open: @js($groupActive) }">
                         <button @click="open = !open"
                             class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors
-                                   text-on-surface-variant hover:bg-surface-container-high">
+                                {{ $groupActive
+                                    ? 'bg-primary-container text-white font-semibold'
+                                    : 'text-on-surface-variant hover:bg-surface-container-high' }}">
                             <span class="flex items-center gap-3">
                                 <span class="material-symbols-outlined">{{ $item['icon'] ?? 'chevron_right' }}</span>
-                                <span class="font-medium">{{ $item['label'] }}</span>
+                                <span class="{{ $groupActive ? 'font-semibold' : 'font-medium' }}">{{ $item['label'] }}</span>
                             </span>
                             <span class="material-symbols-outlined text-base transition-transform"
                                 :class="open && 'rotate-180'">expand_more</span>
@@ -73,11 +94,16 @@
                         <div x-show="open" x-collapse class="pl-11 space-y-1 pt-1">
                             @foreach ($children as $child)
                                 <a href="{{ $hrefFor($child) }}"
-                                    class="block px-3 py-1.5 text-sm rounded-md transition-colors
+                                    class="flex items-center px-3 py-1.5 text-sm rounded-md transition-colors
                                         {{ $isActive($child)
                                             ? 'text-primary font-semibold'
                                             : 'text-on-surface-variant hover:text-primary' }}">
-                                    {{ $child['label'] }}
+                                    <span>{{ $child['label'] }}</span>
+                                    @if (($child['badge'] ?? null) === 'orders')
+                                        <span x-cloak x-show="$store.orderBadge.count > 0"
+                                            class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-error text-white text-[11px] font-bold grid place-items-center"
+                                            x-text="$store.orderBadge.count"></span>
+                                    @endif
                                 </a>
                             @endforeach
                         </div>
@@ -96,6 +122,10 @@
                         <span x-cloak x-show="$store.supportBadge.count > 0"
                             class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-error text-white text-[11px] font-bold grid place-items-center"
                             x-text="$store.supportBadge.count"></span>
+                    @elseif (($item['badge'] ?? null) === 'orders')
+                        <span x-cloak x-show="$store.orderBadge.count > 0"
+                            class="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-error text-white text-[11px] font-bold grid place-items-center"
+                            x-text="$store.orderBadge.count"></span>
                     @endif
                 </a>
             @endif
@@ -157,6 +187,37 @@
                     .listen('.receipt', (e) => {
                         window.dispatchEvent(new CustomEvent('support:receipt', { detail: e }));
                     });
+            });
+        </script>
+    @endpush
+@endcan
+
+{{-- Order-notification badge store — defined unconditionally so the header bell and the
+     Orders nav badge can read it whatever the viewer's permissions (0 when they can't). --}}
+@push('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('orderBadge', { count: {{ (int) $pendingOrders }}, items: @js($recentOrders) });
+        });
+    </script>
+@endpush
+
+@can('orders.view')
+    @push('scripts')
+        <script>
+            // New storefront orders → bump the header bell + prepend to its dropdown, in realtime.
+            document.addEventListener('DOMContentLoaded', () => {
+                if (!window.Echo) return;
+                window.Echo.private('admin.orders').listen('.order.placed', (e) => {
+                    const badge = window.Alpine?.store('orderBadge');
+                    if (badge) {
+                        badge.count++;
+                        badge.items.unshift(e);
+                        if (badge.items.length > 12) badge.items.pop();
+                    }
+                    if (window.__supportBell) window.__supportBell(); // reuse the notification chime
+                    window.dispatchEvent(new CustomEvent('admin:order', { detail: e }));
+                });
             });
         </script>
     @endpush
