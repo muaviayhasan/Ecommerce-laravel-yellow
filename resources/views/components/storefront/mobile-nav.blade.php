@@ -45,22 +45,25 @@
             @else
                 @php $on = request()->routeIs($item['match']); @endphp
                 <a href="{{ $item['url'] }}" @if ($on) aria-current="page" @endif
-                    class="flex flex-col items-center justify-center gap-1 select-none">
+                    class="relative flex flex-col items-center justify-center gap-1 select-none">
                     <span @class([
-                        'relative grid place-items-center h-8 w-16 rounded-full transition-all duration-300 ease-out',
-                        'bg-primary-container shadow-md shadow-primary/25 nav-pill-on' => $on,
-                        'active:scale-90 active:bg-primary-container/20' => ! $on,
+                        'relative grid place-items-center h-8 w-16 rounded-full transition-all duration-300 ease-out active:scale-90',
+                        'active:bg-primary-container/20' => ! $on,
                     ])>
                         @if (! empty($item['avatar']))
                             <img src="{{ $item['avatar'] }}" alt="" @class(['w-6 h-6 rounded-full object-cover transition-all', 'ring-2 ring-primary' => $on, 'ring-1 ring-outline-variant' => ! $on])>
                         @else
-                            <span class="material-symbols-outlined transition-all {{ $on ? 'text-on-primary-container text-[24px]' : 'text-on-surface-variant text-[22px]' }}" style="{{ $on ? "font-variation-settings:'FILL' 1" : '' }}">{{ $item['icon'] }}</span>
+                            <span class="material-symbols-outlined transition-all {{ $on ? 'text-primary text-[24px]' : 'text-on-surface-variant text-[22px]' }}" style="{{ $on ? "font-variation-settings:'FILL' 1" : '' }}">{{ $item['icon'] }}</span>
                         @endif
                         @if (! empty($item['badge']))
                             <span class="nav-badge absolute top-0 right-2 min-w-4 h-4 px-1 rounded-full bg-error text-white text-[9px] font-bold grid place-items-center ring-2 ring-surface-container-lowest">{{ $item['badge'] }}</span>
                         @endif
                     </span>
                     <span class="text-[10px] leading-none transition-colors {{ $on ? 'text-primary font-bold' : 'text-on-surface-variant font-medium' }}">{{ $item['label'] }}</span>
+                    @if ($on)
+                        {{-- Active dot, pinned to the tab's bottom edge so it never shifts the icon/label. --}}
+                        <span class="nav-badge absolute bottom-1 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full bg-primary"></span>
+                    @endif
                 </a>
             @endif
         @endforeach
