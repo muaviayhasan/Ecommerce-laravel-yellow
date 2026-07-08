@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Mail\Admin\NewOrderMail;
 use App\Mail\OrderConfirmationMail;
+use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\AbandonedCartService;
 use App\Services\CartService;
+use App\Services\CouponService;
 use App\Services\SalesService;
 use App\Services\SupportBot;
 use App\Support\Mail\Notifier;
@@ -26,7 +28,10 @@ class CheckoutController extends Controller
     private const PHONE_RULE = 'regex:/^03\d{2}-?\d{7}$/';
     private const PHONE_MESSAGE = 'Enter a valid mobile number like 0300-0000000.';
 
-    public function __construct(private CartService $cart) {}
+    /** Session key holding the applied coupon code (re-validated on every read). */
+    private const COUPON_KEY = 'checkout_coupon';
+
+    public function __construct(private CartService $cart, private CouponService $coupons) {}
 
     public function index(): View|RedirectResponse
     {
@@ -36,6 +41,8 @@ class CheckoutController extends Controller
 
         $subtotal = $this->cart->subtotal();
         $shipping = $this->shipping($subtotal);
+        $coupon = $this->activeCoupon($subtotal);
+        $discount = $coupon ? $this->coupons->discountFor($coupon, $subtotal) : 0.0;
 
         // Remember they reached checkout so the support bot can nudge if they don't finish.
         if (auth()->check()) {
@@ -48,7 +55,9 @@ class CheckoutController extends Controller
             'items' => $this->cart->items(),
             'subtotal' => $subtotal,
             'shipping' => $shipping,
-            'total' => $subtotal + $shipping,
+            'coupon' => $coupon,
+            'discount' => $discount,
+            'total' => max(0, round($subtotal - $discount + $shipping, 2)),
             'user' => auth()->user(),
             'addresses' => auth()->check()
                 ? auth()->user()->addresses()->orderByDesc('is_default_shipping')->orderByDesc('is_default_billing')->orderBy('id')->get()
@@ -117,7 +126,26 @@ class CheckoutController extends Controller
             ['name' => $name, 'phone' => $data['phone'], 'type' => 'retail', 'price_tier' => 'retail', 'is_active' => true, 'user_id' => auth()->id()],
         );
 
-        $shipping = $this->shipping($this->cart->subtotal());
+        $subtotal = $this->cart->subtotal();
+        $shipping = $this->shipping($subtotal);
+
+        // Re-validate the applied coupon against the final cart + this shopper — the
+        // session value is only a hint; this is the authoritative check. A coupon that
+        // lapsed between apply and submit bounces back rather than silently charging full price.
+        $couponOpts = [];
+        if ($code = session(self::COUPON_KEY)) {
+            [$coupon, $couponError] = $this->coupons->evaluate((string) $code, $subtotal, auth()->id(), $data['email']);
+            if (! $coupon) {
+                session()->forget(self::COUPON_KEY);
+
+                return back()->withInput()->with('coupon_error', $couponError);
+            }
+            $couponOpts = [
+                'discount_type' => $coupon->type,
+                'discount_value' => (float) $coupon->value,
+                'coupon_id' => $coupon->id,
+            ];
+        }
 
         try {
             $order = $sales->place('web', $customer, $lines, [
@@ -125,10 +153,16 @@ class CheckoutController extends Controller
                 'shipping_total' => $shipping,
                 'paid' => 0, // COD / bank transfer — settled later
                 'user_id' => auth()->id(), // so it shows in the customer's account
-            ]);
+            ] + $couponOpts);
         } catch (Throwable $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
+
+        // Redeemed — bump the coupon's global usage counter and drop it from the session.
+        if (! empty($couponOpts['coupon_id'])) {
+            Coupon::whereKey($couponOpts['coupon_id'])->increment('used_count');
+        }
+        session()->forget([self::COUPON_KEY, 'checkout_email']);
 
         $address = [
             'name' => $name, 'company' => $data['company'] ?? null, 'phone' => $data['phone'], 'email' => $data['email'],
@@ -180,6 +214,65 @@ class CheckoutController extends Controller
         session(['last_order_id' => $order->id]);
 
         return redirect()->route('checkout.success');
+    }
+
+    /** Apply a coupon code to the checkout (stored in the session, re-validated on each render). */
+    public function applyCoupon(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'coupon_code' => ['required', 'string', 'max:60'],
+            'email' => ['nullable', 'email'],
+        ]);
+
+        if ($this->cart->isEmpty()) {
+            return redirect()->route('cart')->with('error', 'Your cart is empty.');
+        }
+
+        // The whole checkout form is posted here (formaction), so a guest's typed email is
+        // available for targeted / first-order eligibility — remember it for re-validation.
+        $email = auth()->user()?->email ?? ($request->filled('email') ? (string) $request->input('email') : null);
+        if ($email && ! auth()->check()) {
+            session(['checkout_email' => $email]);
+        }
+
+        $subtotal = $this->cart->subtotal();
+        [$coupon, $error] = $this->coupons->evaluate(
+            (string) $request->input('coupon_code'), $subtotal, auth()->id(), $email,
+        );
+
+        if (! $coupon) {
+            return redirect()->route('checkout')->withInput()->with('coupon_error', $error);
+        }
+
+        session([self::COUPON_KEY => $coupon->code]);
+
+        return redirect()->route('checkout')->withInput()
+            ->with('status', "Coupon “{$coupon->code}” applied — you saved " . format_money($this->coupons->discountFor($coupon, $subtotal)) . '.');
+    }
+
+    /** Remove the applied coupon. */
+    public function removeCoupon(): RedirectResponse
+    {
+        session()->forget(self::COUPON_KEY);
+
+        return redirect()->route('checkout')->withInput()->with('status', 'Coupon removed.');
+    }
+
+    /** The session coupon re-validated against the live cart; forgotten (returns null) if no longer valid. */
+    private function activeCoupon(float $subtotal): ?Coupon
+    {
+        $code = session(self::COUPON_KEY);
+        if (! $code) {
+            return null;
+        }
+
+        $email = auth()->user()?->email ?? session('checkout_email');
+        [$coupon] = $this->coupons->evaluate((string) $code, $subtotal, auth()->id(), $email);
+        if (! $coupon) {
+            session()->forget(self::COUPON_KEY);
+        }
+
+        return $coupon;
     }
 
     /**

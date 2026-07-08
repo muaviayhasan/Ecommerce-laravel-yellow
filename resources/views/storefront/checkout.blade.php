@@ -31,6 +31,12 @@
                 </div>
             @endguest
 
+            @if (session('status'))
+                <div class="mb-5 p-4 rounded-lg bg-green-50 text-green-800 border border-green-200 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-green-600">check_circle</span> {{ session('status') }}
+                </div>
+            @endif
+
             @if (session('error'))
                 <div class="mb-5 p-4 rounded-lg bg-error-container/40 text-on-surface flex items-center gap-2">
                     <span class="material-symbols-outlined text-error">error</span> {{ session('error') }}
@@ -256,8 +262,41 @@
                             @endforeach
                         </div>
 
+                        {{-- Coupon code --}}
+                        <div class="border-b border-outline-variant pb-4 mb-4">
+                            @if ($coupon)
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="font-bold text-green-700 flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[20px]">sell</span>{{ $coupon->code }}
+                                        </p>
+                                        <p class="text-label-sm text-on-surface-variant truncate">{{ $coupon->description ?: 'Discount applied' }}</p>
+                                    </div>
+                                    <button type="submit" formaction="{{ route('checkout.coupon.remove') }}" formnovalidate
+                                        class="text-label-sm text-error hover:underline font-bold shrink-0 mt-0.5">Remove</button>
+                                </div>
+                            @else
+                                <label for="coupon_code" class="block text-label-sm font-bold text-on-surface-variant mb-1.5">Have a coupon code?</label>
+                                <div class="flex gap-2">
+                                    <input id="coupon_code" name="coupon_code" type="text" value="{{ old('coupon_code') }}"
+                                        placeholder="Enter code" autocomplete="off" autocapitalize="characters"
+                                        class="flex-1 min-w-0 px-3 py-2.5 border border-outline-variant rounded-lg uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                                    <button type="submit" formaction="{{ route('checkout.coupon.apply') }}" formnovalidate
+                                        class="px-4 py-2.5 rounded-lg border border-primary text-primary font-bold hover:bg-primary-container/10 transition-colors whitespace-nowrap">Apply</button>
+                                </div>
+                                @if (session('coupon_error'))
+                                    <p class="text-error text-label-sm mt-1.5 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[16px]">error</span>{{ session('coupon_error') }}
+                                    </p>
+                                @endif
+                            @endif
+                        </div>
+
                         <div class="space-y-2.5 border-b border-outline-variant pb-4 mb-4 text-body-base">
                             <div class="flex justify-between"><span class="text-on-surface-variant">Subtotal</span><span class="font-medium">{{ format_money($subtotal) }}</span></div>
+                            @if ($discount > 0)
+                                <div class="flex justify-between text-green-700"><span>Discount{{ $coupon ? ' (' . $coupon->code . ')' : '' }}</span><span class="font-medium">&minus;{{ format_money($discount) }}</span></div>
+                            @endif
                             <div class="flex justify-between"><span class="text-on-surface-variant">Shipping</span><span class="font-medium">{{ $shipping > 0 ? format_money($shipping) : 'Free' }}</span></div>
                             <div class="flex justify-between pt-1"><span class="text-lg font-bold">Total</span><span class="text-lg font-bold text-primary">{{ format_money($total) }}</span></div>
                         </div>

@@ -26,7 +26,7 @@ class SalesService
 
     /**
      * @param  array<int, array{variant: ProductVariant, quantity: float, unit_price?: float}>  $lines
-     * @param  array{payment_method?: string, paid?: float, pay_full?: bool, tax_total?: float, tax_rate?: float, shipping_total?: float, discount_total?: float, discount_type?: string, discount_value?: float, shipping_method?: ?string, courier?: ?string, tracking_number?: ?string, quotation_id?: int}  $opts
+     * @param  array{payment_method?: string, paid?: float, pay_full?: bool, tax_total?: float, tax_rate?: float, shipping_total?: float, discount_total?: float, discount_type?: string, discount_value?: float, coupon_id?: int, shipping_method?: ?string, courier?: ?string, tracking_number?: ?string, quotation_id?: int}  $opts
      */
     public function place(string $channel, ?Customer $customer, array $lines, array $opts = []): Order
     {
@@ -100,6 +100,7 @@ class SalesService
                 'discount_type' => $discountType,
                 'discount_value' => $discountValue,
                 'discount_total' => $discount,
+                'coupon_id' => $opts['coupon_id'] ?? null,
                 'tax_total' => $tax,
                 'shipping_total' => $shipping,
                 'shipping_method' => $opts['shipping_method'] ?? null,

@@ -105,6 +105,9 @@ Route::delete('/compare', [CompareController::class, 'clear'])->name('compare.cl
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+// Coupon code apply/remove (throttled to blunt code brute-forcing).
+Route::post('/checkout/coupon', [CheckoutController::class, 'applyCoupon'])->middleware('throttle:10,1')->name('checkout.coupon.apply');
+Route::post('/checkout/coupon/remove', [CheckoutController::class, 'removeCoupon'])->name('checkout.coupon.remove');
 // Progressive email capture for abandoned-cart recovery (guests, on email entry).
 Route::post('/checkout/capture', [CheckoutController::class, 'capture'])->name('checkout.capture');
 Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
