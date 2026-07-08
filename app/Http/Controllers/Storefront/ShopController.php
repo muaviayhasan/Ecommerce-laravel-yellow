@@ -58,9 +58,6 @@ class ShopController extends Controller
             'products' => $paginator,
             'recommended' => Storefront::cards(Storefront::query()->latest('published_at')->take(8)->get()),
             'latest' => Storefront::cards(Storefront::query()->latest('published_at')->take(3)->get()),
-            'featured' => Storefront::cards(Storefront::query()->featured()->take(2)->get()),
-            'topSelling' => Storefront::cards(Storefront::query()->bestseller()->take(2)->get()),
-            'onSale' => Storefront::cards(Storefront::onSaleQuery()->take(1)->get()),
             'categories' => Category::query()->where('is_active', true)->whereNull('parent_id')
                 ->with(['children' => fn ($c) => $c->where('is_active', true)->orderBy('name')])
                 ->withCount(['products' => fn ($q) => $q->webListed()])

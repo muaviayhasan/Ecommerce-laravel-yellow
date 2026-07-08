@@ -180,11 +180,7 @@
 
     <x-storefront.brand-strip />
 
-    <x-storefront.product-columns :columns="[
-        ['title' => 'Featured Products', 'items' => $featured, 'rating' => null],
-        ['title' => 'Top Selling Products', 'items' => $topSelling, 'rating' => null],
-        ['title' => 'On-sale Products', 'items' => $onSale, 'rating' => 5],
-    ]" />
+    <x-storefront.product-columns />
 
     @push('scripts')
         <script>

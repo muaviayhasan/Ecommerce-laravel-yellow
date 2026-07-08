@@ -114,9 +114,6 @@ class ProductController extends Controller
             'related' => $related,
             'moreProducts' => $latestOthers->reverse()->take(4)->values(),
             'latest' => Storefront::cards(Storefront::query()->latest('published_at')->take(3)->get()),
-            'featured' => Storefront::cards(Storefront::query()->featured()->take(2)->get()),
-            'topSelling' => Storefront::cards(Storefront::query()->bestseller()->take(2)->get()),
-            'onSale' => Storefront::cards(Storefront::onSaleQuery()->take(1)->get()),
         ]);
     }
 

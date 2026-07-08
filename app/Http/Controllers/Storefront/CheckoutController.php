@@ -14,7 +14,6 @@ use App\Services\CartService;
 use App\Services\SalesService;
 use App\Services\SupportBot;
 use App\Support\Mail\Notifier;
-use App\Support\Storefront;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -54,9 +53,6 @@ class CheckoutController extends Controller
             'addresses' => auth()->check()
                 ? auth()->user()->addresses()->orderByDesc('is_default_shipping')->orderByDesc('is_default_billing')->orderBy('id')->get()
                 : collect(),
-            'featured' => Storefront::cards(Storefront::query()->featured()->take(2)->get()),
-            'topSelling' => Storefront::cards(Storefront::query()->bestseller()->take(2)->get()),
-            'onSale' => Storefront::cards(Storefront::onSaleQuery()->take(2)->get()),
         ]);
     }
 

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\BlogTag;
-use App\Support\Storefront;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -81,9 +80,6 @@ class BlogController extends Controller
             'categories' => $this->categories(),
             'recentPosts' => $this->recent($post->id),
             'tags' => $this->tags(),
-            'featured' => Storefront::cards(Storefront::query()->featured()->take(2)->get()),
-            'topSelling' => Storefront::cards(Storefront::query()->bestseller()->take(1)->get()),
-            'onSale' => Storefront::cards(Storefront::onSaleQuery()->take(1)->get()),
         ]);
     }
 

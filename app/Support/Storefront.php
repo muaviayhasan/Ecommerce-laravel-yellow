@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
@@ -60,6 +61,50 @@ class Storefront
     public static function cards($products): Collection
     {
         return $products->map(fn (Product $product) => self::card($product))->values();
+    }
+
+    /**
+     * The three product columns rendered by <x-storefront.product-columns>
+     * (Featured / Top Selling / On-sale). Featured and Top Selling fall back to
+     * the latest products so a thin catalog never shows a blank column. This is
+     * the single source of truth, so the section is identical on every page.
+     *
+     * @return array<int, array{title: string, items: Collection<int, array<string, mixed>>, rating: int|null}>
+     */
+    public static function promoColumns(int $perColumn = 3): array
+    {
+        $latest = self::cards(self::query()->latest('published_at')->take($perColumn)->get());
+        $orLatest = fn (Collection $cards): Collection => $cards->isEmpty() ? $latest : $cards;
+
+        return [
+            ['title' => 'Featured Products', 'items' => $orLatest(self::cards(self::query()->featured()->latest('published_at')->take($perColumn)->get())), 'rating' => null],
+            ['title' => 'Top Selling Products', 'items' => $orLatest(self::cards(self::query()->bestseller()->latest('published_at')->take($perColumn)->get())), 'rating' => null],
+            ['title' => 'On-sale Products', 'items' => self::cards(self::onSaleQuery()->take($perColumn)->get()), 'rating' => 5],
+        ];
+    }
+
+    /**
+     * A representative image for a category — its own image, else the newest
+     * product within it or its children. Powers the promo banners so they mirror
+     * the live catalog. Null when nothing suitable exists.
+     */
+    public static function categoryImage(string $slug): ?string
+    {
+        $category = Category::query()->where('slug', $slug)->with('image')->first();
+
+        if ($category?->image?->url) {
+            return $category->image->url;
+        }
+
+        $slugs = $category
+            ? collect([$category->slug])->merge($category->children()->pluck('slug'))->all()
+            : [$slug];
+
+        return self::cards(
+            self::query()
+                ->whereHas('category', fn ($q) => $q->whereIn('slug', $slugs))
+                ->latest('published_at')->take(1)->get()
+        )->first()['image'] ?? null;
     }
 
     // --- Per-variant listing (shop grid shows one card per active variant) -------

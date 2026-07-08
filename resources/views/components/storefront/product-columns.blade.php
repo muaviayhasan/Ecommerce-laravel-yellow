@@ -1,7 +1,22 @@
 @props([
-    'columns', // array of ['title' => string, 'items' => iterable, 'rating' => int|null]
+    'columns' => null, // ['title' => string, 'items' => iterable, 'rating' => int|null][]; defaults site-wide
     'solarImage' => null, // representative solar image; falls back to the static banner
 ])
+
+@php
+    // Self-contained (like <x-storefront.brand-strip>) so every page renders an
+    // identical section from one source of truth. Callers may still pass :columns
+    // to override (e.g. the 404 page). Guarded so the section can never turn a
+    // page — least of all an error page — into a 500.
+    if ($columns === null || $solarImage === null) {
+        try {
+            $columns ??= \App\Support\Storefront::promoColumns();
+            $solarImage ??= \App\Support\Storefront::categoryImage('solar-plates');
+        } catch (\Throwable $e) {
+            $columns ??= [];
+        }
+    }
+@endphp
 
 {{-- Featured / Top Selling / On-sale product lists + a SolarMax promo banner. --}}
 <section class="py-12 bg-white border-t border-gray-200">

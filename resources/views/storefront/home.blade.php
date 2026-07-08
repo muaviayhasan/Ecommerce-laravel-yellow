@@ -372,9 +372,5 @@
 
     <x-storefront.brand-strip />
 
-    <x-storefront.product-columns :solar-image="$promoBanners['solar'] ?? null" :columns="[
-        ['title' => 'Featured Products', 'items' => $featured->take(3), 'rating' => null],
-        ['title' => 'Top Selling Products', 'items' => $bestsellers->take(3), 'rating' => null],
-        ['title' => 'On-sale Products', 'items' => $onSale->take(3), 'rating' => 5],
-    ]" />
+    <x-storefront.product-columns />
 @endsection
