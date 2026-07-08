@@ -150,8 +150,11 @@
                         this._bell = new Audio('/assets/bells/user_notif.mp3');
                         this._bell.volume = 0.5;
                         const unlock = () => {
-                            const v = this._bell.volume; this._bell.volume = 0;
-                            this._bell.play().then(() => { this._bell.pause(); this._bell.currentTime = 0; this._bell.volume = v; }).catch(() => { this._bell.volume = v; });
+                            // Prime autoplay on the first gesture, but keep the priming play itself
+                            // hard-muted: volume:0 alone can leak a brief click on some browsers
+                            // (notably on Windows), which made the bell "ring" on every page load.
+                            const b = this._bell, done = () => { b.pause(); b.currentTime = 0; b.muted = false; };
+                            b.muted = true; b.play().then(done).catch(done);
                             window.removeEventListener('pointerdown', unlock, true);
                             window.removeEventListener('keydown', unlock, true);
                         };

@@ -118,8 +118,11 @@
                 const make = () => { audio = new Audio('/assets/bells/admin_notif.mp3'); audio.volume = 0.5; };
                 const unlock = () => {
                     if (!audio) make();
-                    const v = audio.volume; audio.volume = 0;
-                    audio.play().then(() => { audio.pause(); audio.currentTime = 0; audio.volume = v; }).catch(() => { audio.volume = v; });
+                    // Prime autoplay on the first gesture, but keep the priming play itself
+                    // hard-muted: volume:0 alone can leak a brief click on some browsers
+                    // (notably on Windows), which made the bell "ring" on every page load.
+                    const done = () => { audio.pause(); audio.currentTime = 0; audio.muted = false; };
+                    audio.muted = true; audio.play().then(done).catch(done);
                     window.removeEventListener('pointerdown', unlock, true);
                     window.removeEventListener('keydown', unlock, true);
                 };
