@@ -45,10 +45,32 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-label-sm font-medium mb-1">Email</label>
+                    <div class="flex items-center gap-2 mb-1">
+                        <label class="block text-label-sm font-medium">Email</label>
+                        @if ($user->hasVerifiedEmail())
+                            <span class="inline-flex items-center gap-1 text-blue-600 text-label-sm font-semibold"
+                                @if ($user->email_verified_at) title="Verified on {{ $user->email_verified_at->format('d M Y') }}" @endif>
+                                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1;">verified</span> Verified
+                            </span>
+                        @elseif (setting('emails', 'email_verification', true))
+                            <span class="inline-flex items-center gap-1 text-amber-600 text-label-sm font-semibold">
+                                <span class="material-symbols-outlined text-[16px]">gpp_maybe</span> Not verified
+                            </span>
+                        @endif
+                    </div>
                     <input type="email" value="{{ $user->email }}" disabled
                         class="w-full rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2.5 text-on-surface-variant cursor-not-allowed">
-                    <p class="text-label-sm text-on-surface-variant mt-1">Email can't be changed here. Contact support if you need to update it.</p>
+                    @if (! $user->hasVerifiedEmail() && setting('emails', 'email_verification', true))
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
+                            <p class="text-label-sm text-on-surface-variant">Verifying is optional but recommended.</p>
+                            <form method="POST" action="{{ route('verification.send') }}">
+                                @csrf
+                                <button type="submit" class="text-primary font-semibold text-label-sm hover:underline">Resend verification email</button>
+                            </form>
+                        </div>
+                    @else
+                        <p class="text-label-sm text-on-surface-variant mt-1">Email can't be changed here. Contact support if you need to update it.</p>
+                    @endif
                 </div>
                 <div>
                     <button type="submit" class="bg-primary-container text-on-primary-container px-8 py-3 rounded-full font-bold hover:brightness-105 transition">Save changes</button>

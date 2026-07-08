@@ -37,7 +37,13 @@
                     </div>
                     <div class="min-w-0">
                         <p class="font-bold truncate">{{ $user->name }}</p>
-                        <p class="text-label-sm text-on-surface-variant truncate">{{ $user->email }}</p>
+                        <p class="text-label-sm text-on-surface-variant flex items-center gap-1 min-w-0">
+                            <span class="truncate">{{ $user->email }}</span>
+                            @if ($user->hasVerifiedEmail())
+                                <span class="material-symbols-outlined text-blue-600 text-[15px] shrink-0"
+                                    style="font-variation-settings:'FILL' 1;" title="Email verified">verified</span>
+                            @endif
+                        </p>
                     </div>
                 </div>
                 <nav class="p-2">
@@ -69,6 +75,30 @@
                 @if (session('error'))
                     <div class="p-4 rounded-lg bg-error-container/40 text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-error">error</span> {{ session('error') }}
+                    </div>
+                @endif
+
+                {{-- Optional, non-blocking nudge to verify the email (dismissible for the session). --}}
+                @if (! $user->hasVerifiedEmail() && setting('emails', 'email_verification', true))
+                    <div x-data="{ show: sessionStorage.getItem('hideVerifyBanner') !== '1' }" x-show="show" x-cloak
+                        class="p-4 rounded-lg bg-primary-container/20 border border-primary-container/60 flex items-start gap-3">
+                        <span class="material-symbols-outlined text-primary shrink-0">mark_email_unread</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-on-surface">Verify your email address</p>
+                            <p class="text-label-sm text-on-surface-variant mt-0.5">
+                                We’ve emailed a confirmation link to <span class="font-semibold">{{ $user->email }}</span>. It’s optional — but verifying helps keep your account secure and easier to recover.
+                            </p>
+                            <form method="POST" action="{{ route('verification.send') }}" class="mt-2">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center gap-1.5 text-primary font-bold text-label-sm hover:underline">
+                                    <span class="material-symbols-outlined text-[18px]">outgoing_mail</span> Resend verification email
+                                </button>
+                            </form>
+                        </div>
+                        <button type="button" @click="show = false; sessionStorage.setItem('hideVerifyBanner','1')"
+                            class="shrink-0 text-on-surface-variant hover:text-on-surface transition-colors" title="Dismiss">
+                            <span class="material-symbols-outlined text-[20px]">close</span>
+                        </button>
                     </div>
                 @endif
 
