@@ -27,6 +27,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // shouldn't dump the bare 419 page. Bounce back to the form with the
         // input preserved and a notice so nothing typed is lost.
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            // Signing out must never fail on a stale token — just log the user out
+            // cleanly and send them to the right login screen, whatever the token state.
+            if ($request->is('logout', 'admin/logout')) {
+                $admin = $request->is('admin/logout');
+                auth()->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route($admin ? 'admin.login' : 'login');
+            }
+
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Your session was refreshed. Please retry.'], 419);
             }
