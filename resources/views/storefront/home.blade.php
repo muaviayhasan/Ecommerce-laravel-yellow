@@ -3,6 +3,14 @@
 @section('title', config('app.name') . ' — Electronics Marketplace')
 @section('meta_description', 'Shop the latest electronics — phones, laptops, cameras, audio and more at ' . config('app.name') . '.')
 
+{{-- The first hero slide's image is the LCP candidate — preload it so the fetch
+     starts with the document instead of after layout. --}}
+@if (($firstHeroImage = $heroSlides->first()?->image_url) !== null)
+    @push('head')
+        <link rel="preload" as="image" href="{{ $firstHeroImage }}" fetchpriority="high">
+    @endpush
+@endif
+
 @section('content')
     {{-- Hero slider — slides are managed in Admin → Ecommerce → Hero Slides.
          Images use transparent PNG product cut-outs (object-contain), so the
@@ -59,7 +67,8 @@
                             @if ($slide->image_url)
                                 <div class="absolute right-0 top-0 bottom-0 w-2/5 md:w-1/2 flex items-center justify-center p-3 md:p-8">
                                     <img class="max-w-full max-h-full w-auto object-contain"
-                                        src="{{ $slide->image_url }}" alt="{{ $slide->image_alt }}"
+                                        src="{{ $slide->image_url }}" alt="{{ $slide->image_alt }}" decoding="async"
+                                        @if ($slide->image?->width) width="{{ $slide->image->width }}" height="{{ $slide->image->height }}" @endif
                                         @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
                                 </div>
                             @endif
@@ -92,7 +101,7 @@
                     {{-- Image first (left), text second (right) --}}
                     @if ($promo->image_url)
                         <img src="{{ $promo->image_url }}" alt="{{ $promo->image_alt ?: $promo->title }}" loading="lazy"
-                            class="w-24 h-24 object-contain shrink-0">
+                            width="96" height="96" decoding="async" class="w-24 h-24 object-contain shrink-0">
                     @endif
                     <div class="flex-1 min-w-0">
                         @if ($promo->kicker)
@@ -188,8 +197,8 @@
             <div class="app-container py-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 {{-- Left: category visual (uses the category's admin image; falls back to a placeholder) --}}
                 <div class="flex justify-center">
-                    <img src="{{ $spotCategory->image?->url ?: '/assets/images/television-entertainment-tv.png' }}"
-                        alt="{{ $spotCategory->name }}" class="w-full max-w-xl object-contain">
+                    <img src="{{ $spotCategory->image?->thumbUrl(800) ?: '/assets/images/television-entertainment-tv.png' }}"
+                        alt="{{ $spotCategory->name }}" loading="lazy" decoding="async" class="w-full max-w-xl object-contain">
                 </div>
 
                 {{-- Right: slider --}}
@@ -287,8 +296,8 @@
                     <div class="flex items-start gap-4 px-6 py-4">
                         <a href="{{ route('shop', ['category' => $cat->slug]) }}" class="w-20 h-20 shrink-0">
                             @if ($cat->image?->url)
-                                <img src="{{ $cat->image->url }}" alt="{{ $cat->name }}" loading="lazy"
-                                    class="w-full h-full object-contain">
+                                <img src="{{ $cat->image->thumbUrl(160) }}" alt="{{ $cat->name }}" loading="lazy"
+                                    width="80" height="80" decoding="async" class="w-full h-full object-contain">
                             @else
                                 <span class="w-full h-full rounded-lg bg-surface-container-low border border-outline-variant/40 grid place-items-center">
                                     <span class="material-symbols-outlined text-outline">category</span>

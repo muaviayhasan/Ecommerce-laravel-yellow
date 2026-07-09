@@ -48,7 +48,7 @@ class Storefront
             'category' => $product->category?->name,
             'price' => $retail,
             'compare' => $compare,
-            'image' => $product->media->first()?->url ?? $variant?->image?->url ?? self::placeholder(),
+            'image' => $product->media->first()?->thumbUrl(400) ?? $variant?->image?->thumbUrl(400) ?? self::placeholder(),
             'url' => route('product.show', $product->slug),
             'slug' => $product->slug,
         ];
@@ -93,7 +93,7 @@ class Storefront
         $category = Category::query()->where('slug', $slug)->with('image')->first();
 
         if ($category?->image?->url) {
-            return $category->image->url;
+            return $category->image->thumbUrl(400);
         }
 
         $slugs = $category
@@ -147,7 +147,7 @@ class Storefront
             'category' => $product->category?->name,
             'price' => $retail,
             'compare' => $compare,
-            'image' => $variant->image?->url ?? $product->media->first()?->url ?? self::placeholder(),
+            'image' => $variant->image?->thumbUrl(400) ?? $product->media->first()?->thumbUrl(400) ?? self::placeholder(),
             'url' => route('product.show', $product->slug) . '?variant=' . $variant->id,
             'slug' => $product->slug,
         ];

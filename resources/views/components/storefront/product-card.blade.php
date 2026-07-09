@@ -26,7 +26,7 @@
     @endif
 
     <a href="{{ $url }}" class="block aspect-square mb-4">
-        <img src="{{ $image }}" alt="{{ $name }}" loading="lazy"
+        <img src="{{ $image }}" alt="{{ $name }}" loading="lazy" width="400" height="400" decoding="async"
             class="w-full h-full object-contain transition-transform group-hover:scale-105">
     </a>
 

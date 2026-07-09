@@ -3,7 +3,7 @@
 @section('title', $product['name'] . ' — ' . config('app.name'))
 @section('meta_description', \Illuminate\Support\Str::limit(strip_tags($product['short_description'] ?: ($product['description'] ?: ($product['features'][0] ?? $product['name']))), 155))
 @section('og_type', 'product')
-@section('og_image', $product['image'])
+@section('og_image', $product['og_image'] ?? $product['image'])
 
 @php
     $currency = setting('general', 'currency', 'PKR');

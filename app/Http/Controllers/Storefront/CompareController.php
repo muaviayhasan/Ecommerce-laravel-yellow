@@ -58,7 +58,7 @@ class CompareController extends Controller
             'variant_id' => $variant?->id,
             'name' => $product->name,
             'url' => route('product.show', $product->slug),
-            'image' => $product->media->first()?->url ?? $variant?->image?->url ?? Storefront::placeholder(),
+            'image' => $product->media->first()?->thumbUrl(400) ?? $variant?->image?->thumbUrl(400) ?? Storefront::placeholder(),
             'price' => (float) ($variant?->retail_price ?? 0),
             'category' => $product->category?->name ?? '—',
             'availability' => ($variant && (float) $variant->stock_quantity > 0) ? 'In stock' : 'Out of stock',

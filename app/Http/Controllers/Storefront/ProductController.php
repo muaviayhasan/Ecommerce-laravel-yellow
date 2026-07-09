@@ -42,9 +42,10 @@ class ProductController extends Controller
         $compare = $compareRaw !== null && (float) $compareRaw > $retail ? (float) $compareRaw : null;
 
         // Gallery = product media + any per-variant images, so selecting a colour
-        // can switch the main image to its own photo.
-        $gallery = $product->media->pluck('url')
-            ->merge($activeVariants->map(fn ($v) => $v->image?->url))
+        // can switch the main image to its own photo. Right-sized WebP renditions;
+        // og_image below keeps the original (link-preview scrapers dislike WebP).
+        $gallery = $product->media->map(fn ($m) => $m->thumbUrl(800))
+            ->merge($activeVariants->map(fn ($v) => $v->image?->thumbUrl(800)))
             ->filter()->unique()->values()->all();
         if ($gallery === []) {
             $gallery = [Storefront::placeholder()];
@@ -69,6 +70,7 @@ class ProductController extends Controller
             'price' => $retail,
             'compare' => $compare,
             'image' => $gallery[0],
+            'og_image' => $product->media->first()?->url ?? $gallery[0],
             'gallery' => $gallery,
             'url' => route('product.show', $product->slug),
             'sku' => $variant?->sku ?? $product->sku,
@@ -151,7 +153,8 @@ class ProductController extends Controller
                     'id' => $av->id,
                     'label' => $av->label ?: $av->value,
                     'color_hex' => $av->color_hex,
-                    'image' => $av->image?->url,
+                    // 36px swatch circle — 80 covers 2x retina.
+                    'image' => $av->image?->thumbUrl(80),
                     'sort' => $av->sort_order ?? 0,
                 ];
             }
@@ -165,7 +168,9 @@ class ProductController extends Controller
                 'compare' => $compareRaw !== null && (float) $compareRaw > $retail ? (float) $compareRaw : null,
                 'sku' => $v->sku,
                 'stock' => (float) $v->stock_quantity,
-                'image' => $v->image?->url,
+                // Must match the gallery's rendition URLs — the buy-box locates the
+                // variant photo with gallery.indexOf(image).
+                'image' => $v->image?->thumbUrl(800),
                 'options' => (object) $picked,
             ];
         }

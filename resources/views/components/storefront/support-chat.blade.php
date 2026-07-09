@@ -163,7 +163,10 @@
                     },
                     ping() { if (!this._bell) return; try { this._bell.currentTime = 0; this._bell.play().catch(() => {}); } catch (e) {} },
                     subscribe(token) {
-                        if (!window.Echo || !token || this._channel === token) return;
+                        // Check the token BEFORE touching window.Echo — its lazy getter
+                        // (resources/js/echo.js) opens the websocket on first access, and
+                        // visitors without a conversation shouldn't connect at all.
+                        if (!token || this._channel === token || !window.Echo) return;
                         this._channel = token;
                         window.Echo.channel('support.conversation.' + token)
                             .listen('.message.sent', (m) => this.onEcho(m))

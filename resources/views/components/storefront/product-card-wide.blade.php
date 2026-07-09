@@ -14,7 +14,7 @@
 
 <div {{ $attributes->class('product-card group relative flex bg-white px-6 py-4 transition-all duration-200 hover:shadow-[0_0_6px_0_rgba(1,1,1,0.3)] hover:z-20') }}>
     <a href="{{ $url }}" class="block w-24 h-24 shrink-0 self-center">
-        <img src="{{ $image }}" alt="{{ $name }}" loading="lazy"
+        <img src="{{ $image }}" alt="{{ $name }}" loading="lazy" width="96" height="96" decoding="async"
             class="w-full h-full object-contain transition-transform group-hover:scale-105">
     </a>
 

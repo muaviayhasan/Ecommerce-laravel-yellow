@@ -14,13 +14,11 @@
     @include('storefront.partials.seo')
     @stack('meta')
 
-    {{-- Fonts: Work Sans (body) + Material Symbols (icons), matching the storefront theme. --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap">
-    {{-- Material Symbols is imported via app.css (in a cascade layer) so icon size
-         utilities work; see resources/css/app.css. --}}
+    {{-- Fonts: Work Sans (body) + Material Symbols (icons) are self-hosted from
+         public/fonts/ via @font-face in app.css — no render-blocking third-party
+         CSS. Preloaded so they're fetched in parallel with the stylesheet. --}}
+    <link rel="preload" href="/fonts/work-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles

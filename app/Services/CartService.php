@@ -89,7 +89,7 @@ class CartService
                     'name' => $variant->product?->name ?? 'Item',
                     'slug' => $variant->product?->slug,
                     'sku' => $variant->sku,
-                    'image' => $variant->image?->url ?? $variant->product?->media->first()?->url ?? Storefront::placeholder(),
+                    'image' => $variant->image?->thumbUrl(200) ?? $variant->product?->media->first()?->thumbUrl(200) ?? Storefront::placeholder(),
                     'price' => $price,
                     'qty' => $qty,
                     'line_total' => round($price * $qty, 2),

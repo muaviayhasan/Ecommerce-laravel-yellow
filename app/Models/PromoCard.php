@@ -35,10 +35,11 @@ class PromoCard extends Model
         return $this->belongsTo(Media::class, 'image_media_id');
     }
 
-    /** Resolved image URL: the library media if chosen, else the static path fallback. */
+    /** Resolved image URL: the library media (as a right-sized WebP), else the static path fallback. */
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image?->url ?: $this->image_path;
+        // Rendered in a 96px slot (w-24) — 192 covers 2x retina.
+        return $this->image?->thumbUrl(192) ?: $this->image_path;
     }
 
     /** Card link: the configured URL, else the storefront shop page. */

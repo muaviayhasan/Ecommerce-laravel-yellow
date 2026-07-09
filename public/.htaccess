@@ -1,3 +1,14 @@
+# Long-lived caching for static assets. Vite build output is content-hashed and
+# media renditions (thumbs/) get new URLs when replaced, so a year + immutable is
+# safe; fonts and images rarely change in place. (Only applies behind
+# Apache/LiteSpeed — `php artisan serve` ignores .htaccess, so Lighthouse's cache
+# audit still flags these in local dev.)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2?|ttf|otf|jpe?g|png|gif|webp|avif|svg|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
