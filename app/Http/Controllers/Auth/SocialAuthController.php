@@ -55,12 +55,18 @@ class SocialAuthController extends Controller
 
         $user ??= $this->createCustomer($provider, $oauth, $email);
 
-        // Link the provider (and refresh avatar / login stamp).
+        // Link the provider (and refresh avatar / login stamp). A provider
+        // sign-in also vouches for the email: if the account's address matches
+        // the one the provider returned, treat it as verified — so the account
+        // page never nags a Google/Facebook user to verify.
         $user->forceFill([
             'provider' => $provider,
             'provider_id' => $oauth->getId(),
             'avatar' => $user->avatar ?: $oauth->getAvatar(),
             'last_login_at' => now(),
+            ...($user->email_verified_at === null && strcasecmp($user->email, $email) === 0
+                ? ['email_verified_at' => now()]
+                : []),
         ])->saveQuietly();
 
         Auth::login($user, remember: true);
