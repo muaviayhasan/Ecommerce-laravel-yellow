@@ -169,6 +169,7 @@ class SettingsController extends Controller implements HasMiddleware
                         'fields' => [
                             'app_name' => ['input' => 'text', 'label' => 'Store name', 'max' => 255, 'rules' => ['required', 'string', 'max:255']],
                             'theme' => ['input' => 'select', 'label' => 'Default theme', 'options' => ['light' => 'Light', 'dark' => 'Dark'], 'rules' => ['required', 'in:light,dark']],
+                            'logo' => ['input' => 'media', 'label' => 'Logo', 'rules' => ['nullable', 'integer', 'exists:media,id'], 'help' => 'The website logo, shown in the storefront header and footer. A wide, transparent PNG/SVG works best — upload it in the Gallery, then pick it here. Leave empty to show the store name as text instead.'],
                             'favicon' => ['input' => 'media', 'label' => 'Favicon', 'rules' => ['nullable', 'integer', 'exists:media,id'], 'help' => 'The small icon shown in the browser tab, for the storefront and admin. A square image (PNG, 256×256 or larger) works best — upload it in the Gallery, then pick it here. Leave empty for the default icon.'],
                         ],
                     ],

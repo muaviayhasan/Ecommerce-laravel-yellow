@@ -97,8 +97,12 @@
                     <span class="material-symbols-outlined">menu</span>
                 </button>
                 <a class="flex items-baseline min-w-0 font-bold text-on-surface" href="{{ route('home') }}">
-                    <span class="truncate text-xl sm:text-2xl lg:text-headline-lg">{{ config('app.name') }}</span>
-                    <span class="shrink-0 text-xl sm:text-2xl lg:text-headline-lg text-primary-container">.</span>
+                    @if ($logo = logo_url())
+                        <img src="{{ $logo }}" alt="{{ config('app.name') }}" class="h-9 sm:h-10 lg:h-12 w-auto max-w-full object-contain self-center">
+                    @else
+                        <span class="truncate text-xl sm:text-2xl lg:text-headline-lg">{{ config('app.name') }}</span>
+                        <span class="shrink-0 text-xl sm:text-2xl lg:text-headline-lg text-primary-container">.</span>
+                    @endif
                 </a>
             </div>
 

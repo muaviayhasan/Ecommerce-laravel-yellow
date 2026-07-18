@@ -49,7 +49,11 @@
         {{-- Brand / contact --}}
         <div>
             <a class="text-headline-lg font-bold text-on-surface mb-6 block" href="{{ route('home') }}">
-                {{ config('app.name') }}<span class="text-primary-container">.</span>
+                @if ($logo = logo_url())
+                    <img src="{{ $logo }}" alt="{{ config('app.name') }}" class="h-12 w-auto max-w-full object-contain">
+                @else
+                    {{ config('app.name') }}<span class="text-primary-container">.</span>
+                @endif
             </a>
             <a href="{{ $telHref }}" class="flex items-center gap-4 mb-6 group">
                 <span class="material-symbols-outlined text-primary-container text-5xl">headset_mic</span>

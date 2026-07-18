@@ -70,6 +70,29 @@ if (! function_exists('favicon_url')) {
     }
 }
 
+if (! function_exists('logo_url')) {
+    /**
+     * The admin-configured website logo (Settings → General), or null when none
+     * is set — callers fall back to the store name as text. Resolved once per
+     * request. Shared by the storefront header and footer.
+     */
+    function logo_url(): ?string
+    {
+        static $resolved = false;
+        static $url = null;
+
+        if ($resolved) {
+            return $url;
+        }
+
+        $resolved = true;
+        $id = setting('general', 'logo');
+        $url = $id ? \App\Models\Media::find($id)?->url : null;
+
+        return $url;
+    }
+}
+
 if (! function_exists('format_money')) {
     /**
      * Format an amount using the configured currency symbol, position, decimals
