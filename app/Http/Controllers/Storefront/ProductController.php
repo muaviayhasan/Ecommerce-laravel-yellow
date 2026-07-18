@@ -44,7 +44,9 @@ class ProductController extends Controller
         // Gallery = product media + any per-variant images, so selecting a colour
         // can switch the main image to its own photo. Right-sized WebP renditions;
         // og_image below keeps the original (link-preview scrapers dislike WebP).
-        $gallery = $product->media->map(fn ($m) => $m->thumbUrl(800))
+        // toBase(): mapping an *empty* Eloquent collection yields an Eloquent
+        // collection, whose merge() expects models and would fatal on our strings.
+        $gallery = $product->media->map(fn ($m) => $m->thumbUrl(800))->toBase()
             ->merge($activeVariants->map(fn ($v) => $v->image?->thumbUrl(800)))
             ->filter()->unique()->values()->all();
         if ($gallery === []) {
