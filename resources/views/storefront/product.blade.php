@@ -72,7 +72,9 @@
             </nav>
 
             {{-- ===================== Product hero card ===================== --}}
-            <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12 bg-white p-6 lg:p-8 rounded-lg shadow-sm border border-outline-variant"
+            {{-- 2 columns from md so tablets get image + buy box side by side; a
+                 full-width square gallery below md pushed add-to-cart offscreen. --}}
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 mb-12 bg-white p-6 lg:p-8 rounded-lg shadow-sm border border-outline-variant"
                 x-data="productDetail({
                     gallery: @js($product['gallery']),
                     matrix: @js($variantMatrix),
