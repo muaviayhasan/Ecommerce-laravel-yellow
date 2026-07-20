@@ -6,6 +6,11 @@
 {{-- Shared print shell: renders the A4 / thermal page frame, a screen-only toolbar,
      and auto-opens the print dialog. The document content (invoice or receipt) is
      the slot; wrap the two designs with @if ($billType === 'thermal'). --}}
+@php
+    // A4 bills carry a faint centred brand watermark — the favicon for now,
+    // falling back to the site logo (Admin → Settings → General).
+    $watermark = favicon_url() ?: logo_url();
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,6 +54,24 @@
         .a4 .totals td { padding: 5px 0; font-size: 13px; }
         .a4 .totals .grand td { border-top: 2px solid #111827; font-size: 15px; font-weight: 800; padding-top: 10px; }
         .a4 .footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; white-space: pre-line; }
+
+        @if ($billType !== 'thermal' && $watermark)
+            /* Brand watermark — centred and faint; fixed while printing so it
+               repeats on every page of multi-page invoices. */
+            .a4 .sheet { position: relative; }
+            .a4 .sheet::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: url('{{ $watermark }}') no-repeat center center;
+                background-size: min(320px, 55%);
+                opacity: .05;
+                pointer-events: none;
+            }
+            @media print {
+                .a4 .sheet::before { position: fixed; inset: 0; }
+            }
+        @endif
 
         /* ===== Thermal 80mm receipt ===== */
         .thermal .sheet { width: 80mm; margin: 0 auto; background: #fff; padding: 4mm 4mm 6mm; font-family: 'Courier New', ui-monospace, monospace; font-size: 12px; line-height: 1.5; color: #000; }
