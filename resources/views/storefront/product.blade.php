@@ -81,6 +81,7 @@
                     groups: @js($variantOptions),
                     initial: @js($selectedVariant),
                     fallback: { price: @js((float) $product['price']), compare: @js($product['compare']), sku: @js($product['sku'] ?? ''), stock: @js((float) $product['stock']) },
+                    tracked: @js((bool) ($product['tracked'] ?? true)),
                 })">
                 {{-- Gallery: main image on top, thumbnails below --}}
                 <div class="space-y-6">
@@ -183,9 +184,9 @@
                                 <input type="hidden" name="quantity" :value="qty">
                                 <div class="flex border border-outline rounded-lg overflow-hidden h-12">
                                     <button type="button" @click="qty = Math.max(1, qty - 1)" aria-label="Decrease quantity" class="px-4 hover:bg-surface transition-colors">&minus;</button>
-                                    <input type="number" min="1" x-model.number="qty" aria-label="Quantity"
+                                    <input type="number" min="1" :max="maxQty" x-model.number="qty" @change="qty = clampQty(qty)" aria-label="Quantity"
                                         class="w-12 text-center border-none focus:ring-0 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none">
-                                    <button type="button" @click="qty++" aria-label="Increase quantity" class="px-4 hover:bg-surface transition-colors">+</button>
+                                    <button type="button" @click="qty = clampQty(qty + 1)" aria-label="Increase quantity" class="px-4 hover:bg-surface transition-colors">+</button>
                                 </div>
                                 <button type="submit" :class="!({{ $availExpr }}) ? 'opacity-50 pointer-events-none' : ''"
                                     class="bg-primary-container text-on-primary-container px-10 h-12 font-bold rounded hover:brightness-95 transition-all flex items-center gap-2">
@@ -475,6 +476,9 @@
     <x-storefront.brand-strip />
 
     <x-storefront.product-columns />
+
+    {{-- Floating share button, stacked above the support-chat bubble. --}}
+    <x-storefront.share-fab :url="route('product.show', $product['slug'])" :title="$product['name']" />
 @endsection
 
 @push('scripts')
@@ -507,6 +511,17 @@
                         if (v) this.selected = { ...v.options };
                     }
                     this.syncImage();
+                    this.qty = this.clampQty(this.qty); // new variant may have less stock
+                },
+                // Highest quantity that can be ordered: the variant's stock when
+                // tracked, otherwise effectively unlimited (dropship).
+                get maxQty() {
+                    if (! cfg.tracked) return 999;
+                    return Math.max(1, Math.floor(Number(this.stock) || 0));
+                },
+                clampQty(v) {
+                    v = Math.floor(Number(v) || 1);
+                    return Math.max(1, Math.min(v, this.maxQty));
                 },
                 selectedLabel(gid) {
                     const g = this.groups.find(x => x.id === gid);

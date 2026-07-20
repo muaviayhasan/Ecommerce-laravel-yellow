@@ -31,15 +31,38 @@ class CartController extends Controller
         ]);
 
         // Block adding a non-sellable / unlisted product.
-        $sellable = ProductVariant::where('id', $data['variant_id'])
-            ->whereHas('product', fn ($q) => $q->where('is_active', true)->where('is_sellable', true))
-            ->exists();
+        $variant = ProductVariant::with('product:id,is_active,is_sellable,is_stock_tracked')
+            ->find((int) $data['variant_id']);
 
-        if (! $sellable) {
+        if (! $variant || ! $variant->product?->is_active || ! $variant->product->is_sellable) {
             return back()->with('error', 'That product is not available right now.');
         }
 
-        $this->cart->add((int) $data['variant_id'], (int) ($data['quantity'] ?? 1));
+        $qty = max(1, (int) ($data['quantity'] ?? 1));
+
+        // Cap at available stock (counting what the cart already holds), unless
+        // the product is dropshipped or overselling is explicitly allowed.
+        $tracked = (bool) $variant->product->is_stock_tracked;
+        $allowOversell = (bool) setting('inventory', 'allow_negative_stock', false);
+
+        if ($tracked && ! $allowOversell) {
+            $stock = max(0, (int) floor((float) $variant->stock_quantity));
+            $room = $stock - $this->cart->quantityOf($variant->id);
+
+            if ($room <= 0) {
+                return back()->with('error', $stock > 0
+                    ? "Only {$stock} in stock — your cart already has all of them."
+                    : 'That item is out of stock.');
+            }
+
+            if ($qty > $room) {
+                $this->cart->add($variant->id, $room);
+
+                return back()->with('error', "Only {$stock} in stock — we added the remaining {$room} to your cart.");
+            }
+        }
+
+        $this->cart->add($variant->id, $qty);
 
         return back()->with('status', 'Added to your cart.');
     }

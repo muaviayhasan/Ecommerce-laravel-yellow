@@ -23,6 +23,12 @@ class CartService
         $this->save($cart);
     }
 
+    /** Current quantity of one variant in the cart (0 when absent). */
+    public function quantityOf(int $variantId): int
+    {
+        return (int) ($this->raw()[$variantId] ?? 0);
+    }
+
     public function update(int $variantId, int $qty): void
     {
         $cart = $this->raw();
