@@ -86,6 +86,12 @@ class BlogSeeder extends Seeder
             '<p><em>Based in Lahore, serving all of Pakistan — check the product pages above for live prices and stock.</em></p>',
         ];
 
+        // One-time cleanup: this title originally carried a literal "&amp;",
+        // which showed as raw text on the storefront and leaked "amp" into the
+        // slug. Rename the old slug so the loop updates that row in place.
+        BlogPost::where('slug', 'water-coolers-amp-dispensers-staying-hydrated-through-the-heat')
+            ->update(['slug' => 'water-coolers-dispensers-staying-hydrated-through-the-heat']);
+
         foreach ($posts as $i => $data) {
             $post = BlogPost::updateOrCreate(
                 ['slug' => Str::slug($data['title'])],
@@ -328,7 +334,7 @@ class BlogSeeder extends Seeder
                     . '<p>Browse both styles in ' . $catLink('Washing Machines', 'washing-machine') . '.</p>',
             ],
             [
-                'title' => 'Water Coolers &amp; Dispensers: Staying Hydrated Through the Heat',
+                'title' => 'Water Coolers & Dispensers: Staying Hydrated Through the Heat',
                 'excerpt' => 'From electric water coolers to 3-tap dispensers — how to keep chilled water flowing all summer at home or the office.',
                 'categories' => ['Buying Guides'],
                 'tags' => ['Water Cooler', 'Summer', 'Home Appliances'],
