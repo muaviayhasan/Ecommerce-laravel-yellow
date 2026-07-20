@@ -56,12 +56,12 @@
         .a4 .footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; white-space: pre-line; }
         .a4 .sheet { position: relative; }
 
-        /* Rubber-stamp payment badge (top right, slightly tilted). */
+        /* Rubber-stamp payment badge — centred in the header area, slightly tilted. */
         .a4 .pay-stamp {
             position: absolute;
-            top: 200px;
-            right: 44px;
-            transform: rotate(-12deg);
+            top: 88px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-12deg);
             border: 4px double currentColor;
             border-radius: 12px;
             padding: 7px 20px;
