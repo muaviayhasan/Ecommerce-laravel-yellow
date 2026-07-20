@@ -22,7 +22,13 @@
         {{-- ===================== THERMAL RECEIPT ===================== --}}
         <div class="sheet">
             <div class="center">
-                <div class="brand">{{ $store['name'] }}</div>
+                <div class="brand">
+                    @if ($brandLogo = logo_url())
+                        <img src="{{ $brandLogo }}" alt="{{ $store['name'] }}">
+                    @else
+                        {{ $store['name'] }}
+                    @endif
+                </div>
                 @if ($store['address'])<div>{{ $store['address'] }}</div>@endif
                 @if ($store['phone'])<div>Tel: {{ $store['phone'] }}</div>@endif
                 <div class="doc-title">Sales Receipt</div>
@@ -56,6 +62,15 @@
             <div class="row grand"><span>TOTAL</span><span>{{ format_money($order->grand_total) }}</span></div>
             <div class="row"><span>Paid</span><span>{{ format_money($order->paid_total) }}</span></div>
             @if ($balance > 0)<div class="row"><span>Balance</span><span>{{ format_money($balance) }}</span></div>@endif
+            @php
+                $payBanner = match ($order->payment_status) {
+                    'paid' => 'Paid',
+                    'partial' => 'Partial',
+                    'refunded', 'partially_refunded' => 'Refunded',
+                    default => 'Unpaid',
+                };
+            @endphp
+            <div class="banner">{{ $payBanner }}</div>
             <hr>
             <div class="foot">@if ($store['footer']){{ $store['footer'] }}@else Thank you for your purchase!@endif</div>
             <div class="barcode">*{{ $order->order_number }}*</div>

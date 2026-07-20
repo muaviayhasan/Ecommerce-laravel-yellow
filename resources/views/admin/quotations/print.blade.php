@@ -19,7 +19,13 @@
         {{-- ===================== THERMAL QUOTE ===================== --}}
         <div class="sheet">
             <div class="center">
-                <div class="brand">{{ $store['name'] }}</div>
+                <div class="brand">
+                    @if ($brandLogo = logo_url())
+                        <img src="{{ $brandLogo }}" alt="{{ $store['name'] }}">
+                    @else
+                        {{ $store['name'] }}
+                    @endif
+                </div>
                 @if ($store['address'])<div>{{ $store['address'] }}</div>@endif
                 @if ($store['phone'])<div>Tel: {{ $store['phone'] }}</div>@endif
                 <div class="doc-title">Quotation</div>
@@ -46,6 +52,16 @@
             @if ((float) $quotation->tax_total > 0)<div class="row"><span>Tax</span><span>{{ format_money($quotation->tax_total) }}</span></div>@endif
             <hr>
             <div class="row grand"><span>TOTAL</span><span>{{ format_money($quotation->grand_total) }}</span></div>
+            @php
+                $statusBanner = match ($quotation->status) {
+                    'accepted' => 'Accepted',
+                    'converted' => 'Converted',
+                    'rejected' => 'Rejected',
+                    'expired' => 'Expired',
+                    default => $quotation->valid_until ? 'Valid until ' . format_date($quotation->valid_until) : 'Quotation',
+                };
+            @endphp
+            <div class="banner">{{ $statusBanner }}</div>
             @if ($notes)<hr><div class="foot">{{ $notes }}</div>@endif
         </div>
     @else

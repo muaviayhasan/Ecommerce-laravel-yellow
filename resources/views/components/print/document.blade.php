@@ -98,6 +98,10 @@
         /* ===== Thermal 80mm receipt ===== */
         .thermal .sheet { width: 80mm; margin: 0 auto; background: #fff; padding: 4mm 4mm 6mm; font-family: 'Courier New', ui-monospace, monospace; font-size: 12px; line-height: 1.5; color: #000; }
         .thermal .brand { font-size: 16px; font-weight: 700; letter-spacing: .02em; }
+        .thermal .brand img { display: block; margin: 0 auto 3px; max-width: 48mm; max-height: 18mm; object-fit: contain; }
+        /* Bold bordered banner (payment / status) — prints razor-sharp on 1-bit
+           thermal paper, unlike tilted or faint stamps. */
+        .thermal .banner { border: 2px solid #000; text-align: center; font-weight: 700; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; padding: 6px 4px; margin: 8px 0 2px; }
         .thermal .doc-title { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin-top: 2px; }
         .thermal hr { border: 0; border-top: 1px dashed #000; margin: 7px 0; }
         .thermal .row { display: flex; justify-content: space-between; gap: 8px; }
