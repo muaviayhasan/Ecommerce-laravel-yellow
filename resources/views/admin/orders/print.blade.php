@@ -74,7 +74,13 @@
             <div class="pay-stamp {{ $payStamp[0] }}">{{ $payStamp[1] }}</div>
             <div class="head">
                 <div>
-                    <div class="brand">{{ $store['name'] }}</div>
+                    <div class="brand">
+                        @if ($brandLogo = logo_url())
+                            <img src="{{ $brandLogo }}" alt="{{ $store['name'] }}">
+                        @else
+                            {{ $store['name'] }}
+                        @endif
+                    </div>
                     <div class="muted" style="font-size:12px;margin-top:4px;line-height:1.5">
                         @if ($store['address'])<div>{{ $store['address'] }}</div>@endif
                         @if ($store['phone'])<div>Tel: {{ $store['phone'] }}</div>@endif

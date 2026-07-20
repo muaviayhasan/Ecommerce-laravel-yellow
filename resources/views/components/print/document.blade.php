@@ -45,6 +45,7 @@
         .a4 .sheet { max-width: 760px; margin: 16px auto; background: #fff; padding: 40px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
         .a4 .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding-bottom: 20px; border-bottom: 2px solid #111827; }
         .a4 .brand { font-size: 24px; font-weight: 800; letter-spacing: -.01em; }
+        .a4 .brand img { display: block; max-height: 54px; max-width: 230px; object-fit: contain; }
         .a4 .doc-title { font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
         .a4 .parties { display: flex; justify-content: space-between; gap: 24px; margin: 24px 0; }
         .a4 .label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: #6b7280; margin-bottom: 4px; }
