@@ -373,11 +373,39 @@
                             </button>
                         @endcan
                         @can('gallery.delete')
-                            <button wire:click="delete({{ $sel->id }})" wire:confirm="Delete this file? This cannot be undone."
-                                class="p-2.5 rounded-lg bg-error-container text-on-error-container hover:brightness-95 transition-all"
-                                title="Delete">
-                                <span class="material-symbols-outlined text-[18px]">delete</span>
-                            </button>
+                            {{-- Styled confirm dialog instead of the browser's native confirm(). --}}
+                            <div x-data="{ confirmDelete: false }">
+                                <button type="button" @click="confirmDelete = true"
+                                    class="p-2.5 rounded-lg bg-error-container text-on-error-container hover:brightness-95 transition-all"
+                                    title="Delete">
+                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+
+                                <div x-cloak x-show="confirmDelete" class="fixed inset-0 z-50 grid place-items-center p-4"
+                                    @keydown.escape.window="confirmDelete = false" role="dialog" aria-modal="true">
+                                    <div class="absolute inset-0 bg-black/50" @click="confirmDelete = false"
+                                        x-show="confirmDelete" x-transition.opacity></div>
+                                    <div class="relative w-full max-w-sm bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-2xl shadow-2xl p-6 text-center"
+                                        x-show="confirmDelete"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                                        <div class="w-14 h-14 mx-auto rounded-full bg-error-container grid place-items-center mb-4">
+                                            <span class="material-symbols-outlined text-error text-[28px]">delete_forever</span>
+                                        </div>
+                                        <h3 class="text-lg font-bold text-on-surface mb-1">Delete this file?</h3>
+                                        <p class="text-sm text-on-surface-variant mb-6 break-words">
+                                            <span class="font-semibold">{{ $sel->title ?: basename($sel->path) }}</span>
+                                            will be removed from the gallery permanently. This cannot be undone.
+                                        </p>
+                                        <div class="flex gap-3">
+                                            <button type="button" @click="confirmDelete = false"
+                                                class="flex-1 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">Cancel</button>
+                                            <button type="button" @click="confirmDelete = false; $wire.delete({{ $sel->id }})"
+                                                class="flex-1 py-2.5 bg-error text-white font-bold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @endcan
                     </div>
                 </x-admin.panel>
