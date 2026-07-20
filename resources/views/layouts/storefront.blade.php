@@ -24,6 +24,12 @@
     @livewireStyles
     @stack('schema')
     @stack('head')
+
+    {{-- Google Analytics — only when an ID is set (Admin → Settings → SEO). --}}
+    @if ($gaId = setting('seo', 'google_analytics_id'))
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
+        <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',@json($gaId));</script>
+    @endif
 </head>
 
 <body class="min-h-screen bg-background text-on-surface antialiased">

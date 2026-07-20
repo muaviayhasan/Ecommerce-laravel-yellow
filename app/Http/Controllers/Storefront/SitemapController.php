@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Response;
 
@@ -16,7 +17,23 @@ class SitemapController extends Controller
             ['loc' => url('/'), 'changefreq' => 'daily', 'priority' => '1.0'],
             ['loc' => route('shop'), 'changefreq' => 'daily', 'priority' => '0.9'],
             ['loc' => route('blog'), 'changefreq' => 'weekly', 'priority' => '0.6'],
+            ['loc' => route('about'), 'changefreq' => 'monthly', 'priority' => '0.4'],
+            ['loc' => route('contact'), 'changefreq' => 'monthly', 'priority' => '0.4'],
         ];
+
+        // Category landing pages (only those with something to show).
+        Category::query()
+            ->where('is_active', true)
+            ->whereHas('products', fn ($q) => $q->webListed())
+            ->orderBy('name')
+            ->each(function (Category $c) use (&$urls) {
+                $urls[] = [
+                    'loc' => route('shop', ['category' => $c->slug]),
+                    'lastmod' => $c->updated_at?->toAtomString(),
+                    'changefreq' => 'weekly',
+                    'priority' => '0.7',
+                ];
+            });
 
         Product::webListed()->orderByDesc('updated_at')->chunk(500, function ($rows) use (&$urls) {
             foreach ($rows as $p) {

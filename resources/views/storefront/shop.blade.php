@@ -1,7 +1,20 @@
 @extends('layouts.storefront')
 
-@section('title', 'Shop — ' . config('app.name'))
-@section('meta_description', 'Browse all products at ' . config('app.name') . '.')
+{{-- Category-filtered views get category SEO: its own meta fields when set in
+     the admin, sensible generated copy otherwise, and a self-canonical so
+     Google indexes each category page instead of folding them into /shop. --}}
+@php
+    $seoCat = $activeCategory ?? null;
+    $shopTitle = ($seoCat ? ($seoCat->meta_title ?: $seoCat->name . ' — Best Prices in Pakistan') : 'Shop') . ' — ' . config('app.name');
+    $shopDesc = $seoCat
+        ? ($seoCat->meta_description ?: 'Shop ' . $seoCat->name . ' at ' . config('app.name') . ' — genuine brands, updated prices and delivery across Lahore & all Pakistan.')
+        : 'Browse all products at ' . config('app.name') . '.';
+@endphp
+@section('title', $shopTitle)
+@section('meta_description', $shopDesc)
+@if ($seoCat)
+    @section('canonical', route('shop', ['category' => $seoCat->slug]))
+@endif
 
 @section('content')
     <div class="bg-white py-8">

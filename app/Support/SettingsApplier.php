@@ -15,7 +15,21 @@ class SettingsApplier
 {
     public static function apply(): void
     {
+        self::applyGeneral();
         self::applyMail();
+    }
+
+    /**
+     * The admin-configured store name becomes config('app.name'), so every page
+     * title, OG tag and JSON-LD block uses it (instead of the .env APP_NAME).
+     */
+    private static function applyGeneral(): void
+    {
+        $general = rescue(fn () => Setting::groupWithDefaults('general'), [], report: false);
+
+        if (filled($general['app_name'] ?? null)) {
+            Config::set('app.name', $general['app_name']);
+        }
     }
 
     /**

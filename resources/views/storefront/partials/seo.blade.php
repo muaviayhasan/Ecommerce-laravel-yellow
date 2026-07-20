@@ -2,12 +2,19 @@
     use Illuminate\Support\Str;
 
     $siteName = config('app.name');
-    $title = trim($__env->yieldContent('title', $siteName));
-    $desc = trim($__env->yieldContent('meta_description', (string) setting('seo', 'meta_description', '')));
-    $canonical = trim($__env->yieldContent('canonical', url()->current()));
+
+    // Inline @section values arrive HTML-escaped (Blade e()s them), while the
+    // setting()/url() fallbacks arrive raw. Decode once so every value is plain
+    // text, then the single {{ }} escape below applies uniformly — otherwise
+    // titles containing "&" render as "&amp;" in the tab and OG tags.
+    $plain = fn (string $v): string => html_entity_decode(trim($v), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    $title = $plain($__env->yieldContent('title', $siteName));
+    $desc = $plain($__env->yieldContent('meta_description', (string) setting('seo', 'meta_description', '')));
+    $canonical = $plain($__env->yieldContent('canonical', url()->current()));
 
     $ogType = trim($__env->yieldContent('og_type', 'website'));
-    $ogImage = trim($__env->yieldContent('og_image', (string) setting('seo', 'og_image', '')));
+    $ogImage = $plain($__env->yieldContent('og_image', (string) setting('seo', 'og_image', '')));
     if ($ogImage !== '' && ! Str::startsWith($ogImage, ['http://', 'https://'])) {
         $ogImage = url($ogImage);
     }

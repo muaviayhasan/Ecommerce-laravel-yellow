@@ -1,7 +1,10 @@
 @extends('layouts.storefront')
 
-@section('title', 'Blog — ' . config('app.name'))
-@section('meta_description', 'Insights & trends in consumer electronics, design and technology from ' . config('app.name') . '.')
+@section('title', ($activeFilter ? $activeFilter['label'] . ' — ' : '') . 'Blog — ' . config('app.name'))
+@section('meta_description', 'Buying guides, honest reviews and maintenance tips for home appliances — coolers, geysers, fans, washing machines, kitchen and solar — from ' . config('app.name') . '.')
+@if (! empty($activeCategory))
+    @section('canonical', route('blog', ['category' => $activeCategory]))
+@endif
 
 @section('content')
     {{-- Page header — dark band with layered brand glows, a faint appliance

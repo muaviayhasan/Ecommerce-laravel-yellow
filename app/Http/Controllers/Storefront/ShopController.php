@@ -54,8 +54,16 @@ class ShopController extends Controller
             return view('storefront.partials.shop-items', ['products' => $paginator]);
         }
 
+        // When exactly one category is filtered, surface it so the shop page can
+        // emit category-specific SEO (title, meta description, canonical).
+        $catSlugs = array_values($categories ?? []);
+        $activeCategory = count($catSlugs) === 1
+            ? Category::query()->where('is_active', true)->where('slug', $catSlugs[0])->first()
+            : null;
+
         return view('storefront.shop', [
             'products' => $paginator,
+            'activeCategory' => $activeCategory,
             'recommended' => Storefront::cards(Storefront::query()->latest('published_at')->take(8)->get()),
             'latest' => Storefront::cards(Storefront::query()->latest('published_at')->take(3)->get()),
             'categories' => Category::query()->where('is_active', true)->whereNull('parent_id')

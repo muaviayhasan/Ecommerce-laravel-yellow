@@ -1,7 +1,7 @@
 @extends('layouts.storefront')
 
-@section('title', config('app.name') . ' — Electronics Marketplace')
-@section('meta_description', 'Shop the latest electronics — phones, laptops, cameras, audio and more at ' . config('app.name') . '.')
+@section('title', config('app.name') . ' — Home Appliances & Electronics Store in Lahore')
+@section('meta_description', 'Shop air coolers, geysers, fans, washing machines, kitchen appliances and solar at ' . config('app.name') . ' — genuine brands, fair prices and delivery across Lahore & all Pakistan.')
 
 {{-- The first hero slide's image is the LCP candidate — preload it so the fetch
      starts with the document instead of after layout. --}}
