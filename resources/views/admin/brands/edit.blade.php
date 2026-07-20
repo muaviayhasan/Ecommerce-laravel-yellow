@@ -16,7 +16,8 @@
         @csrf
         @method('PUT')
         @include('admin.brands._form')
-        <div class="mt-6 flex items-center justify-between gap-3">
+        {{-- Sticky action bar — always visible while the form scrolls. --}}
+        <div class="sticky bottom-4 z-20 mt-6 flex items-center justify-between gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest dark:bg-surface-container px-4 py-3 shadow-lg">
             @can('brands.delete')
                 <button type="submit" form="delete-brand" onclick="return confirm('Delete “{{ $brand->name }}”?');"
                     class="px-4 py-2.5 text-sm font-semibold text-error hover:bg-error-container rounded-lg transition-colors flex items-center gap-2">

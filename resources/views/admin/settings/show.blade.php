@@ -65,8 +65,8 @@
                 </x-settings.section>
             @endforeach
 
-            {{-- Save bar --}}
-            <div class="flex justify-end gap-3">
+            {{-- Save bar — sticky so it stays visible while the page scrolls. --}}
+            <div class="sticky bottom-4 z-20 flex items-center justify-end gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest dark:bg-surface-container px-4 py-3 shadow-lg">
                 <a href="{{ route('admin.settings.show', $group) }}"
                     class="px-5 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">
                     Discard

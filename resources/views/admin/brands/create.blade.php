@@ -15,7 +15,8 @@
     <form method="POST" action="{{ route('admin.brands.store') }}">
         @csrf
         @include('admin.brands._form')
-        <div class="mt-6 flex items-center justify-end gap-3">
+        {{-- Sticky action bar — always visible while the form scrolls. --}}
+        <div class="sticky bottom-4 z-20 mt-6 flex items-center justify-end gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest dark:bg-surface-container px-4 py-3 shadow-lg">
             <a href="{{ route('admin.brands.index') }}" class="px-5 py-2.5 text-sm font-semibold text-on-surface-variant hover:text-on-surface transition-colors">Cancel</a>
             <button type="submit" class="px-6 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
                 <span class="material-symbols-outlined text-[20px]">check</span> Create brand

@@ -16,7 +16,8 @@
         @csrf
         @include('admin.categories._form')
 
-        <div class="flex justify-end gap-3">
+        {{-- Sticky action bar — always visible while the form scrolls. --}}
+        <div class="sticky bottom-4 z-20 flex items-center justify-end gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest dark:bg-surface-container px-4 py-3 shadow-lg">
             <a href="{{ route('admin.categories.index') }}"
                 class="px-5 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">Cancel</a>
             <button type="submit"
