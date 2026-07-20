@@ -32,7 +32,11 @@
     @stack('head')
 </head>
 
-<body class="bg-background text-on-background min-h-screen flex antialiased">
+{{-- h-screen + overflow-hidden: the document itself never scrolls — all admin
+     scrolling happens inside <main>. Body-level helpers appended by libraries
+     (Select2 dropdowns, TinyMCE's sink) can otherwise extend the page below the
+     viewport and cause a second, document-level scrollbar. --}}
+<body class="bg-background text-on-background h-screen overflow-hidden flex antialiased">
     <x-admin.sidebar />
 
     {{-- Main column --}}
