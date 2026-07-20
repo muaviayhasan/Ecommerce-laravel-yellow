@@ -85,7 +85,12 @@ class SalesService
             // `pay_full` (POS/immediate) settles the whole total; otherwise use the given amount.
             $paid = ! empty($opts['pay_full']) ? $grand : round((float) ($opts['paid'] ?? 0), 2);
 
-            // 2) The order.
+            // 2) The order. 'paid' is NOT an order status (payment state lives in
+            // payment_status): counter channels (POS / vendor) hand the goods over
+            // immediately, so a fully-settled sale is 'completed' on the spot;
+            // anything else — web orders, credit/partial counter sales — starts
+            // 'pending' and moves through the normal flow.
+            $isCounter = in_array($channel, [Order::CHANNEL_POS, Order::CHANNEL_VENDOR], true);
             $order = Order::create([
                 'order_number' => $this->nextNumber(),
                 'channel' => $channel,
@@ -93,7 +98,7 @@ class SalesService
                 'user_id' => $opts['user_id'] ?? $customer?->user_id, // links the order to the customer's account
                 'quotation_id' => $opts['quotation_id'] ?? null,
                 'price_tier' => $tier,
-                'status' => $paid >= $grand ? 'paid' : 'pending',
+                'status' => $isCounter && $paid >= $grand ? 'completed' : 'pending',
                 'payment_method' => $opts['payment_method'] ?? 'cash',
                 'payment_status' => $paid <= 0 ? 'unpaid' : ($paid >= $grand ? 'paid' : 'partial'),
                 'subtotal' => $subtotal,
@@ -232,10 +237,27 @@ class SalesService
             ]);
 
             $paid = round((float) $order->paid_total + $amount, 2);
-            $order->update([
+            $paidInFull = $paid >= (float) $order->grand_total;
+
+            // Settling a counter sale (POS / vendor) closes it — the goods left
+            // with the customer at sale time; payment was the only open item.
+            $completes = $paidInFull
+                && in_array($order->channel, [Order::CHANNEL_POS, Order::CHANNEL_VENDOR], true)
+                && $order->status === 'pending';
+
+            $order->update(array_merge([
                 'paid_total' => $paid,
-                'payment_status' => $paid >= (float) $order->grand_total ? 'paid' : 'partial',
-            ]);
+                'payment_status' => $paidInFull ? 'paid' : 'partial',
+            ], $completes ? ['status' => 'completed'] : []));
+
+            if ($completes) {
+                $order->statusHistory()->create([
+                    'from_status' => 'pending',
+                    'to_status' => 'completed',
+                    'note' => 'Payment received in full — sale settled.',
+                    'created_by' => auth()->id(),
+                ]);
+            }
 
             // Clear the receivable raised when the order was placed.
             $this->ledger->post([
