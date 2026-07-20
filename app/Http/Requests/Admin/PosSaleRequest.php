@@ -28,6 +28,9 @@ class PosSaleRequest extends FormRequest
     {
         return [
             'customer_id' => ['nullable', Rule::exists('customers', 'id')],
+            // Optional walk-in contact details, printed on the bill.
+            'walk_in_name' => ['nullable', 'string', 'max:100'],
+            'walk_in_phone' => ['nullable', 'string', 'max:30'],
             'payment_method' => ['required', Rule::in(['cash', 'card', 'qr'])],
             'discount_type' => ['required', Rule::in(['fixed', 'percent'])],
             'discount_value' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],

@@ -36,7 +36,8 @@
             <hr>
             <div class="row tight"><span>Order</span><span class="bold">#{{ $order->order_number }}</span></div>
             <div class="row tight"><span>Date</span><span>{{ format_datetime($placed) }}</span></div>
-            <div class="row tight"><span>Customer</span><span>{{ $order->customer?->name ?? 'Walk-in' }}</span></div>
+            <div class="row tight"><span>Customer</span><span>{{ $order->walk_in_name ?: ($order->customer?->name ?? 'Walk-in') }}</span></div>
+            @if ($order->walk_in_phone)<div class="row tight"><span>Phone</span><span>{{ $order->walk_in_phone }}</span></div>@endif
             <div class="row tight"><span>Payment</span><span style="text-transform:capitalize">{{ str_replace('_', ' ', $order->payment_status) }}</span></div>
             @if ($deliveryLabel)
                 <div class="row tight"><span>Delivery</span><span>{{ $deliveryLabel }}</span></div>
@@ -117,15 +118,16 @@
             <div class="parties">
                 <div>
                     <div class="label">Bill to</div>
-                    <div class="bold">{{ ($billing?->name) ?? $order->customer?->name ?? 'Walk-in customer' }}</div>
+                    <div class="bold">{{ ($billing?->name) ?? $order->walk_in_name ?? $order->customer?->name ?? 'Walk-in customer' }}</div>
                     @if ($billing)
                         <div style="font-size:12px;line-height:1.5;margin-top:2px">
                             {{ $billing->line1 }}@if ($billing->line2)<br>{{ $billing->line2 }}@endif<br>
                             {{ collect([$billing->city, $billing->state, $billing->zip])->filter()->implode(', ') }}<br>
                             {{ $billing->country }}@if ($billing->phone)<br>{{ $billing->phone }}@endif
                         </div>
-                    @elseif ($order->customer?->email)
-                        <div style="font-size:12px" class="muted">{{ $order->customer->email }}</div>
+                    @else
+                        @if ($order->walk_in_phone)<div style="font-size:12px" class="muted">{{ $order->walk_in_phone }}</div>@endif
+                        @if ($order->customer?->email)<div style="font-size:12px" class="muted">{{ $order->customer->email }}</div>@endif
                     @endif
                 </div>
                 @if ($shipping)

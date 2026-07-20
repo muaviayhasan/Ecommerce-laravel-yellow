@@ -139,6 +139,21 @@
                             </select>
                         </div>
 
+                        {{-- Walk-in extras: optional name + contact, printed on the bill. --}}
+                        <div x-show="customerId === '' || customerId === @js((string) ($defaultCustomerId ?? ''))"
+                            class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-on-surface-variant">Customer name <span class="text-outline font-normal">(optional)</span></label>
+                                <input type="text" name="walk_in_name" maxlength="100" placeholder="e.g. Ahmed"
+                                    class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-on-surface-variant">Contact no <span class="text-outline font-normal">(optional)</span></label>
+                                <input type="text" name="walk_in_phone" maxlength="30" placeholder="03xx-xxxxxxx"
+                                    class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
+                            </div>
+                        </div>
+
                         <dl class="space-y-2 text-sm border-t border-outline-variant/60 pt-4">
                             <div class="flex justify-between"><dt class="text-on-surface-variant">Subtotal</dt><dd class="text-on-surface" x-text="money(subtotal())"></dd></div>
                             <div class="flex justify-between items-center gap-2">

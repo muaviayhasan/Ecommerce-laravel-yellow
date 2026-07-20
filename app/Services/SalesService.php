@@ -95,6 +95,8 @@ class SalesService
                 'order_number' => $this->nextNumber(),
                 'channel' => $channel,
                 'customer_id' => $customer?->id,
+                'walk_in_name' => $opts['walk_in_name'] ?? null,
+                'walk_in_phone' => $opts['walk_in_phone'] ?? null,
                 'user_id' => $opts['user_id'] ?? $customer?->user_id, // links the order to the customer's account
                 'quotation_id' => $opts['quotation_id'] ?? null,
                 'price_tier' => $tier,
