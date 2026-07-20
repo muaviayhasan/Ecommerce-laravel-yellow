@@ -30,6 +30,7 @@ class MediaController extends Controller
                 'title' => $m->title ?: basename($m->path),
             ])->all(),
             'next' => $media->hasMorePages() ? $media->currentPage() + 1 : null,
+            'last' => $media->lastPage(),
         ]);
     }
 }
