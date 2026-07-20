@@ -54,11 +54,32 @@
         .a4 .totals td { padding: 5px 0; font-size: 13px; }
         .a4 .totals .grand td { border-top: 2px solid #111827; font-size: 15px; font-weight: 800; padding-top: 10px; }
         .a4 .footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; white-space: pre-line; }
+        .a4 .sheet { position: relative; }
+
+        /* Rubber-stamp payment badge (top right, slightly tilted). */
+        .a4 .pay-stamp {
+            position: absolute;
+            top: 200px;
+            right: 44px;
+            transform: rotate(-12deg);
+            border: 4px double currentColor;
+            border-radius: 12px;
+            padding: 7px 20px;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            opacity: .85;
+            pointer-events: none;
+        }
+        .a4 .pay-stamp.paid { color: #15803d; }
+        .a4 .pay-stamp.partial { color: #b45309; }
+        .a4 .pay-stamp.unpaid { color: #b91c1c; }
+        .a4 .pay-stamp.refunded { color: #6b7280; }
 
         @if ($billType !== 'thermal' && $watermark)
             /* Brand watermark — centred and faint; fixed while printing so it
                repeats on every page of multi-page invoices. */
-            .a4 .sheet { position: relative; }
             .a4 .sheet::before {
                 content: '';
                 position: absolute;

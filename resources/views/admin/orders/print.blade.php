@@ -62,7 +62,16 @@
         </div>
     @else
         {{-- ===================== A4 INVOICE ===================== --}}
+        @php
+            $payStamp = match ($order->payment_status) {
+                'paid' => ['paid', 'Paid'],
+                'partial' => ['partial', 'Partial'],
+                'refunded', 'partially_refunded' => ['refunded', 'Refunded'],
+                default => ['unpaid', 'Unpaid'],
+            };
+        @endphp
         <div class="sheet">
+            <div class="pay-stamp {{ $payStamp[0] }}">{{ $payStamp[1] }}</div>
             <div class="head">
                 <div>
                     <div class="brand">{{ $store['name'] }}</div>
