@@ -4,12 +4,47 @@
 @section('meta_description', 'Insights & trends in consumer electronics, design and technology from ' . config('app.name') . '.')
 
 @section('content')
-    {{-- Page header --}}
-    <div class="bg-inverse-surface text-inverse-on-surface py-14">
-        <div class="app-container text-center">
-            <p class="text-primary-container font-bold uppercase tracking-widest text-label-sm mb-2">{{ config('app.name') }} Insights</p>
-            <h1 class="text-3xl md:text-headline-lg font-bold">The Appliance Blog</h1>
+    {{-- Page header — dark band with layered brand glows, a faint appliance
+         motif and category quick-filters so readers can jump straight in. --}}
+    <div class="relative overflow-hidden bg-inverse-surface text-inverse-on-surface">
+        {{-- Decorative yellow glows --}}
+        <div class="pointer-events-none absolute -top-28 -right-20 w-96 h-96 rounded-full bg-primary-container/20 blur-3xl" aria-hidden="true"></div>
+        <div class="pointer-events-none absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-primary-container/10 blur-3xl" aria-hidden="true"></div>
+
+        {{-- Faint appliance icon strip along the bottom --}}
+        <div class="pointer-events-none absolute inset-x-0 bottom-3 hidden lg:flex items-end justify-between px-16 opacity-[0.07]" aria-hidden="true">
+            @foreach (['ac_unit', 'mode_fan', 'local_laundry_service', 'water_heater', 'solar_power', 'kitchen', 'microwave', 'blender'] as $heroIcon)
+                <span class="material-symbols-outlined" style="font-size:44px;">{{ $heroIcon }}</span>
+            @endforeach
+        </div>
+
+        <div class="app-container relative py-12 md:py-16 text-center">
+            <p class="inline-flex items-center gap-2 border border-primary-container/50 text-primary-container rounded-full px-4 py-1.5 font-bold uppercase tracking-widest text-label-sm mb-4">
+                <span class="material-symbols-outlined text-[16px]">auto_stories</span>
+                {{ config('app.name') }} Insights
+            </p>
+            <h1 class="text-3xl md:text-headline-lg font-bold">The Appliance Blog<span class="text-primary-container">.</span></h1>
             <p class="text-inverse-on-surface/80 mt-3 max-w-2xl mx-auto">Buying guides, honest reviews and practical maintenance tips for coolers, geysers, fans, washing machines and solar.</p>
+
+            {{-- Category quick filters --}}
+            @if (! empty($categories))
+                <nav class="mt-8 flex flex-wrap justify-center gap-2.5" aria-label="Blog categories">
+                    <a href="{{ route('blog') }}"
+                        @class([
+                            'px-4 py-2 rounded-full text-label-sm font-semibold border transition-colors',
+                            'bg-primary-container text-on-primary-container border-primary-container' => $activeFilter === null,
+                            'border-inverse-on-surface/20 text-inverse-on-surface/85 hover:border-primary-container hover:text-primary-container' => $activeFilter !== null,
+                        ])>All posts</a>
+                    @foreach ($categories as $cat)
+                        <a href="{{ route('blog', ['category' => $cat['slug']]) }}"
+                            @class([
+                                'px-4 py-2 rounded-full text-label-sm font-semibold border transition-colors',
+                                'bg-primary-container text-on-primary-container border-primary-container' => $activeCategory === $cat['slug'],
+                                'border-inverse-on-surface/20 text-inverse-on-surface/85 hover:border-primary-container hover:text-primary-container' => $activeCategory !== $cat['slug'],
+                            ])>{{ $cat['name'] }} <span class="opacity-70">({{ $cat['count'] }})</span></a>
+                    @endforeach
+                </nav>
+            @endif
         </div>
     </div>
 

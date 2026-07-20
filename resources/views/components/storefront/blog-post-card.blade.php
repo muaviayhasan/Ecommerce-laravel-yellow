@@ -10,9 +10,11 @@
 
 <article class="group rounded-xl overflow-hidden border border-outline-variant transition-shadow {{ $isText ? 'bg-surface-container-low p-8' : 'bg-white hover:shadow-md' }}">
     @unless ($isText)
-        <a href="{{ $url }}" class="relative block overflow-hidden {{ $format === 'video' ? 'h-[420px] bg-black' : 'h-72' }}">
+        {{-- Standard covers render at their natural aspect ratio (no crop) so
+             poster-style banners stay fully visible; video keeps its fixed stage. --}}
+        <a href="{{ $url }}" class="relative block overflow-hidden {{ $format === 'video' ? 'h-[420px] bg-black' : '' }}">
             <img src="{{ data_get($post, 'image') }}" alt="{{ data_get($post, 'title') }}" loading="lazy"
-                class="w-full h-full object-cover {{ $format === 'video' ? 'opacity-80' : '' }} group-hover:scale-105 transition-transform duration-500">
+                class="w-full {{ $format === 'video' ? 'h-full object-cover opacity-80' : 'h-auto max-h-[560px] object-contain' }} group-hover:scale-105 transition-transform duration-500">
             @if ($hasOverlay)
                 <span class="absolute inset-0 flex items-center justify-center {{ $format === 'audio' ? 'bg-black/30' : '' }}">
                     <span class="w-16 h-16 rounded-full flex items-center justify-center shadow-lg {{ $format === 'video' ? 'bg-primary-container text-on-primary-container' : 'bg-white text-primary' }} group-hover:scale-110 transition-transform">
