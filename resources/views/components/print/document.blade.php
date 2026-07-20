@@ -64,7 +64,7 @@
                 position: absolute;
                 inset: 0;
                 background: url('{{ $watermark }}') no-repeat center center;
-                background-size: min(320px, 55%);
+                background-size: min(480px, 80%);
                 opacity: .05;
                 pointer-events: none;
             }
