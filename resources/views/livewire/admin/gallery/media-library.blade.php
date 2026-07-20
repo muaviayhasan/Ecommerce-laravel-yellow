@@ -52,23 +52,56 @@
                         </button>
                     </div>
 
-            {{-- Drag & drop zone --}}
-            <label x-data="{ over: false }"
-                x-on:dragover.prevent="over = true"
-                x-on:dragleave.prevent="over = false"
-                x-on:drop.prevent="over = false; $refs.input.files = $event.dataTransfer.files; $refs.input.dispatchEvent(new Event('change', { bubbles: true }))"
-                :class="over ? 'border-primary bg-primary-container/10' : 'border-outline-variant'"
-                class="cursor-pointer flex flex-col items-center justify-center gap-2 text-center border-2 border-dashed rounded-xl px-4 py-10 transition-colors">
-                <input x-ref="input" type="file" wire:model="uploads" multiple accept="image/*" class="hidden">
-                <span class="material-symbols-outlined text-primary" style="font-size:36px;">cloud_upload</span>
-                <p class="text-sm font-medium text-on-surface">Drop images here or <span class="text-primary">browse</span></p>
-                <p class="text-[11px] text-outline">PNG, JPG, WEBP · up to 5 MB each</p>
-                <span wire:loading wire:target="uploads"
-                    class="flex items-center gap-1.5 text-primary text-xs font-semibold">
-                    <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
-                    Uploading…
-                </span>
-            </label>
+            {{-- Drag & drop zone. Files are checked in the browser first (type +
+                 5 MB size) so oversized picks get a friendly, named error instead
+                 of the server's generic "failed to upload". --}}
+            <div x-data="{
+                    over: false,
+                    clientErrors: [],
+                    stage(list) {
+                        this.clientErrors = [];
+                        const ok = [];
+                        for (const f of Array.from(list)) {
+                            if (! f.type.startsWith('image/')) {
+                                this.clientErrors.push(`“${f.name}” is not an image.`);
+                            } else if (f.size > 5 * 1024 * 1024) {
+                                this.clientErrors.push(`“${f.name}” is ${(f.size / 1048576).toFixed(1)} MB — images must be 5 MB or smaller.`);
+                            } else {
+                                ok.push(f);
+                            }
+                        }
+                        if (ok.length) {
+                            $wire.uploadMultiple('uploads', ok, () => {}, () => {
+                                this.clientErrors.push('Upload failed — the file may be larger than the server allows. Try a smaller image.');
+                            });
+                        }
+                        this.$refs.input.value = '';
+                    },
+                }">
+                <label
+                    x-on:dragover.prevent="over = true"
+                    x-on:dragleave.prevent="over = false"
+                    x-on:drop.prevent="over = false; stage($event.dataTransfer.files)"
+                    :class="over ? 'border-primary bg-primary-container/10' : 'border-outline-variant'"
+                    class="cursor-pointer flex flex-col items-center justify-center gap-2 text-center border-2 border-dashed rounded-xl px-4 py-10 transition-colors">
+                    <input x-ref="input" type="file" multiple accept="image/*" class="hidden"
+                        x-on:change="stage($event.target.files)">
+                    <span class="material-symbols-outlined text-primary" style="font-size:36px;">cloud_upload</span>
+                    <p class="text-sm font-medium text-on-surface">Drop images here or <span class="text-primary">browse</span></p>
+                    <p class="text-[11px] text-outline">PNG, JPG, WEBP · up to 5 MB each</p>
+                    <span wire:loading wire:target="uploads"
+                        class="flex items-center gap-1.5 text-primary text-xs font-semibold">
+                        <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                        Uploading…
+                    </span>
+                </label>
+
+                <template x-for="err in clientErrors" :key="err">
+                    <p class="mt-3 text-sm text-error flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[18px]">error</span><span x-text="err"></span>
+                    </p>
+                </template>
+            </div>
 
             @error('uploads.*')
                 <p class="mt-3 text-sm text-error flex items-center gap-1.5">

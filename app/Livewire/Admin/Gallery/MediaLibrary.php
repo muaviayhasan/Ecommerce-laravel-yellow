@@ -72,7 +72,11 @@ class MediaLibrary extends Component
     {
         return [
             ['uploads.*' => ['image', 'max:5120']], // 5 MB each
-            ['uploads.*.image' => 'Each file must be an image.', 'uploads.*.max' => 'Each image may not exceed 5 MB.'],
+            [
+                'uploads.*.image' => 'Each file must be an image.',
+                'uploads.*.max' => 'Each image may not exceed 5 MB.',
+                'uploads.*.uploaded' => 'An image failed to upload — it is likely larger than the server allows. Images must be 5 MB or smaller.',
+            ],
         ];
     }
 
