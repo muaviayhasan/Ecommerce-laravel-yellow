@@ -17,7 +17,7 @@ class MediaController extends Controller
 {
     public function browse(Request $request): JsonResponse
     {
-        $perPage = 10;
+        $perPage = 12;
 
         $media = Media::query()
             ->latest('id')

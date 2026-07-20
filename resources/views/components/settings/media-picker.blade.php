@@ -20,32 +20,39 @@
         id: @js((string) ($selected ?? '')),
         url: @js($current['url'] ?? ''),
         title: @js($current['title'] ?? ''),
-        pages: {},
-        page: 1,
-        last: null,
+        items: [],
+        nextPage: 1,
         loading: false,
         loaded: false,
         endpoint: @js(route('admin.media.browse')),
-        get items() { return this.pages[this.page] || []; },
-        openModal() { this.open = true; if (! this.loaded) this.goto(1); },
+        openModal() { this.open = true; if (! this.loaded) this.loadMore(); },
         choose(m) { this.id = String(m.id); this.url = m.url; this.title = m.title; this.open = false; },
         clear() { this.id = ''; this.url = ''; this.title = ''; },
-        async goto(p) {
-            if (this.loading || p < 1 || (this.last !== null && p > this.last)) return;
-            if (this.pages[p]) { this.page = p; return; }
+        async loadMore() {
+            if (this.loading || this.nextPage === null) return;
             this.loading = true;
             try {
                 const sep = this.endpoint.includes('?') ? '&' : '?';
-                const r = await fetch(this.endpoint + sep + 'page=' + p, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                const r = await fetch(this.endpoint + sep + 'page=' + this.nextPage, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
                 if (r.ok) {
                     const d = await r.json();
-                    this.pages[p] = d.data || [];
-                    this.last = d.last ?? (d.next === null ? p : null);
-                    this.page = p;
+                    const seen = new Set(this.items.map(i => i.id));
+                    (d.data || []).forEach(m => { if (! seen.has(m.id)) this.items.push(m); });
+                    this.nextPage = d.next;
                 }
             } catch (e) {}
             this.loaded = true;
             this.loading = false;
+            // If the grid can't scroll yet (very tall screens), top it up so
+            // the scroll-to-load-more gesture stays reachable.
+            this.$nextTick(() => {
+                const g = this.$refs.grid;
+                if (this.nextPage !== null && g && g.scrollHeight <= g.clientHeight + 4) this.loadMore();
+            });
+        },
+        onScroll(e) {
+            const el = e.target;
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) this.loadMore();
         },
     }">
     <input type="hidden" name="{{ $name }}" :value="id">
@@ -80,8 +87,9 @@
                     </button>
                 </div>
 
-                {{-- Paged grid: newest first, 10 per page (5 per row on desktop). --}}
-                <div class="p-5 max-h-[60vh] overflow-y-auto">
+                {{-- Lazy grid: newest first, 12 per batch (5 per row on desktop),
+                     12 more load each time you scroll near the bottom. --}}
+                <div x-ref="grid" @scroll.passive="onScroll($event)" class="p-5 max-h-[60vh] overflow-y-auto">
                     <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                         <template x-for="m in items" :key="m.id">
                             <button type="button" @click="choose(m)"
@@ -107,18 +115,8 @@
                             <a href="{{ route('admin.gallery.index') }}" class="text-primary font-semibold hover:underline">Gallery</a> first.</p>
                     </div>
 
-                    {{-- Pagination --}}
-                    <div x-show="loaded && last !== null && last > 1" class="flex items-center justify-center gap-1 pt-5">
-                        <button type="button" @click="goto(page - 1)" :disabled="loading || page <= 1" aria-label="Previous page"
-                            class="cursor-pointer w-9 h-9 grid place-items-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high disabled:opacity-40 disabled:pointer-events-none transition-colors">
-                            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
-                        </button>
-                        <span class="px-3 text-sm font-semibold text-on-surface tabular-nums" x-text="page + ' / ' + (last ?? 1)"></span>
-                        <button type="button" @click="goto(page + 1)" :disabled="loading || (last !== null && page >= last)" aria-label="Next page"
-                            class="cursor-pointer w-9 h-9 grid place-items-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high disabled:opacity-40 disabled:pointer-events-none transition-colors">
-                            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-                        </button>
-                    </div>
+                    {{-- End-of-list marker --}}
+                    <p x-show="loaded && items.length > 0 && nextPage === null" class="text-center text-xs text-outline pt-4">That’s all your images.</p>
                 </div>
 
                 <div class="flex justify-end gap-3 p-5 border-t border-outline-variant/60">
