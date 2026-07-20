@@ -240,6 +240,9 @@
 
     <x-storefront.product-columns />
 
+    {{-- Floating share button, stacked above the support-chat bubble. --}}
+    <x-storefront.share-fab :url="$post['url']" :title="$post['title']" />
+
     @push('scripts')
         <script>
             function commentForm() {
