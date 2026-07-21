@@ -43,7 +43,7 @@ class RolePermissionSeeder extends Seeder
         'coupons' => ['view', 'create', 'edit', 'delete'],
         'reviews' => ['view', 'moderate'],
         'wishlists' => ['view'],
-        'support' => ['view', 'reply'],
+        'support' => ['view', 'reply', 'delete'],
         // Marketing
         'subscribers' => ['view', 'delete', 'export'],
         'campaigns' => ['view', 'create', 'edit', 'delete', 'send'],

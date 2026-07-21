@@ -267,6 +267,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Support inbox — staff side of the customer chat widget.
     Route::get('support', [SupportController::class, 'index'])->name('support.index');
+    Route::post('support/read-all', [SupportController::class, 'readAll'])->name('support.read-all');
+    Route::post('support/purge', [SupportController::class, 'purge'])->name('support.purge');
+    Route::post('support/bulk-delete', [SupportController::class, 'bulkDestroy'])->name('support.bulk-delete');
+    Route::delete('support/{conversation}', [SupportController::class, 'destroy'])->name('support.destroy');
     Route::get('support/conversations', [SupportController::class, 'conversations'])->name('support.conversations');
     Route::get('support/{conversation}/messages', [SupportController::class, 'messages'])->name('support.messages');
     Route::get('support/{conversation}/history', [SupportController::class, 'history'])->name('support.history');

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SupportConversation;
 use App\Models\SupportMessage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -25,7 +26,8 @@ class SupportController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('can:support.view', only: ['index', 'messages', 'delivered', 'conversations', 'history']),
-            new Middleware('can:support.reply', only: ['reply', 'block']),
+            new Middleware('can:support.reply', only: ['reply', 'block', 'readAll']),
+            new Middleware('can:support.delete', only: ['destroy', 'bulkDestroy', 'purge']),
         ];
     }
 
@@ -152,6 +154,75 @@ class SupportController extends Controller implements HasMiddleware
         }
 
         return response()->json(['messages' => $this->recent($conversation)]);
+    }
+
+    /** Delete one conversation (its messages cascade at the DB level). */
+    public function destroy(SupportConversation $conversation): RedirectResponse
+    {
+        $conversation->delete();
+
+        return redirect()->route('admin.support.index')->with('status', 'Conversation deleted.');
+    }
+
+    /** Delete a selection of conversations from the inbox list. */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:support_conversations,id'],
+        ]);
+
+        $count = SupportConversation::whereIn('id', $data['ids'])->delete();
+
+        return redirect()->route('admin.support.index')->with('status', "{$count} conversation(s) deleted.");
+    }
+
+    /**
+     * Housekeeping: delete messages older than 15/30 days, or every automated
+     * order-update message (system posts: from_admin with no author). Threads
+     * left with no messages are removed, and thread timestamps re-synced.
+     */
+    public function purge(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'mode' => ['required', 'in:older,bot'],
+            'days' => ['required_if:mode,older', 'nullable', 'integer', 'in:15,30'],
+        ]);
+
+        if ($data['mode'] === 'bot') {
+            $deleted = SupportMessage::where('from_admin', true)->whereNull('user_id')->delete();
+            $status = "Deleted {$deleted} automated order message(s).";
+        } else {
+            $days = (int) $data['days'];
+            $deleted = SupportMessage::where('created_at', '<', now()->subDays($days))->delete();
+            $status = "Deleted {$deleted} message(s) older than {$days} days.";
+        }
+
+        $this->tidyAfterPurge();
+
+        return redirect()->route('admin.support.index')->with('status', $status);
+    }
+
+    /** Clear the inbox badge: mark every customer message delivered + read. */
+    public function readAll(): RedirectResponse
+    {
+        SupportMessage::where('from_admin', false)->whereNull('delivered_at')->update(['delivered_at' => now()]);
+        SupportMessage::where('from_admin', false)->whereNull('read_at')->update(['read_at' => now()]);
+
+        return redirect()->route('admin.support.index')->with('status', 'All messages marked as read.');
+    }
+
+    /** Drop now-empty conversations and re-sync last_message_at after a purge. */
+    private function tidyAfterPurge(): void
+    {
+        SupportConversation::doesntHave('messages')->delete();
+
+        SupportConversation::with('lastMessage')->get()->each(function (SupportConversation $c) {
+            $latest = $c->lastMessage?->created_at;
+            if ($latest && ! $latest->equalTo($c->last_message_at)) {
+                $c->updateQuietly(['last_message_at' => $latest]);
+            }
+        });
     }
 
     /** Base query for the inbox contact list (honours the search filter). */

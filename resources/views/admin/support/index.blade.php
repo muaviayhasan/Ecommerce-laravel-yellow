@@ -21,6 +21,7 @@
                     url: @js(route('admin.support.conversations')),
                     indexUrl: @js(route('admin.support.index')),
                     search: @js($filters['search'] ?? ''),
+                    bulkUrl: @js(route('admin.support.bulk-delete')),
                 })"
                 class="col-span-12 md:col-span-4 xl:col-span-3 border-r border-outline-variant/60 flex flex-col min-h-0 {{ $explicit ? 'hidden md:flex' : '' }}">
                 <div class="p-4 border-b border-outline-variant/60">
@@ -29,12 +30,78 @@
                         <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search contacts…"
                             class="w-full pl-10 pr-3 py-2.5 bg-surface-container-low border border-outline-variant rounded-lg text-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary">
                     </form>
+
+                    {{-- Inbox tools: select-to-delete, mark all read, cleanup menu --}}
+                    @canany(['support.delete', 'support.reply'])
+                        <div class="mt-3 flex items-center gap-2">
+                            @can('support.delete')
+                                <button type="button" @click="toggleMode()"
+                                    :class="selectMode ? 'bg-primary text-on-primary border-primary' : 'text-on-surface-variant border-outline-variant hover:bg-surface-container-high'"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors">
+                                    <span class="material-symbols-outlined text-[16px]" x-text="selectMode ? 'close' : 'checklist'"></span>
+                                    <span x-text="selectMode ? 'Cancel' : 'Select'"></span>
+                                </button>
+                            @endcan
+                            @can('support.reply')
+                                <button type="button" title="Mark all messages as read"
+                                    @click="window.__postForm(@js(route('admin.support.read-all')))"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant text-xs font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                                    <span class="material-symbols-outlined text-[16px]">done_all</span> Read all
+                                </button>
+                            @endcan
+                            @can('support.delete')
+                                <div class="relative ml-auto" x-data="{ open: false }" @click.outside="open = false">
+                                    <button type="button" @click="open = !open"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant text-xs font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                                        <span class="material-symbols-outlined text-[16px]">delete_sweep</span> Cleanup
+                                        <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                                    </button>
+                                    <div x-show="open" x-cloak x-transition
+                                        class="absolute right-0 mt-1 w-72 z-30 bg-surface-container-lowest dark:bg-surface-container-high border border-outline-variant rounded-xl shadow-xl p-1.5">
+                                        <p class="px-2.5 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-widest text-outline">Old messages</p>
+                                        <button type="button"
+                                            @click="open = false; $store.supportConfirm.ask('Delete messages older than 15 days?', 'Messages older than 15 days will be permanently removed; conversations left empty are cleaned up too.', () => window.__postForm(@js(route('admin.support.purge')), { mode: 'older', days: 15 }))"
+                                            class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm text-on-surface hover:bg-surface-container-high text-left transition-colors">
+                                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">history</span> Older than 15 days
+                                        </button>
+                                        <button type="button"
+                                            @click="open = false; $store.supportConfirm.ask('Delete messages older than 30 days?', 'Messages older than 30 days will be permanently removed; conversations left empty are cleaned up too.', () => window.__postForm(@js(route('admin.support.purge')), { mode: 'older', days: 30 }))"
+                                            class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm text-on-surface hover:bg-surface-container-high text-left transition-colors">
+                                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">history</span> Older than 30 days
+                                        </button>
+                                        <p class="px-2.5 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-outline border-t border-outline-variant/60 mt-1.5">Automated messages</p>
+                                        <button type="button"
+                                            @click="open = false; $store.supportConfirm.ask('Delete all order-update messages?', 'Every automated order status message the system posted into chats will be removed. Customer and staff messages stay.', () => window.__postForm(@js(route('admin.support.purge')), { mode: 'bot' }))"
+                                            class="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm text-on-surface hover:bg-surface-container-high text-left transition-colors">
+                                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">smart_toy</span> Order-update messages
+                                        </button>
+                                    </div>
+                                </div>
+                            @endcan
+                        </div>
+                    @endcanany
+
+                    {{-- Bulk-selection action bar --}}
+                    <div x-show="selectMode && selected.length" x-cloak
+                        class="mt-3 flex items-center justify-between gap-2 bg-error-container/40 border border-error/30 rounded-lg px-3 py-2">
+                        <span class="text-xs font-semibold text-error" x-text="selected.length + ' selected'"></span>
+                        <button type="button" @click="bulkDelete()"
+                            class="inline-flex items-center gap-1 text-xs font-bold text-error hover:opacity-80 transition-opacity">
+                            <span class="material-symbols-outlined text-[16px]">delete</span> Delete selected
+                        </button>
+                    </div>
                 </div>
                 <div class="flex-1 overflow-y-auto divide-y divide-outline-variant/40">
                     <template x-for="c in conversations" :key="c.id">
                         <a :href="link(c.id)"
+                            @click="if (selectMode) { $event.preventDefault(); toggle(c.id); }"
                             class="flex items-center gap-3 px-4 py-3.5 transition-colors"
-                            :class="c.id === activeId ? 'bg-surface-container-high' : 'hover:bg-surface-container-low'">
+                            :class="[c.id === activeId && ! selectMode ? 'bg-surface-container-high' : 'hover:bg-surface-container-low', selectMode && isSel(c.id) ? '!bg-primary/10' : '']">
+                            <span x-show="selectMode" x-cloak
+                                class="shrink-0 w-6 h-6 rounded-full border-2 grid place-items-center transition-colors"
+                                :class="isSel(c.id) ? 'bg-primary border-primary text-on-primary' : 'border-outline'">
+                                <span class="material-symbols-outlined text-[16px]" x-show="isSel(c.id)">check</span>
+                            </span>
                             <div class="relative shrink-0">
                                 <div class="w-11 h-11 rounded-full bg-primary/10 text-primary grid place-items-center font-bold" x-text="c.initial"></div>
                                 <span x-show="c.online" x-cloak class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 ring-2 ring-surface-container-lowest" title="Online"></span>
@@ -111,15 +178,24 @@
                                     </span>
                                 </p>
                             </div>
-                            @can('support.reply')
-                                <button type="button" @click="toggleBlock()" :disabled="blockBusy"
-                                    class="ml-auto shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
-                                    :class="blocked ? 'bg-error/10 text-error hover:bg-error/20' : 'text-on-surface-variant hover:bg-surface-container-high'"
-                                    :title="blocked ? 'Allow this customer to message again' : 'Block this customer from sending messages'">
-                                    <span class="material-symbols-outlined text-[18px]" x-text="blocked ? 'lock_open' : 'block'"></span>
-                                    <span x-text="blocked ? 'Unblock' : 'Block'"></span>
-                                </button>
-                            @endcan
+                            <div class="ml-auto shrink-0 flex items-center gap-1">
+                                @can('support.reply')
+                                    <button type="button" @click="toggleBlock()" :disabled="blockBusy"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                                        :class="blocked ? 'bg-error/10 text-error hover:bg-error/20' : 'text-on-surface-variant hover:bg-surface-container-high'"
+                                        :title="blocked ? 'Allow this customer to message again' : 'Block this customer from sending messages'">
+                                        <span class="material-symbols-outlined text-[18px]" x-text="blocked ? 'lock_open' : 'block'"></span>
+                                        <span x-text="blocked ? 'Unblock' : 'Block'"></span>
+                                    </button>
+                                @endcan
+                                @can('support.delete')
+                                    <button type="button" title="Delete conversation"
+                                        @click="$store.supportConfirm.ask(@js('Delete this conversation?'), @js('All messages with ' . $active->name . ' will be permanently removed. This cannot be undone.'), () => document.getElementById('delete-conversation-form').submit())"
+                                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-error hover:bg-error/10 transition">
+                                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                                    </button>
+                                @endcan
+                            </div>
                         </div>
 
                         {{-- Messages --}}
@@ -178,6 +254,11 @@
                             </form>
                         @endcan
                     </div>
+                    @can('support.delete')
+                        <form id="delete-conversation-form" method="POST" action="{{ route('admin.support.destroy', $active) }}" class="hidden">
+                            @csrf @method('DELETE')
+                        </form>
+                    @endcan
                 @else
                     <div class="flex-1 grid place-items-center text-center text-on-surface-variant p-8">
                         <div>
@@ -191,9 +272,52 @@
         </div>
     </x-admin.panel>
 
+    {{-- Shared yes/no confirmation dialog (single, bulk and cleanup deletes). --}}
+    <div x-data x-show="$store.supportConfirm.open" x-cloak class="fixed inset-0 z-50 grid place-items-center p-4"
+        @keydown.escape.window="$store.supportConfirm.close()" role="dialog" aria-modal="true">
+        <div class="absolute inset-0 bg-black/50" @click="$store.supportConfirm.close()" x-transition.opacity></div>
+        <div class="relative w-full max-w-sm bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-2xl shadow-2xl p-6 text-center"
+            x-show="$store.supportConfirm.open"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+            <div class="w-14 h-14 mx-auto rounded-full bg-error-container grid place-items-center mb-4">
+                <span class="material-symbols-outlined text-error text-[28px]">delete_forever</span>
+            </div>
+            <h3 class="text-lg font-bold text-on-surface mb-1" x-text="$store.supportConfirm.title"></h3>
+            <p class="text-sm text-on-surface-variant mb-6" x-text="$store.supportConfirm.message"></p>
+            <div class="flex gap-3">
+                <button type="button" @click="$store.supportConfirm.close()"
+                    class="flex-1 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">No, keep</button>
+                <button type="button" @click="$store.supportConfirm.yes()"
+                    class="flex-1 py-2.5 bg-error text-white font-bold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all">Yes, delete</button>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
+            // Build + submit a real form so deletes flow through the normal
+            // redirect + flash cycle (and the audit middleware).
+            window.__postForm = (url, fields = {}, method = 'POST') => {
+                const f = document.createElement('form');
+                f.method = 'POST'; f.action = url; f.style.display = 'none';
+                const add = (n, v) => { const i = document.createElement('input'); i.type = 'hidden'; i.name = n; i.value = v; f.appendChild(i); };
+                add('_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+                if (method !== 'POST') add('_method', method);
+                Object.entries(fields).forEach(([k, v]) => Array.isArray(v) ? v.forEach(x => add(k + '[]', x)) : add(k, v));
+                document.body.appendChild(f);
+                f.submit();
+            };
+
             document.addEventListener('alpine:init', () => {
+                // One confirm dialog shared by every destructive action on this page.
+                Alpine.store('supportConfirm', {
+                    open: false, title: '', message: '', _fn: null,
+                    ask(title, message, fn) { this.title = title; this.message = message; this._fn = fn; this.open = true; },
+                    close() { this.open = false; this._fn = null; },
+                    yes() { const f = this._fn; this.close(); if (f) f(); },
+                });
+
                 Alpine.data('supportInbox', (cfg) => ({
                     messages: cfg.messages || [],
                     body: '',
@@ -360,8 +484,21 @@
                     conversations: cfg.seed || [],
                     activeId: cfg.activeId,
                     search: cfg.search || '',
+                    selectMode: false,
+                    selected: [],
                     _poll: null,
                     _t: null,
+                    toggleMode() { this.selectMode = ! this.selectMode; this.selected = []; },
+                    toggle(id) { const i = this.selected.indexOf(id); i > -1 ? this.selected.splice(i, 1) : this.selected.push(id); },
+                    isSel(id) { return this.selected.includes(id); },
+                    bulkDelete() {
+                        if (! this.selected.length) return;
+                        Alpine.store('supportConfirm').ask(
+                            'Delete ' + this.selected.length + ' conversation(s)?',
+                            'All their messages will be permanently removed. This cannot be undone.',
+                            () => window.__postForm(cfg.bulkUrl, { ids: this.selected }),
+                        );
+                    },
                     init() {
                         this._onEvt = () => this.schedule();
                         window.addEventListener('support:message', this._onEvt);
