@@ -74,6 +74,7 @@ class ProductController extends Controller
             'image' => $gallery[0],
             'og_image' => $product->media->first()?->url ?? $gallery[0],
             'gallery' => $gallery,
+            'video' => video_embed($product->video_url),
             'url' => route('product.show', $product->slug),
             'sku' => $variant?->sku ?? $product->sku,
             'stock' => (float) ($variant?->stock_quantity ?? 0),

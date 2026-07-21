@@ -82,21 +82,47 @@
                     initial: @js($selectedVariant),
                     fallback: { price: @js((float) $product['price']), compare: @js($product['compare']), sku: @js($product['sku'] ?? ''), stock: @js((float) $product['stock']) },
                     tracked: @js((bool) ($product['tracked'] ?? true)),
+                    video: @js($product['video'] ?? null),
                 })">
-                {{-- Gallery: main image on top, thumbnails below --}}
+                {{-- Gallery: main image (or embedded product video) on top, thumbnails below --}}
                 <div class="space-y-6">
-                    <div class="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center p-6 sm:p-8 group cursor-zoom-in">
-                        <img :src="gallery[active]" alt="{{ $product['name'] }}"
-                            class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
+                    <div class="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center group"
+                        :class="showVideo ? 'bg-black' : 'p-6 sm:p-8 cursor-zoom-in'">
+                        <template x-if="showVideo">
+                            <iframe :src="video.embed + '?rel=0&autoplay=1'" class="w-full h-full" frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen title="{{ $product['name'] }} — video"></iframe>
+                        </template>
+                        <template x-if="! showVideo">
+                            <img :src="gallery[active]" alt="{{ $product['name'] }}"
+                                class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
+                        </template>
                     </div>
                     <div class="flex gap-3 sm:gap-4 overflow-x-auto pb-2 no-scrollbar">
                         @foreach ($product['gallery'] as $i => $img)
-                            <button type="button" @click="active = {{ $i }}" aria-label="View image {{ $i + 1 }}"
+                            <button type="button" @click="active = {{ $i }}; showVideo = false" aria-label="View image {{ $i + 1 }}"
                                 class="w-20 h-20 shrink-0 border-2 rounded-lg p-2 transition-colors"
-                                :class="active === {{ $i }} ? 'border-primary' : 'border-outline-variant hover:border-primary'">
+                                :class="active === {{ $i }} && ! showVideo ? 'border-primary' : 'border-outline-variant hover:border-primary'">
                                 <img src="{{ $img }}" alt="" loading="lazy" class="w-full h-full object-contain">
                             </button>
                         @endforeach
+                        @if (! empty($product['video']))
+                            {{-- Product video tile: provider thumbnail (YouTube) + play badge --}}
+                            <button type="button" @click="showVideo = true" aria-label="Play product video"
+                                class="relative w-20 h-20 shrink-0 border-2 rounded-lg overflow-hidden transition-colors"
+                                :class="showVideo ? 'border-primary' : 'border-outline-variant hover:border-primary'">
+                                @if ($product['video']['thumb'])
+                                    <img src="{{ $product['video']['thumb'] }}" alt="Product video" loading="lazy" class="w-full h-full object-cover">
+                                @else
+                                    <span class="absolute inset-0 bg-inverse-surface"></span>
+                                @endif
+                                <span class="absolute inset-0 grid place-items-center bg-black/25">
+                                    <span class="w-8 h-8 rounded-full bg-white/95 shadow grid place-items-center">
+                                        <span class="material-symbols-outlined text-[20px] text-error" style="font-variation-settings:'FILL' 1;">play_arrow</span>
+                                    </span>
+                                </span>
+                            </button>
+                        @endif
                     </div>
                 </div>
 
@@ -492,6 +518,8 @@
                 selected: {},
                 active: 0,
                 qty: 1,
+                video: cfg.video || null,
+                showVideo: false,
                 init() {
                     const start = this.matrix.find(v => v.id === cfg.initial) || this.matrix[0];
                     if (start) this.selected = { ...start.options };
@@ -511,6 +539,7 @@
                         if (v) this.selected = { ...v.options };
                     }
                     this.syncImage();
+                    this.showVideo = false; // picking a variant returns to its image
                     this.qty = this.clampQty(this.qty); // new variant may have less stock
                 },
                 // Highest quantity that can be ordered: the variant's stock when

@@ -93,6 +93,41 @@ if (! function_exists('logo_url')) {
     }
 }
 
+if (! function_exists('video_embed')) {
+    /**
+     * Parse a YouTube / Vimeo link into an embeddable player URL + thumbnail.
+     * Supports youtu.be/ID, youtube.com/watch?v=ID, /shorts/ID, /embed/ID and
+     * vimeo.com/ID (Vimeo has no keyless thumbnail — callers show a play tile).
+     *
+     * @return array{provider: string, embed: string, thumb: ?string}|null
+     */
+    function video_embed(?string $url): ?array
+    {
+        $url = trim((string) $url);
+        if ($url === '') {
+            return null;
+        }
+
+        if (preg_match('~(?:youtube\.com/(?:watch\?v=|shorts/|embed/)|youtu\.be/)([A-Za-z0-9_-]{6,20})~', $url, $m)) {
+            return [
+                'provider' => 'youtube',
+                'embed' => 'https://www.youtube-nocookie.com/embed/' . $m[1],
+                'thumb' => 'https://i.ytimg.com/vi/' . $m[1] . '/hqdefault.jpg',
+            ];
+        }
+
+        if (preg_match('~vimeo\.com/(?:video/)?(\d+)~', $url, $m)) {
+            return [
+                'provider' => 'vimeo',
+                'embed' => 'https://player.vimeo.com/video/' . $m[1],
+                'thumb' => null,
+            ];
+        }
+
+        return null;
+    }
+}
+
 if (! function_exists('format_money')) {
     /**
      * Format an amount using the configured currency symbol, position, decimals
