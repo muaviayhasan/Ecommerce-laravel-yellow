@@ -98,18 +98,36 @@
                     @csrf @method('PUT')
                     <div>
                         <label for="current_password" class="{{ $label }}">Current password</label>
-                        <input id="current_password" name="current_password" type="password" autocomplete="current-password" class="{{ $field }}">
+                        <div class="relative" x-data="{ show: false }">
+                            <input id="current_password" name="current_password" type="password" :type="show ? 'text' : 'password'" autocomplete="current-password" class="{{ $field }} pr-11">
+                            <button type="button" @click="show = !show" tabindex="-1" :title="show ? 'Hide password' : 'Show password'"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[20px]" x-text="show ? 'visibility_off' : 'visibility'"></span>
+                            </button>
+                        </div>
                         @error('current_password')<p class="text-xs text-error mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label for="password" class="{{ $label }}">New password</label>
-                        <input id="password" name="password" type="password" autocomplete="new-password" class="{{ $field }}">
+                        <div class="relative" x-data="{ show: false }">
+                            <input id="password" name="password" type="password" :type="show ? 'text' : 'password'" autocomplete="new-password" class="{{ $field }} pr-11">
+                            <button type="button" @click="show = !show" tabindex="-1" :title="show ? 'Hide password' : 'Show password'"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[20px]" x-text="show ? 'visibility_off' : 'visibility'"></span>
+                            </button>
+                        </div>
                         <p class="text-xs text-outline mt-1">At least 8 characters.</p>
                         @error('password')<p class="text-xs text-error mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label for="password_confirmation" class="{{ $label }}">Confirm new password</label>
-                        <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" class="{{ $field }}">
+                        <div class="relative" x-data="{ show: false }">
+                            <input id="password_confirmation" name="password_confirmation" type="password" :type="show ? 'text' : 'password'" autocomplete="new-password" class="{{ $field }} pr-11">
+                            <button type="button" @click="show = !show" tabindex="-1" :title="show ? 'Hide password' : 'Show password'"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[20px]" x-text="show ? 'visibility_off' : 'visibility'"></span>
+                            </button>
+                        </div>
                     </div>
                     <div class="flex justify-end pt-1">
                         <button type="submit" class="px-6 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all">

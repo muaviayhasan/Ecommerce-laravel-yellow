@@ -98,22 +98,40 @@
                 @if ($user->password)
                     <div>
                         <label class="block text-label-sm font-medium mb-1">Current password <span class="text-error">*</span></label>
-                        <input type="password" name="current_password" autocomplete="current-password"
-                            class="w-full max-w-md rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('current_password') border-error @enderror">
+                        <div class="relative max-w-md" x-data="{ reveal: false }">
+                            <input type="password" name="current_password" autocomplete="current-password" :type="reveal ? 'text' : 'password'"
+                                class="w-full rounded-lg border border-outline-variant px-3 py-2.5 pr-11 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('current_password') border-error @enderror">
+                            <button type="button" @click="reveal = !reveal" tabindex="-1" :title="reveal ? 'Hide password' : 'Show password'"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
+                            </button>
+                        </div>
                         @error('current_password')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                 @endif
                 <div class="grid sm:grid-cols-2 gap-4 max-w-2xl">
                     <div>
                         <label class="block text-label-sm font-medium mb-1">New password <span class="text-error">*</span></label>
-                        <input type="password" name="password" autocomplete="new-password"
-                            class="w-full rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('password') border-error @enderror">
+                        <div class="relative" x-data="{ reveal: false }">
+                            <input type="password" name="password" autocomplete="new-password" :type="reveal ? 'text' : 'password'"
+                                class="w-full rounded-lg border border-outline-variant px-3 py-2.5 pr-11 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('password') border-error @enderror">
+                            <button type="button" @click="reveal = !reveal" tabindex="-1" :title="reveal ? 'Hide password' : 'Show password'"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
+                            </button>
+                        </div>
                         @error('password')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-label-sm font-medium mb-1">Confirm password <span class="text-error">*</span></label>
-                        <input type="password" name="password_confirmation" autocomplete="new-password"
-                            class="w-full rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                        <div class="relative" x-data="{ reveal: false }">
+                            <input type="password" name="password_confirmation" autocomplete="new-password" :type="reveal ? 'text' : 'password'"
+                                class="w-full rounded-lg border border-outline-variant px-3 py-2.5 pr-11 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                            <button type="button" @click="reveal = !reveal" tabindex="-1" :title="reveal ? 'Hide password' : 'Show password'"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
