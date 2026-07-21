@@ -128,6 +128,8 @@ class VendorSaleController extends Controller implements HasMiddleware
         try {
             $order = $sales->place('vendor', $customer, $lines, [
                 'payment_method' => $data['payment_method'],
+                'walk_in_name' => $data['walk_in_name'] ?? null,
+                'walk_in_phone' => $data['walk_in_phone'] ?? null,
                 'tax_rate' => $taxRate,
                 'discount_type' => $data['discount_type'],
                 'discount_value' => (float) ($data['discount_value'] ?? 0),

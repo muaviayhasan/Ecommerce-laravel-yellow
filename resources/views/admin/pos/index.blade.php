@@ -144,13 +144,13 @@
                             class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-medium text-on-surface-variant">Customer name <span class="text-outline font-normal">(optional)</span></label>
-                                <input type="text" name="walk_in_name" maxlength="100" placeholder="e.g. Ahmed"
+                                <input type="text" name="walk_in_name" value="{{ old('walk_in_name') }}" maxlength="100" placeholder="e.g. Ahmed"
                                     class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
+                                @error('walk_in_name')<p class="text-xs text-error">{{ $message }}</p>@enderror
                             </div>
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-medium text-on-surface-variant">Contact no <span class="text-outline font-normal">(optional)</span></label>
-                                <input type="text" name="walk_in_phone" maxlength="30" placeholder="03xx-xxxxxxx"
-                                    class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
+                                <x-storefront.phone-input name="walk_in_phone" error="walk_in_phone" :value="old('walk_in_phone')" />
                             </div>
                         </div>
 

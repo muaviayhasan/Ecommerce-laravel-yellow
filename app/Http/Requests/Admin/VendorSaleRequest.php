@@ -29,6 +29,9 @@ class VendorSaleRequest extends FormRequest
     {
         return [
             'customer_id' => ['required', Rule::exists('customers', 'id')],
+            // Optional walk-in contact details, printed on the bill.
+            'walk_in_name' => ['nullable', 'string', 'max:100'],
+            'walk_in_phone' => ['nullable', 'regex:/^03\d{2}-?\d{7}$/'],
             'payment_method' => ['required', Rule::in(['cash', 'card', 'bank', 'credit'])],
             'paid' => ['numeric', 'min:0'],
             'discount_type' => ['required', Rule::in(['fixed', 'percent'])],
@@ -58,6 +61,7 @@ class VendorSaleRequest extends FormRequest
     {
         return [
             'customer_id.required' => 'Choose the vendor / customer this sale is for.',
+            'walk_in_phone.regex' => 'Enter a valid mobile number like 0300-0000000.',
             'items.required' => 'Add at least one item to the sale.',
         ];
     }

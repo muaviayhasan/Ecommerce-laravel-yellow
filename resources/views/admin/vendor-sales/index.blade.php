@@ -145,6 +145,21 @@
                             @error('customer_id')<p class="text-xs text-error">{{ $message }}</p>@enderror
                         </div>
 
+                        {{-- Walk-in extras: optional name + contact, printed on the bill. --}}
+                        <div x-show="customerId === '' || customerId === @js((string) ($defaultCustomerId ?? ''))"
+                            class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-on-surface-variant">Customer name <span class="text-outline font-normal">(optional)</span></label>
+                                <input type="text" name="walk_in_name" value="{{ old('walk_in_name') }}" maxlength="100" placeholder="e.g. Ahmed"
+                                    class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
+                                @error('walk_in_name')<p class="text-xs text-error">{{ $message }}</p>@enderror
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-on-surface-variant">Contact no <span class="text-outline font-normal">(optional)</span></label>
+                                <x-storefront.phone-input name="walk_in_phone" error="walk_in_phone" :value="old('walk_in_phone')" />
+                            </div>
+                        </div>
+
                         <dl class="space-y-2 text-sm border-t border-outline-variant/60 pt-4">
                             <div class="flex justify-between"><dt class="text-on-surface-variant">Subtotal</dt><dd class="text-on-surface" x-text="money(subtotal())"></dd></div>
                             <div class="flex justify-between items-center gap-2">

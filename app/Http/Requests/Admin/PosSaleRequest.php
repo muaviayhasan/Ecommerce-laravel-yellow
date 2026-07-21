@@ -30,7 +30,7 @@ class PosSaleRequest extends FormRequest
             'customer_id' => ['nullable', Rule::exists('customers', 'id')],
             // Optional walk-in contact details, printed on the bill.
             'walk_in_name' => ['nullable', 'string', 'max:100'],
-            'walk_in_phone' => ['nullable', 'string', 'max:30'],
+            'walk_in_phone' => ['nullable', 'regex:/^03\d{2}-?\d{7}$/'],
             'payment_method' => ['required', Rule::in(['cash', 'card', 'qr'])],
             'discount_type' => ['required', Rule::in(['fixed', 'percent'])],
             'discount_value' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
@@ -59,6 +59,7 @@ class PosSaleRequest extends FormRequest
     {
         return [
             'items.required' => 'Add at least one item to the sale.',
+            'walk_in_phone.regex' => 'Enter a valid mobile number like 0300-0000000.',
         ];
     }
 }
