@@ -150,7 +150,7 @@
                             </div>
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-medium text-on-surface-variant">Contact no <span class="text-outline font-normal">(optional)</span></label>
-                                <x-storefront.phone-input name="walk_in_phone" error="walk_in_phone" :value="old('walk_in_phone')" />
+                                <x-storefront.phone-input name="walk_in_phone" error="walk_in_phone" :value="old('walk_in_phone')" compact />
                             </div>
                         </div>
 

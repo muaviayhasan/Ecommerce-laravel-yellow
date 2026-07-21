@@ -1,14 +1,14 @@
-@props(['value' => '', 'name' => 'phone', 'error' => 'phone'])
+@props(['value' => '', 'name' => 'phone', 'error' => 'phone', 'compact' => false])
 @php
     // Seed the editable part from a stored value: strip non-digits and a leading "03".
     $digits = preg_replace('/\D/', '', (string) $value);
     $seed = \Illuminate\Support\Str::startsWith($digits, '03') ? substr($digits, 2) : $digits;
 @endphp
 <div x-data="phoneField(@js($seed))">
-    <div class="flex rounded-lg border border-outline-variant overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-colors @error($error) border-error @enderror">
-        <span class="grid place-items-center px-3 bg-surface-container-low text-on-surface-variant font-semibold border-r border-outline-variant select-none">03</span>
+    <div class="flex rounded-lg border border-outline-variant overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-colors {{ $compact ? 'bg-surface-container-low' : '' }} @error($error) border-error @enderror">
+        <span class="grid place-items-center text-on-surface-variant font-semibold border-r border-outline-variant select-none {{ $compact ? 'px-2.5 text-sm bg-surface-container-high' : 'px-3 bg-surface-container-low' }}">03</span>
         <input type="tel" inputmode="numeric" x-model="rest" @input="onInput" maxlength="10" placeholder="00-0000000"
-            class="flex-1 min-w-0 px-3 py-2.5 outline-none bg-transparent" autocomplete="tel-national">
+            class="flex-1 min-w-0 outline-none bg-transparent {{ $compact ? 'px-3 py-2 text-sm text-on-surface' : 'px-3 py-2.5' }}" autocomplete="tel-national">
     </div>
     <input type="hidden" name="{{ $name }}" :value="full">
     @error($error)<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
