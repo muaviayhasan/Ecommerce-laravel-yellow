@@ -1,6 +1,6 @@
 @php($user = auth()->user())
 
-<header class="h-16 flex items-center justify-between gap-4 px-4 sm:px-8 bg-surface-container-lowest dark:bg-surface
+<header class="h-20 flex items-center justify-between gap-4 px-4 sm:px-8 bg-surface-container-lowest dark:bg-surface
                border-b border-outline-variant sticky top-0 z-20">
 
     {{-- Hamburger (mobile menu toggle) --}}
