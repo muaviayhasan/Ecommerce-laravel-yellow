@@ -28,7 +28,7 @@
             {{-- Sidebar --}}
             <aside class="bg-white rounded-lg border border-outline-variant overflow-hidden">
                 <div class="p-5 border-b border-outline-variant flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-full overflow-hidden bg-primary-container text-on-primary-container grid place-items-center font-bold shrink-0">
+                    <div class="w-11 h-11 rounded-full overflow-hidden bg-primary-container text-on-primary-container grid place-items-center font-bold shrink-0 border-2 border-outline">
                         @if ($user->avatar_url)
                             <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
                         @else
@@ -56,12 +56,13 @@
                             <span class="material-symbols-outlined text-[20px]">{{ $item['icon'] }}</span> {{ $item['label'] }}
                         </a>
                     @endforeach
-                    <form method="POST" action="{{ route('logout') }}" class="mt-1 pt-1 border-t border-outline-variant/60">
-                        @csrf
-                        <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-colors">
+                    {{-- Opens the header's shared logout-confirm dialog instead of logging out directly. --}}
+                    <div class="mt-1 pt-1 border-t border-outline-variant/60" x-data>
+                        <button type="button" @click="window.dispatchEvent(new CustomEvent('open-logout-confirm'))"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-colors">
                             <span class="material-symbols-outlined text-[20px]">logout</span> Logout
                         </button>
-                    </form>
+                    </div>
                 </nav>
             </aside>
 

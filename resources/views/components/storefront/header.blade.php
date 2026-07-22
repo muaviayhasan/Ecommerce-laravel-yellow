@@ -34,7 +34,7 @@
     $wishlistCount = app(\App\Services\WishlistService::class)->count();
 @endphp
 
-<div x-data="{ mobileMenu: false, logoutConfirm: false }">
+<div x-data="{ mobileMenu: false, logoutConfirm: false }" @open-logout-confirm.window="logoutConfirm = true">
     {{-- Top bar (hidden on mobile — its links live in the main header / bottom nav / drawer) --}}
     <div class="hidden md:block bg-surface border-b border-outline-variant">
         <div class="app-container flex items-center justify-between py-2 text-label-sm text-on-surface-variant">
@@ -69,7 +69,7 @@
                     @endif
                     <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('account') }}">
                         @if (auth()->user()->avatar_url)
-                            <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}" class="w-6 h-6 rounded-full object-cover">
+                            <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}" class="w-6 h-6 rounded-full object-cover border-2 border-outline">
                         @else
                             <span class="material-symbols-outlined text-[16px]">person</span>
                         @endif

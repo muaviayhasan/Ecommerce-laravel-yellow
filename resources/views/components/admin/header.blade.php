@@ -96,7 +96,7 @@
 
         {{-- User menu --}}
         <div x-data="{ open: false }" class="relative">
-            <button @click="open = !open" class="flex items-center gap-3">
+            <button @click="open = !open" class="flex items-center gap-3 my-2">
                 <div class="text-right hidden sm:block leading-tight">
                     <div class="text-sm font-bold text-on-surface">{{ $user?->name ?? 'Guest' }}</div>
                     <div class="text-[10px] text-on-surface-variant font-medium">
@@ -105,9 +105,9 @@
                 </div>
                 @if ($user?->avatar_url)
                     <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}"
-                        class="w-10 h-10 rounded-full object-cover border border-outline-variant">
+                        class="w-10 h-10 rounded-full object-cover border-2 border-outline">
                 @else
-                    <span class="w-10 h-10 rounded-full bg-primary-container text-white grid place-items-center font-bold">
+                    <span class="w-10 h-10 rounded-full bg-primary-container text-white grid place-items-center font-bold border-2 border-outline">
                         {{ strtoupper(substr($user?->name ?? 'A', 0, 1)) }}
                     </span>
                 @endif
