@@ -179,7 +179,11 @@
         </x-settings.section>
 
         <x-settings.section title="Placement">
-            <x-settings.field group="deal" name="is_active" :meta="['input' => 'toggle', 'label' => 'Active', 'help' => 'Inactive deals are hidden everywhere.']" :value="(bool) old('is_active', $deal->is_active)" />
+            <div class="space-y-4">
+                <x-settings.field group="deal" name="is_active" :meta="['input' => 'toggle', 'label' => 'Active', 'help' => 'Inactive deals are hidden everywhere.']" :value="(bool) old('is_active', $deal->is_active)" />
+                <x-settings.field group="deal" name="show_on_home" :meta="['input' => 'toggle', 'label' => 'Show on home page', 'help' => 'Feature this deal in the home-page deal slider and the two-card block. Live deals only.']" :value="(bool) old('show_on_home', $deal->show_on_home)" />
+                <x-settings.field group="deal" name="is_spotlight" :meta="['input' => 'toggle', 'label' => 'Spotlight deal', 'help' => 'The single large spotlight card shown site-wide. Turning this on removes the spotlight from any other deal.']" :value="(bool) old('is_spotlight', $deal->is_spotlight)" />
+            </div>
         </x-settings.section>
     </div>
 </div>

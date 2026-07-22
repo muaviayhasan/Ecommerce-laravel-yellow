@@ -72,6 +72,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/deals/{slug}', [\App\Http\Controllers\Storefront\DealController::class, 'show'])->name('deal.show');
 Route::post('/product/{product:slug}/reviews', [StorefrontReviewController::class, 'store'])->middleware('auth')->name('product.reviews.store');
 
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');

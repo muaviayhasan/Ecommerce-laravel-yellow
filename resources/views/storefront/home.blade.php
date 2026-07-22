@@ -90,9 +90,58 @@
 
     </section>
 
-    {{-- Promo grid --}}
+    {{-- Deals slider — live deals flagged "Show on home" in Admin → Ecommerce →
+         Deals. Shows 3 at a time and slides when there are more; falls back to
+         the Promo Cards grid below when no deals are featured. --}}
+    @if ($homeDeals->isNotEmpty())
+    <section class="py-12 bg-white">
+        <div class="app-container"
+            x-data="{
+                page: 0,
+                per: 3,
+                total: {{ $homeDeals->count() }},
+                get pages() { return Math.max(1, Math.ceil(this.total / this.per)); },
+                next() { this.page = (this.page + 1) % this.pages; },
+                prev() { this.page = (this.page - 1 + this.pages) % this.pages; },
+            }"
+            x-init="const setPer = () => per = window.innerWidth < 768 ? 1 : (window.innerWidth < 1024 ? 2 : 3); setPer(); window.addEventListener('resize', () => { setPer(); if (page >= pages) page = 0; });">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-headline-md font-bold pb-3 border-b-2 border-primary-container">Hot Deals</h2>
+                <div class="flex items-center gap-2" x-show="pages > 1" x-cloak>
+                    <button type="button" @click="prev()" aria-label="Previous deals" class="w-9 h-9 grid place-items-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_left</span></button>
+                    <button type="button" @click="next()" aria-label="More deals" class="w-9 h-9 grid place-items-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_right</span></button>
+                </div>
+            </div>
+            <div class="overflow-hidden">
+                <div class="flex transition-transform duration-500 ease-in-out" :style="`transform: translateX(-${page * 100}%)`">
+                    @foreach ($homeDeals as $deal)
+                        <div class="shrink-0 px-3 first:pl-0" :style="`width: ${100 / per}%`">
+                            <a href="{{ $deal['url'] }}"
+                                class="h-full bg-surface-container-low rounded-lg p-6 flex items-center gap-4 group transition-shadow hover:shadow-md">
+                                <img src="{{ $deal['image'] }}" alt="{{ $deal['name'] }}" loading="lazy"
+                                    class="w-24 h-24 object-contain shrink-0">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-label-sm font-bold uppercase text-secondary">Deal</p>
+                                    <h3 class="font-bold text-headline-md leading-tight text-on-surface line-clamp-2">{{ $deal['name'] }}</h3>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <span class="text-headline-md font-bold text-on-surface leading-none">Rs {{ number_format($deal['total']) }}</span>
+                                        @if ($deal['discount_label'])
+                                            <span class="text-label-sm font-bold text-secondary">{{ $deal['discount_label'] }}</span>
+                                        @endif
+                                        <span class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform ml-auto">
+                                            <span class="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+    @elseif ($promoCards->isNotEmpty())
     {{-- Promo grid — cards managed in Admin → Ecommerce → Promo Cards. --}}
-    @if ($promoCards->isNotEmpty())
     <section class="py-12 bg-white">
         <div class="app-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             @foreach ($promoCards as $promo)
@@ -328,40 +377,61 @@
     </section>
     @endif
 
-    {{-- Promo banners --}}
+    {{-- Promo banners — the top two featured deals, or the fallback banners. --}}
+    @php $bannerDeals = $homeDeals->take(2); @endphp
     <section class="py-12 bg-white">
         <div class="app-container grid grid-cols-1 md:grid-cols-2 gap-8">
-            {{-- Inverter coolers --}}
-            <a href="{{ route('shop', ['category' => 'coolers']) }}"
-                class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
-                <div class="max-w-[55%]">
-                    <h3 class="text-headline-md font-bold mb-2 text-on-surface">Inverter Air Coolers</h3>
-                    <p class="text-body-base text-on-surface-variant">powerful cooling that saves on your electricity bill</p>
-                </div>
-                <img src="{{ $promoBanners['coolers'] ?? '/assets/images/banner-laptops.png' }}" alt="Inverter air coolers"
-                    class="w-40 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
-            </a>
+            @if ($bannerDeals->isNotEmpty())
+                @foreach ($bannerDeals as $deal)
+                    <a href="{{ $deal['url'] }}"
+                        class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
+                        <div class="max-w-[55%]">
+                            <p class="text-label-sm font-bold uppercase text-secondary mb-1">Deal</p>
+                            <h3 class="text-headline-md font-bold mb-2 text-on-surface line-clamp-2">{{ $deal['name'] }}</h3>
+                            <p class="text-2xl font-bold text-on-surface leading-none">
+                                <span class="text-base align-top">Rs</span> {{ number_format($deal['total']) }}
+                            </p>
+                            @if ($deal['discount_label'])
+                                <p class="text-label-sm font-bold text-secondary mt-1">{{ $deal['discount_label'] }}</p>
+                            @endif
+                        </div>
+                        <img src="{{ $deal['image'] }}" alt="{{ $deal['name'] }}" loading="lazy"
+                            class="w-40 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
+                    </a>
+                @endforeach
+            @else
+                {{-- Inverter coolers --}}
+                <a href="{{ route('shop', ['category' => 'coolers']) }}"
+                    class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
+                    <div class="max-w-[55%]">
+                        <h3 class="text-headline-md font-bold mb-2 text-on-surface">Inverter Air Coolers</h3>
+                        <p class="text-body-base text-on-surface-variant">powerful cooling that saves on your electricity bill</p>
+                    </div>
+                    <img src="{{ $promoBanners['coolers'] ?? '/assets/images/banner-laptops.png' }}" alt="Inverter air coolers"
+                        class="w-40 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
+                </a>
 
-            {{-- SolarMax --}}
-            <a href="{{ route('shop', ['category' => 'solar-plates']) }}"
-                class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
-                <div class="flex items-center gap-5">
-                    <div>
-                        <p class="text-2xl leading-none">
-                            <span class="font-bold text-on-surface">Solar</span><span class="font-bold text-primary-container">Max</span>
-                        </p>
-                        <p class="text-label-sm text-on-surface-variant mt-1">550W Mono PERC</p>
+                {{-- SolarMax --}}
+                <a href="{{ route('shop', ['category' => 'solar-plates']) }}"
+                    class="bg-surface-container rounded p-8 flex items-center justify-between gap-4 overflow-hidden group">
+                    <div class="flex items-center gap-5">
+                        <div>
+                            <p class="text-2xl leading-none">
+                                <span class="font-bold text-on-surface">Solar</span><span class="font-bold text-primary-container">Max</span>
+                            </p>
+                            <p class="text-label-sm text-on-surface-variant mt-1">550W Mono PERC</p>
+                        </div>
+                        <div class="border-l border-outline-variant pl-5">
+                            <p class="text-label-sm text-on-surface-variant">from</p>
+                            <p class="text-2xl font-bold text-on-surface leading-none">
+                                <span class="text-base align-top">Rs</span> 21,999
+                            </p>
+                        </div>
                     </div>
-                    <div class="border-l border-outline-variant pl-5">
-                        <p class="text-label-sm text-on-surface-variant">from</p>
-                        <p class="text-2xl font-bold text-on-surface leading-none">
-                            <span class="text-base align-top">Rs</span> 21,999
-                        </p>
-                    </div>
-                </div>
-                <img src="{{ $promoBanners['solar'] ?? '/assets/images/banner-smartg3.png' }}" alt="SolarMax solar panels"
-                    class="w-36 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
-            </a>
+                    <img src="{{ $promoBanners['solar'] ?? '/assets/images/banner-smartg3.png' }}" alt="SolarMax solar panels"
+                        class="w-36 h-32 object-contain shrink-0 group-hover:scale-105 transition-transform">
+                </a>
+            @endif
         </div>
     </section>
 

@@ -67,6 +67,7 @@ class DealController extends Controller implements HasMiddleware
         $deal = DB::transaction(function () use ($data) {
             $deal = Deal::create(Arr::except($data, ['items']));
             $this->syncItems($deal, $data['items']);
+            $this->enforceSingleSpotlight($deal);
 
             return $deal;
         });
@@ -99,6 +100,7 @@ class DealController extends Controller implements HasMiddleware
         DB::transaction(function () use ($deal, $data) {
             $deal->update(Arr::except($data, ['items']));
             $this->syncItems($deal, $data['items']);
+            $this->enforceSingleSpotlight($deal);
         });
 
         return redirect()->route('admin.deals.edit', $deal)->with('status', 'Deal updated.');
@@ -141,6 +143,14 @@ class DealController extends Controller implements HasMiddleware
             'price' => (float) $v->retail_price,
             'image' => $this->variantImage($v),
         ]));
+    }
+
+    /** Only one deal is the spotlight — turning this one on clears the rest. */
+    private function enforceSingleSpotlight(Deal $deal): void
+    {
+        if ($deal->is_spotlight) {
+            Deal::where('id', '!=', $deal->id)->where('is_spotlight', true)->update(['is_spotlight' => false]);
+        }
     }
 
     /** Replace the deal's items with the submitted set (keyed by variant). */

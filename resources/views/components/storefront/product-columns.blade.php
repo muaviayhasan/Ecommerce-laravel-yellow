@@ -8,10 +8,13 @@
     // identical section from one source of truth. Callers may still pass :columns
     // to override (e.g. the 404 page). Guarded so the section can never turn a
     // page — least of all an error page — into a 500.
+    $spotlight = null;
     if ($columns === null || $solarImage === null) {
         try {
             $columns ??= \App\Support\Storefront::promoColumns();
             $solarImage ??= \App\Support\Storefront::categoryImage('solar-plates');
+            // The admin spotlight deal replaces the static SolarMax banner site-wide.
+            $spotlight = \App\Support\Storefront::spotlightDeal();
         } catch (\Throwable $e) {
             $columns ??= [];
         }
@@ -32,25 +35,51 @@
             </div>
         @endforeach
 
-        {{-- SolarMax vertical banner --}}
-        <div class="bg-surface-container rounded p-6 flex flex-col">
-            <div class="flex items-start justify-between mb-4">
-                <div>
-                    <p class="text-2xl leading-none">
-                        <span class="font-bold text-on-surface">Solar</span><span class="font-bold text-primary-container">Max</span>
-                    </p>
-                    <p class="text-label-sm text-on-surface-variant mt-1">550W Mono PERC</p>
+        {{-- Spotlight: the admin's spotlight deal, or the fallback SolarMax banner. --}}
+        @if ($spotlight)
+            <div class="bg-surface-container rounded p-6 flex flex-col">
+                <div class="flex items-start justify-between mb-4 gap-3">
+                    <div class="min-w-0">
+                        <p class="text-label-sm font-bold uppercase text-secondary">Deal of the moment</p>
+                        <p class="text-xl font-bold text-on-surface leading-tight line-clamp-2">{{ $spotlight['name'] }}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="text-label-sm font-bold uppercase text-on-surface-variant">Starting at</p>
+                        <p class="text-2xl font-bold text-on-surface leading-none">
+                            <span class="text-base align-top">Rs</span> {{ number_format($spotlight['total']) }}
+                        </p>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-label-sm font-bold uppercase text-on-surface-variant">Starting at</p>
-                    <p class="text-2xl font-bold text-on-surface leading-none">
-                        <span class="text-base align-top">Rs</span> 21,999
-                    </p>
-                </div>
+                <a href="{{ $spotlight['url'] }}" class="flex-1 flex items-center justify-center min-h-[200px]">
+                    <img src="{{ $spotlight['image'] }}" alt="{{ $spotlight['name'] }}" loading="lazy" class="max-h-[260px] w-auto object-contain">
+                </a>
+                @if ($spotlight['discount_label'])
+                    <span class="mt-3 self-start inline-flex items-center gap-1.5 bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-label-sm font-bold">
+                        <span class="material-symbols-outlined text-[16px]">sell</span> {{ $spotlight['discount_label'] }}
+                    </span>
+                @endif
             </div>
-            <a href="{{ route('shop', ['category' => 'solar-plates']) }}" class="flex-1 flex items-center justify-center min-h-[200px]">
-                <img src="{{ $solarImage ?? '/assets/images/banner-smartg3.png' }}" alt="SolarMax solar panels" class="max-h-[260px] w-auto object-contain">
-            </a>
-        </div>
+        @else
+            {{-- SolarMax vertical banner --}}
+            <div class="bg-surface-container rounded p-6 flex flex-col">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <p class="text-2xl leading-none">
+                            <span class="font-bold text-on-surface">Solar</span><span class="font-bold text-primary-container">Max</span>
+                        </p>
+                        <p class="text-label-sm text-on-surface-variant mt-1">550W Mono PERC</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-label-sm font-bold uppercase text-on-surface-variant">Starting at</p>
+                        <p class="text-2xl font-bold text-on-surface leading-none">
+                            <span class="text-base align-top">Rs</span> 21,999
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('shop', ['category' => 'solar-plates']) }}" class="flex-1 flex items-center justify-center min-h-[200px]">
+                    <img src="{{ $solarImage ?? '/assets/images/banner-smartg3.png' }}" alt="SolarMax solar panels" class="max-h-[260px] w-auto object-contain">
+                </a>
+            </div>
+        @endif
     </div>
 </section>

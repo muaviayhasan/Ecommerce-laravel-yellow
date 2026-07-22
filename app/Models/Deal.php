@@ -19,7 +19,7 @@ class Deal extends Model
     protected $fillable = [
         'name', 'slug', 'description', 'image_media_id', 'type', 'bundle_price',
         'discount_type', 'discount_value',
-        'starts_at', 'ends_at', 'is_active', 'sort_order',
+        'starts_at', 'ends_at', 'is_active', 'show_on_home', 'is_spotlight', 'sort_order',
     ];
 
     protected function casts(): array
@@ -30,6 +30,8 @@ class Deal extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'is_active' => 'boolean',
+            'show_on_home' => 'boolean',
+            'is_spotlight' => 'boolean',
             'sort_order' => 'integer',
         ];
     }
@@ -55,6 +57,13 @@ class Deal extends Model
         return $query->active()
             ->where(fn ($q) => $q->whereNull('starts_at')->orWhere('starts_at', '<=', now()))
             ->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>=', now()));
+    }
+
+    /** Live deals flagged to appear in the home-page deal areas, in display order. */
+    public function scopeForHome(Builder $query): Builder
+    {
+        return $query->live()->where('show_on_home', true)
+            ->orderBy('sort_order')->orderByDesc('id');
     }
 
     /** Live now / scheduled / expired / inactive — for badges and stats. */

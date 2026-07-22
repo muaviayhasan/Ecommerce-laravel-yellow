@@ -19,6 +19,8 @@ class DealRequest extends FormRequest
         $this->merge([
             'slug' => Str::slug($this->input('slug') ?: (string) $this->input('name')),
             'is_active' => $this->boolean('is_active'),
+            'show_on_home' => $this->boolean('show_on_home'),
+            'is_spotlight' => $this->boolean('is_spotlight'),
             'discount_type' => in_array($this->input('discount_type'), ['fixed', 'percent'], true) ? $this->input('discount_type') : 'fixed',
             'discount_value' => $this->filled('discount_value') ? $this->input('discount_value') : 0,
         ]);
@@ -41,6 +43,8 @@ class DealRequest extends FormRequest
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'is_active' => ['boolean'],
+            'show_on_home' => ['boolean'],
+            'is_spotlight' => ['boolean'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.variant_id' => ['required', 'integer', 'distinct', Rule::exists('product_variants', 'id')],
             'items.*.quantity' => ['required', 'numeric', 'gt:0', 'max:9999999.999'],

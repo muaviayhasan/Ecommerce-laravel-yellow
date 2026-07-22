@@ -36,9 +36,13 @@ class HomeController extends Controller
         // "Top Categories" grid, and carry their own sub-categories + image.
         $departments = $this->departments();
 
+        // Admin-managed deals featured on the home page (slider + two-card block).
+        $homeDeals = Storefront::homeDeals();
+
         return view('storefront.home', [
             'heroSlides' => $this->heroSlides(),
             'promoCards' => PromoCard::query()->with('image')->active()->ordered()->get(),
+            'homeDeals' => $homeDeals,
             'infoBarItems' => InfoBarItem::query()->active()->ordered()->get(),
             'featured' => $featured,
             'onSale' => $onSale,

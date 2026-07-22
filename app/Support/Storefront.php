@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Category;
+use App\Models\Deal;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
@@ -105,6 +106,71 @@ class Storefront
                 ->whereHas('category', fn ($q) => $q->whereIn('slug', $slugs))
                 ->latest('published_at')->take(1)->get()
         )->first()['image'] ?? null;
+    }
+
+    // --- Deals (home-page promotions) -------------------------------------------
+
+    /**
+     * Home-page deal cards, in admin order. Live + show_on_home deals only.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public static function homeDeals(int $limit = 8): Collection
+    {
+        return Deal::forHome()
+            ->with(['image', 'items.variant.product:id,name', 'items.variant.product.media', 'items.variant.image'])
+            ->take($limit)->get()
+            ->map(fn (Deal $d) => self::dealCard($d))
+            ->filter(fn ($c) => $c['items_count'] > 0)
+            ->values();
+    }
+
+    /** The single spotlight deal card, or null. */
+    public static function spotlightDeal(): ?array
+    {
+        $deal = Deal::live()->where('is_spotlight', true)
+            ->with(['image', 'items.variant.product:id,name', 'items.variant.product.media', 'items.variant.image'])
+            ->first();
+
+        if (! $deal) {
+            return null;
+        }
+
+        $card = self::dealCard($deal);
+
+        return $card['items_count'] > 0 ? $card : null;
+    }
+
+    /** Map a Deal into the card shape the storefront deal blocks consume. */
+    public static function dealCard(Deal $deal): array
+    {
+        $firstVariant = $deal->items->first()?->variant;
+        $image = $deal->image?->thumbUrl(400)
+            ?? $firstVariant?->image?->thumbUrl(400)
+            ?? ($firstVariant?->product?->media?->first()?->thumbUrl(400))
+            ?? self::placeholder();
+
+        $subtotal = $deal->retailTotal();
+        $discount = $deal->discountAmount();
+        $discountLabel = (float) $deal->discount_value <= 0
+            ? null
+            : ($deal->discount_type === 'percent'
+                ? 'Save ' . rtrim(rtrim(number_format((float) $deal->discount_value, 2), '0'), '.') . '%'
+                : 'Save ' . format_money($discount));
+
+        return [
+            'id' => $deal->id,
+            'name' => $deal->name,
+            'slug' => $deal->slug,
+            'description' => $deal->description,
+            'url' => route('deal.show', $deal->slug),
+            'image' => $image,
+            'items_count' => $deal->items->count(),
+            'subtotal' => $subtotal,
+            'total' => $deal->dealTotal(),
+            'discount_amount' => $discount,
+            'discount_label' => $discountLabel,
+        ];
     }
 
     // --- Per-variant listing (shop grid shows one card per active variant) -------
