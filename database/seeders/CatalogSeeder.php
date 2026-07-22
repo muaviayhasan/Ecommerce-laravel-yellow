@@ -127,9 +127,12 @@ class CatalogSeeder extends Seeder
                 ],
             );
 
-            ProductVariant::updateOrCreate(
-                ['sku' => "{$sku}-D"],
-                [
+            // Seed the default variant only when the product has none — a reseed
+            // must never resurrect a "-D" row an admin replaced with real
+            // variants, nor overwrite live stock/prices on an existing one.
+            if (! $product->variants()->exists()) {
+                ProductVariant::create([
+                    'sku' => "{$sku}-D",
                     'product_id' => $product->id,
                     'cost' => round($retail * 0.7, 2),
                     'retail_price' => $retail,
@@ -139,8 +142,8 @@ class CatalogSeeder extends Seeder
                     'low_stock_threshold' => 5,
                     'is_active' => true,
                     'is_default' => true,
-                ],
-            );
+                ]);
+            }
 
             if ($author && $i < 3) {
                 Review::updateOrCreate(
@@ -196,9 +199,10 @@ class CatalogSeeder extends Seeder
                 ],
             );
 
-            ProductVariant::updateOrCreate(
-                ['sku' => "{$sku}-D"],
-                [
+            // Create-only, like the demo loop above: never resurrect or overwrite.
+            if (! $product->variants()->exists()) {
+                ProductVariant::create([
+                    'sku' => "{$sku}-D",
                     'product_id' => $product->id,
                     'cost' => round($retail * 0.7, 2),
                     'retail_price' => $retail,
@@ -208,8 +212,8 @@ class CatalogSeeder extends Seeder
                     'low_stock_threshold' => 5,
                     'is_active' => true,
                     'is_default' => true,
-                ],
-            );
+                ]);
+            }
         }
 
         // Default POS "Walk-in" customer (§10)

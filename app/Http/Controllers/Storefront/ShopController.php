@@ -24,6 +24,14 @@ class ShopController extends Controller
     {
         $query = Storefront::variantQuery();
 
+        // A pinned product surfaces as a single card — its default variant (or
+        // the first one, should data ever carry duplicate defaults) — so a
+        // pinned variable product doesn't flood the top of the shop with one
+        // card per colour/size. Unpinned products keep a card per variant.
+        $query->where(fn ($q) => $q
+            ->orWhereHas('product', fn ($p) => $p->where('is_pinned', false))
+            ->orWhereRaw('product_variants.id = (select pv2.id from product_variants pv2 where pv2.product_id = product_variants.product_id and pv2.is_active = 1 order by pv2.is_default desc, pv2.id asc limit 1)'));
+
         if ($request->filled('q')) {
             $query->whereHas('product', fn ($p) => $p->where('name', 'like', '%' . $request->string('q') . '%'));
         }
