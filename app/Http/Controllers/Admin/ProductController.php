@@ -26,10 +26,79 @@ class ProductController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('can:products.view', only: ['index', 'show']),
-            new Middleware('can:products.create', only: ['create', 'store']),
+            new Middleware('can:products.create', only: ['create', 'store', 'duplicate']),
             new Middleware('can:products.edit', only: ['edit', 'update']),
             new Middleware('can:products.delete', only: ['destroy']),
         ];
+    }
+
+    /**
+     * Clone a product into a hidden draft: everything copies (variants with
+     * zero stock, attributes, images, specs) except storefront exposure —
+     * the copy is unlisted, unpublished and carries no curation flags.
+     */
+    public function duplicate(Product $product): RedirectResponse
+    {
+        $product->load(['variants.attributeValues', 'attributes', 'media']);
+
+        $copy = \Illuminate\Support\Facades\DB::transaction(function () use ($product) {
+            $new = $product->replicate(['slug', 'sku']);
+            $new->name = $product->name . ' (Copy)';
+            $new->slug = $this->uniqueSlug($product->slug . '-copy');
+            $new->sku = $this->uniqueSku($product->sku . '-COPY');
+            $new->is_web_listed = false;   // live-on-store off
+            $new->published_at = null;     // draft
+            $new->is_featured = false;
+            $new->is_trending = false;
+            $new->is_bestseller = false;
+            $new->is_pinned = false;
+            $new->save();
+
+            $new->attributes()->sync($product->attributes->pluck('id')->all());
+
+            $mediaSync = [];
+            foreach ($product->media as $m) {
+                $mediaSync[$m->id] = ['sort_order' => (int) $m->pivot->sort_order, 'is_primary' => (bool) $m->pivot->is_primary];
+            }
+            $new->media()->sync($mediaSync);
+
+            foreach ($product->variants as $variant) {
+                $nv = $variant->replicate(['sku']);
+                $nv->product_id = $new->id;
+                $nv->sku = $this->uniqueSku($variant->sku . '-COPY');
+                $nv->stock_quantity = 0;      // stock never duplicates — receive it via purchases
+                $nv->reserved_quantity = 0;
+                $nv->save();
+                $nv->attributeValues()->sync($variant->attributeValues->pluck('id')->all());
+            }
+
+            return $new;
+        });
+
+        return redirect()->route('admin.products.edit', $copy)
+            ->with('status', "Duplicated as “{$copy->name}” — hidden from the store and unpublished. Review it, then publish when ready.");
+    }
+
+    /** First free slug for a duplicate (soft-deleted rows still hold theirs). */
+    private function uniqueSlug(string $base): string
+    {
+        $slug = $base;
+        for ($i = 2; Product::withTrashed()->where('slug', $slug)->exists(); $i++) {
+            $slug = "{$base}-{$i}";
+        }
+
+        return $slug;
+    }
+
+    /** First free SKU across products and variants (both are unique columns). */
+    private function uniqueSku(string $base): string
+    {
+        $sku = $base;
+        for ($i = 2; Product::withTrashed()->where('sku', $sku)->exists() || ProductVariant::where('sku', $sku)->exists(); $i++) {
+            $sku = "{$base}{$i}";
+        }
+
+        return $sku;
     }
 
     public function index(Request $request): View

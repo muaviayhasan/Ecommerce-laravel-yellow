@@ -28,11 +28,20 @@
             </div>
             <p class="text-sm text-on-surface-variant mt-1 font-mono">{{ $product->sku }}</p>
         </div>
-        @can('products.edit')
-            <a href="{{ route('admin.products.edit', $product) }}" class="px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 transition-all flex items-center gap-2 shrink-0">
-                <span class="material-symbols-outlined text-[20px]">edit</span> Edit
-            </a>
-        @endcan
+        <div class="flex items-center gap-2 shrink-0">
+            @can('products.create')
+                <button type="button" x-data
+                    @click="$store.pageConfirm.ask(@js('Duplicate this product?'), @js('A draft copy of “' . $product->name . '” will be created — hidden from the store and unpublished — and you will be taken to it.'), () => window.__postForm(@js(route('admin.products.duplicate', $product))))"
+                    class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">content_copy</span> Duplicate
+                </button>
+            @endcan
+            @can('products.edit')
+                <a href="{{ route('admin.products.edit', $product) }}" class="px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">edit</span> Edit
+                </a>
+            @endcan
+        </div>
     </div>
 
     <div class="grid grid-cols-12 gap-6 items-start">
@@ -223,4 +232,6 @@
             @endif
         </div>
     </div>
+
+    <x-admin.confirm-modal />
 @endsection

@@ -141,6 +141,14 @@
                                     <a href="{{ route('admin.products.show', $product) }}" title="View" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
                                         <span class="material-symbols-outlined text-[20px]">visibility</span>
                                     </a>
+                                    @can('products.create')
+                                        {{-- x-data gives the @click an Alpine scope — without it the directive never binds --}}
+                                        <button type="button" title="Duplicate" x-data
+                                            @click="$store.pageConfirm.ask(@js('Duplicate this product?'), @js('A draft copy of “' . $product->name . '” will be created — hidden from the store and unpublished — and you will be taken to it.'), () => window.__postForm(@js(route('admin.products.duplicate', $product))))"
+                                            class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-[20px]">content_copy</span>
+                                        </button>
+                                    @endcan
                                     @can('products.edit')
                                         <a href="{{ route('admin.products.edit', $product) }}" title="Edit" class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
                                             <span class="material-symbols-outlined text-[20px]">edit</span>
@@ -178,4 +186,6 @@
             </div>
         @endif
     </x-admin.panel>
+
+    <x-admin.confirm-modal />
 @endsection

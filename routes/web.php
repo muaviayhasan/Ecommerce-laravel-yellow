@@ -210,6 +210,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 
     // Catalog
+    Route::post('products/{product}/duplicate', [AdminProductController::class, 'duplicate'])->name('products.duplicate');
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('brands', BrandController::class)->except('show');
