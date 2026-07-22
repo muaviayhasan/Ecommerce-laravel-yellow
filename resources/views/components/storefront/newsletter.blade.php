@@ -23,11 +23,14 @@
                     Sign Up
                 </button>
             </form>
-            @error('email', 'newsletter')
+            {{-- isset guard: the 404 page renders this layout without the web
+                 middleware, so $errors is never shared there — a bare @error
+                 would turn every 404 into a 500. --}}
+            @if (isset($errors) && $errors->getBag('newsletter')->has('email'))
                 <p class="mt-2 text-label-sm text-error flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}
+                    <span class="material-symbols-outlined text-[16px]">error</span>{{ $errors->getBag('newsletter')->first('email') }}
                 </p>
-            @enderror
+            @endif
         </div>
     </div>
 </section>
