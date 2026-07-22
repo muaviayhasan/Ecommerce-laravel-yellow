@@ -54,10 +54,15 @@
            fixed inset-y-0 left-0 z-40 flex flex-col overflow-y-auto no-scrollbar
            transition-transform duration-200 md:static md:translate-x-0 md:h-screen md:sticky md:top-0">
 
-    {{-- Brand --}}
+    {{-- Brand — the site logo when set (Settings → General), else the store name --}}
     <div class="px-6 py-7 flex items-center justify-between">
-        <a href="{{ route('admin.dashboard') }}" class="text-2xl font-bold text-primary tracking-tight">
-            {{ setting('general', 'app_name', config('app.name')) }}
+        <a href="{{ route('admin.dashboard') }}" class="min-w-0 text-2xl font-bold text-primary tracking-tight">
+            @if ($brandLogo = logo_url())
+                <img src="{{ $brandLogo }}" alt="{{ setting('general', 'app_name', config('app.name')) }}"
+                    class="h-10 w-auto max-w-[10.5rem] object-contain">
+            @else
+                {{ setting('general', 'app_name', config('app.name')) }}
+            @endif
         </a>
         <button @click="$store.adminNav.open = false" class="md:hidden p-1 text-on-surface-variant">
             <span class="material-symbols-outlined">close</span>
