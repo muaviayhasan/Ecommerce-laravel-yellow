@@ -126,7 +126,12 @@ class ShopController extends Controller
             'price_high' => $query->orderByDesc('retail_price'),
             'name' => $query->orderBy($productCol('name'))->orderBy('product_variants.id'),
             'popular' => $query->orderByDesc($reviewCount)->orderBy('product_variants.id'),
-            default => $query->orderByDesc($productCol('published_at'))->orderBy('product_variants.id'),
+            // Default: pinned products first, then newest. The id tie-break is
+            // DESC on purpose — bulk-imported products share one published_at
+            // second, and ASC made them render oldest-first.
+            default => $query->orderByDesc($productCol('is_pinned'))
+                ->orderByDesc($productCol('published_at'))
+                ->orderByDesc('product_variants.id'),
         };
     }
 }

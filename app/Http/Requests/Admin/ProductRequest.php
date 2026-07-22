@@ -26,6 +26,7 @@ class ProductRequest extends FormRequest
             'is_featured' => $this->boolean('is_featured'),
             'is_trending' => $this->boolean('is_trending'),
             'is_bestseller' => $this->boolean('is_bestseller'),
+            'is_pinned' => $this->boolean('is_pinned'),
             'no_index' => $this->boolean('no_index'),
             // Empty <select>s → real null so `nullable` short-circuits `exists`.
             'brand_id' => $this->filled('brand_id') ? $this->input('brand_id') : null,
@@ -130,6 +131,7 @@ class ProductRequest extends FormRequest
             'is_featured' => ['boolean'],
             'is_trending' => ['boolean'],
             'is_bestseller' => ['boolean'],
+            'is_pinned' => ['boolean'],
             'published_at' => ['nullable', 'date'],
 
             // Media (ordered; first = primary)

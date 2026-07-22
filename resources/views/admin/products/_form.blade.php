@@ -39,6 +39,7 @@
         'is_featured' => ['label' => 'Featured', 'help' => 'Show in the home-page Featured section.'],
         'is_trending' => ['label' => 'Trending', 'help' => 'Show in the home-page Trending section.'],
         'is_bestseller' => ['label' => 'Bestseller', 'help' => 'Show in the home-page Bestsellers section.'],
+        'is_pinned' => ['label' => 'Pin on shop page', 'help' => 'Pinned products appear at the top of the shop listing.'],
     ];
 
     $numCell = 'w-24 bg-surface-container-low border border-outline-variant rounded-md px-2 py-1.5 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary';

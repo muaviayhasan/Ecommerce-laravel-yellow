@@ -31,7 +31,7 @@ class Product extends Model
         'is_sellable', 'is_web_listed', 'manufacture_mode', 'variant_mode',
         'short_description', 'description', 'highlights', 'specifications', 'base_price', 'markup_percent',
         'warranty', 'return_policy', 'video_url', 'length', 'width', 'height',
-        'is_active', 'is_featured', 'is_trending', 'is_bestseller', 'published_at',
+        'is_active', 'is_featured', 'is_trending', 'is_bestseller', 'is_pinned', 'published_at',
         'meta_title', 'meta_description', 'meta_keywords',
         'og_image_media_id', 'canonical_url', 'no_index',
     ];
@@ -55,6 +55,7 @@ class Product extends Model
             'is_featured' => 'boolean',
             'is_trending' => 'boolean',
             'is_bestseller' => 'boolean',
+            'is_pinned' => 'boolean',
             'no_index' => 'boolean',
             'published_at' => 'datetime',
         ];
