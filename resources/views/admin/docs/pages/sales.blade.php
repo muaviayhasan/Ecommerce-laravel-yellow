@@ -58,6 +58,18 @@
         <x-docs.pill tone="perm">coupons.*</x-docs.pill>
     </x-docs.section>
 
+    <x-docs.section id="deals" title="Deals" icon="sell">
+        <p>
+            Named promotions grouping variants from different products. Items keep their regular prices;
+            the deal applies one discount — fixed Rs or a percentage — off the combined total (same control
+            as the POS discount). Deals carry an optional date window plus an Active toggle, and the items
+            builder searches the catalogue the same way the POS does. Admin-side only for now — storefront
+            pricing hooks come later.
+        </p>
+        <x-docs.pill tone="route">admin.deals.*</x-docs.pill>
+        <x-docs.pill tone="perm">deals.*</x-docs.pill>
+    </x-docs.section>
+
     <x-docs.section id="connects" title="How sales connects" icon="hub">
         <ul>
             <li><strong>&larr; Catalog:</strong> every line sells a product variant.</li>

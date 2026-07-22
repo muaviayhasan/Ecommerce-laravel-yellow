@@ -41,6 +41,7 @@ class RolePermissionSeeder extends Seeder
         'pos' => ['access', 'sell', 'refund'],
         'orders' => ['view', 'create', 'edit', 'refund', 'fulfil'],
         'coupons' => ['view', 'create', 'edit', 'delete'],
+        'deals' => ['view', 'create', 'edit', 'delete'],
         'reviews' => ['view', 'moderate'],
         'wishlists' => ['view'],
         'support' => ['view', 'reply', 'delete'],
@@ -76,7 +77,7 @@ class RolePermissionSeeder extends Seeder
         'catalog-manager' => [
             'dashboard', 'documentation', 'products', 'variants', 'categories', 'brands',
             'attributes', 'media', 'gallery', 'reviews', 'hero-slides',
-            'promo-cards', 'info-bar-items',
+            'promo-cards', 'info-bar-items', 'deals',
         ],
         'procurement' => ['dashboard', 'documentation', 'suppliers', 'purchases', 'stock'],
         'production-manager' => ['dashboard', 'documentation', 'boms', 'production', 'stock'],

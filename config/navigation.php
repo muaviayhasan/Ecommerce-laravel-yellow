@@ -122,6 +122,12 @@ return [
                     'permission' => 'coupons.view',
                 ],
                 [
+                    'label' => 'Deals',
+                    'route' => 'admin.deals.index',
+                    'active' => 'admin.deals.*',
+                    'permission' => 'deals.view',
+                ],
+                [
                     'label' => 'Reviews',
                     'route' => 'admin.reviews.index',
                     'active' => 'admin.reviews.*',
