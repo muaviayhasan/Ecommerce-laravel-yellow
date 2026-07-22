@@ -56,7 +56,7 @@
 
     {{-- Brand — the site logo when set (Settings → General), else the store name --}}
     <div class="px-6 py-7 flex items-center justify-between">
-        <a href="{{ route('admin.dashboard') }}" class="min-w-0 text-2xl font-bold text-primary tracking-tight">
+        <a href="{{ route('admin.dashboard') }}" class="flex-1 min-w-0 flex justify-center text-2xl font-bold text-primary tracking-tight">
             @if ($brandLogo = logo_url())
                 <img src="{{ $brandLogo }}" alt="{{ setting('general', 'app_name', config('app.name')) }}"
                     class="h-10 w-auto max-w-[10.5rem] object-contain">
