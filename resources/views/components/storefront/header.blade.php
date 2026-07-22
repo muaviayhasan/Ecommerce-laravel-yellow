@@ -180,6 +180,18 @@
                         <div class="text-body-base font-bold">{{ $cartTotal }}</div>
                     </div>
                 </a>
+                {{-- Mobile: support chat trigger — the floating bubble is desktop-only,
+                     so on phones the chat lives here with its unread badge. --}}
+                <button type="button" aria-label="Chat with support"
+                    x-data="{ n: 0 }" x-init="window.addEventListener('support:unread', e => n = e.detail || 0)"
+                    @click="window.dispatchEvent(new CustomEvent('support:open'))"
+                    class="md:hidden relative flex items-center text-on-surface hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[28px]">chat_bubble</span>
+                    <span x-show="n" x-cloak
+                        class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center"
+                        x-text="n"></span>
+                </button>
+
                 {{-- Mobile: login (guest) / logout (signed in) — replaces the cart on small screens --}}
                 <div class="md:hidden">
                     @auth
@@ -278,6 +290,12 @@
                 <li><a href="{{ route('contact') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">mail</span> Contact Us</a></li>
                 <li><a href="{{ route('blog') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">article</span> Blog</a></li>
                 <li><a href="{{ route('track.order') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">local_shipping</span> Track Order</a></li>
+                <li>
+                    <button type="button" @click="mobileMenu = false; window.dispatchEvent(new CustomEvent('support:open'))"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container text-left">
+                        <span class="material-symbols-outlined text-[20px] text-primary">support_agent</span> Chat with support
+                    </button>
+                </li>
             </ul>
             <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
                 @auth

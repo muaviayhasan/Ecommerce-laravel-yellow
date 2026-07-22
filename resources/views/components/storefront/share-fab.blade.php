@@ -24,8 +24,8 @@
         },
     }"
     @keydown.escape.window="open = false"
-    :class="($store.compareBar && $store.compareBar.visible) ? '!bottom-60 md:!bottom-[11.75rem]' : ''"
-    class="fixed bottom-40 md:bottom-24 right-5 z-[60] print:hidden transition-all duration-200">
+    :class="($store.compareBar && $store.compareBar.visible) ? '!bottom-[9.5rem] md:!bottom-[11.75rem]' : ''"
+    class="fixed bottom-[4.5rem] md:bottom-24 right-2 md:right-5 z-[60] print:hidden transition-all duration-200">
 
     {{-- Drop-up menu (fallback when the OS share sheet is unavailable) --}}
     <div x-show="open" x-cloak @click.outside="open = false" x-transition
@@ -61,7 +61,7 @@
     {{-- The floating button — a bare share arrow (no background), centred over
          the chat-bubble column below it; w/h only give it a comfortable tap area. --}}
     <button type="button" @click="toggle()" title="Share" aria-label="Share this page"
-        class="w-14 h-14 grid place-items-center text-on-surface hover:text-primary active:scale-90 transition-all">
-        <span class="material-symbols-outlined text-[34px]" style="font-variation-settings: 'FILL' 1;">shortcut</span>
+        class="w-12 h-12 grid place-items-center text-on-surface hover:text-primary active:scale-90 transition-all">
+        <span class="material-symbols-outlined text-[25px]" style="font-variation-settings: 'FILL' 1;">shortcut</span>
     </button>
 </div>

@@ -106,9 +106,10 @@
         </template>
     </div>
 
-    {{-- Toggle button --}}
+    {{-- Toggle button — desktop only; on mobile the header chat icon (and the
+         drawer link) open the panel instead, keeping the thumb zone clear. --}}
     <button type="button" @click="toggle()"
-        class="w-14 h-14 rounded-full bg-primary-container text-on-primary-container shadow-xl grid place-items-center hover:brightness-110 active:scale-95 transition relative">
+        class="w-14 h-14 rounded-full bg-primary-container text-on-primary-container shadow-xl hidden md:grid place-items-center hover:brightness-110 active:scale-95 transition relative">
         <span class="material-symbols-outlined" x-text="open ? 'close' : 'chat_bubble'"></span>
         <span x-show="!open && unread" x-cloak class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[11px] font-bold grid place-items-center" x-text="unread"></span>
     </button>
@@ -200,6 +201,10 @@
                         // When the visitor returns to this tab with the chat open, mark replies read.
                         this._onFocus = () => { if (this.open) this.refresh(); };
                         window.addEventListener('focus', this._onFocus);
+                        // External triggers (mobile header icon, drawer link) open the panel,
+                        // and the header badge mirrors the unread count via an event.
+                        window.addEventListener('support:open', () => { if (!this.open) this.toggle(); });
+                        this.$watch('unread', (v) => window.dispatchEvent(new CustomEvent('support:unread', { detail: v || 0 })));
                         this.refresh().then(() => { if (this.started) this.startPolling(); });
                     },
                     toggle() {
