@@ -356,6 +356,16 @@
                                 @error('editTitle') <p class="text-xs text-error mt-1">{{ $message }}</p> @enderror
                             </div>
                             <div>
+                                <label class="text-[10px] font-bold text-outline uppercase tracking-widest">File name</label>
+                                <div class="mt-1 flex items-center rounded-lg border border-outline-variant/40 bg-surface-container-low overflow-hidden focus-within:ring-1 focus-within:ring-primary">
+                                    <input type="text" wire:model="editFilename" maxlength="150"
+                                        class="flex-1 min-w-0 bg-transparent border-0 px-3 py-2 text-sm text-on-surface outline-none focus:ring-0">
+                                    <span class="px-2.5 text-xs text-outline font-mono select-none shrink-0">.{{ pathinfo($sel->path, PATHINFO_EXTENSION) }}</span>
+                                </div>
+                                <p class="text-[11px] text-outline mt-1">Renames the file and its URL (letters, numbers and dashes).</p>
+                                @error('editFilename') <p class="text-xs text-error mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
                                 <label class="text-[10px] font-bold text-outline uppercase tracking-widest">Alt text</label>
                                 <input type="text" wire:model="editAlt" maxlength="255"
                                     class="mt-1 w-full bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">

@@ -46,6 +46,9 @@ class MediaLibrary extends Component
 
     public string $editAlt = '';
 
+    /** File name (without extension) — renaming moves the file on disk. */
+    public string $editFilename = '';
+
     public function mount(): void
     {
         $this->authorize('gallery.view');
@@ -159,6 +162,7 @@ class MediaLibrary extends Component
         $this->selectedId = $media->id;
         $this->editTitle = (string) $media->title;
         $this->editAlt = (string) $media->alt;
+        $this->editFilename = pathinfo($media->path, PATHINFO_FILENAME);
     }
 
     public function deselect(): void
@@ -179,14 +183,48 @@ class MediaLibrary extends Component
         $this->validate([
             'editTitle' => ['nullable', 'string', 'max:255'],
             'editAlt' => ['nullable', 'string', 'max:255'],
+            'editFilename' => ['required', 'string', 'max:150'],
         ]);
+
+        $renamed = $this->renameFile($media);
 
         $media->update([
             'title' => $this->editTitle !== '' ? $this->editTitle : null,
             'alt' => $this->editAlt !== '' ? $this->editAlt : null,
         ]);
 
-        session()->flash('gallery_status', 'Details saved.');
+        session()->flash('gallery_status', $renamed ? 'Details saved — file renamed.' : 'Details saved.');
+    }
+
+    /**
+     * Move the file on disk when the (slugified) name changed. Thumbs are keyed
+     * by media id, and every reference resolves via id → url, so a rename is
+     * safe; only URLs hard-pasted into rich text would go stale.
+     */
+    private function renameFile(Media $media): bool
+    {
+        $base = \Illuminate\Support\Str::slug($this->editFilename) ?: 'file';
+        $current = pathinfo($media->path, PATHINFO_FILENAME);
+
+        if ($base === $current) {
+            return false;
+        }
+
+        $dir = pathinfo($media->path, PATHINFO_DIRNAME);
+        $ext = pathinfo($media->path, PATHINFO_EXTENSION);
+        $prefix = ($dir !== '' && $dir !== '.') ? $dir . '/' : '';
+
+        // Dodge collisions: name.webp, name-2.webp, …
+        $candidate = "{$prefix}{$base}.{$ext}";
+        for ($i = 2; Storage::disk($media->disk)->exists($candidate); $i++) {
+            $candidate = "{$prefix}{$base}-{$i}.{$ext}";
+        }
+
+        Storage::disk($media->disk)->move($media->path, $candidate);
+        $media->update(['path' => $candidate]);
+        $this->editFilename = pathinfo($candidate, PATHINFO_FILENAME);
+
+        return true;
     }
 
     public function delete(int $id): void
