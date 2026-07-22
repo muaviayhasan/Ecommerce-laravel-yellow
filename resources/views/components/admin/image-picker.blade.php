@@ -22,6 +22,11 @@
             if (i > -1) { this.selected.splice(i, 1); } else { this.selected.push(id); }
         },
         remove(id) { const i = this.selected.indexOf(String(id)); if (i > -1) this.selected.splice(i, 1); },
+        makePrimary(id) {
+            id = String(id);
+            const i = this.selected.indexOf(id);
+            if (i > 0) { this.selected.splice(i, 1); this.selected.unshift(id); }
+        },
         chosen() { return this.selected.map(id => this.items.find(m => String(m.id) === id)).filter(Boolean); },
     }">
     {{-- Submitted values (ordered; the first is treated as primary on save) --}}
@@ -35,6 +40,10 @@
             <div class="relative w-24 h-24 rounded-xl border border-outline-variant overflow-hidden group bg-surface-container-low">
                 <img :src="m.url" alt="" class="w-full h-full object-cover">
                 <span x-show="idx === 0" class="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-primary text-on-primary text-[9px] font-bold uppercase tracking-wide">Primary</span>
+                <button type="button" x-show="idx > 0" @click="makePrimary(m.id)" title="Make primary"
+                    class="absolute top-1 left-1 w-5 h-5 grid place-items-center rounded-full bg-primary text-on-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="material-symbols-outlined text-[14px]">star</span>
+                </button>
                 <button type="button" @click="remove(m.id)" title="Remove"
                     class="absolute top-1 right-1 w-5 h-5 grid place-items-center rounded-full bg-error text-on-error opacity-0 group-hover:opacity-100 transition-opacity">
                     <span class="material-symbols-outlined text-[14px]">close</span>
