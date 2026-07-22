@@ -17,6 +17,8 @@ use Throwable;
 
 class PosController extends Controller implements HasMiddleware
 {
+    use \App\Http\Controllers\Admin\Concerns\BuildsDealResults;
+
     public static function middleware(): array
     {
         return [
@@ -66,7 +68,11 @@ class PosController extends Controller implements HasMiddleware
             ->skip($offset)->take($limit)
             ->get(['id', 'product_id', 'sku', 'retail_price', 'stock_quantity', 'image_media_id']);
 
-        return response()->json($variants->map(fn (ProductVariant $v) => [
+        // Live deals ride on top of the first page so staff can sell a whole
+        // promotion in one tap; deeper pages stay variants-only.
+        $deals = $offset === 0 ? $this->dealResults($term, wholesale: false) : [];
+
+        return response()->json(array_merge($deals, $variants->map(fn (ProductVariant $v) => [
             'id' => $v->id,
             'name' => $v->product?->name ?? 'Item',
             'sku' => $v->sku,
@@ -74,8 +80,9 @@ class PosController extends Controller implements HasMiddleware
             'stock' => (float) $v->stock_quantity,
             'tracked' => (bool) $v->product?->is_stock_tracked,
             'image' => $this->variantImage($v),
-        ]));
+        ])->values()->all()));
     }
+
 
     /** Default "Walk-in" customer: the configured POS customer, else the walk-in record. */
     private function defaultCustomerId(): ?int
@@ -110,7 +117,11 @@ class PosController extends Controller implements HasMiddleware
         foreach ($data['items'] as $item) {
             $variant = $variants->get((int) $item['variant_id']);
             if ($variant) {
-                $lines[] = ['variant' => $variant, 'quantity' => (float) $item['quantity']];
+                $lines[] = [
+                    'variant' => $variant,
+                    'quantity' => (float) $item['quantity'],
+                    'deal_id' => isset($item['deal_id']) ? (int) $item['deal_id'] : null,
+                ];
             }
         }
 
@@ -136,6 +147,11 @@ class PosController extends Controller implements HasMiddleware
             ]);
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
+        }
+
+        // A completed sale consumes the parked draft it was resumed from.
+        if (! empty($data['draft_id'])) {
+            \App\Models\SaleDraft::whereKey((int) $data['draft_id'])->where('channel', 'pos')->delete();
         }
 
         return redirect()->route('admin.pos.index')

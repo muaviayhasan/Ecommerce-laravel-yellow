@@ -42,6 +42,8 @@ class PosSaleRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.variant_id' => ['required', Rule::exists('product_variants', 'id')],
             'items.*.quantity' => ['required', 'numeric', 'gt:0', 'max:9999999.999'],
+            'items.*.deal_id' => ['nullable', 'integer', Rule::exists('deals', 'id')],
+            'draft_id' => ['nullable', 'integer', Rule::exists('sale_drafts', 'id')],
         ];
     }
 

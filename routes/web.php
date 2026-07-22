@@ -210,6 +210,14 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 
     // Catalog
+    // Parked sales (POS / vendor drafts).
+    Route::get('sale-drafts', [\App\Http\Controllers\Admin\SaleDraftController::class, 'index'])->name('sale-drafts.index');
+    Route::post('sale-drafts', [\App\Http\Controllers\Admin\SaleDraftController::class, 'store'])->name('sale-drafts.store');
+    Route::delete('sale-drafts/{saleDraft}', [\App\Http\Controllers\Admin\SaleDraftController::class, 'destroy'])->name('sale-drafts.destroy');
+
+    Route::get('deals/search-variants', [\App\Http\Controllers\Admin\DealController::class, 'searchVariants'])->name('deals.search-variants');
+    Route::resource('deals', \App\Http\Controllers\Admin\DealController::class)->except('show');
+
     Route::post('products/{product}/duplicate', [AdminProductController::class, 'duplicate'])->name('products.duplicate');
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class)->except('show');

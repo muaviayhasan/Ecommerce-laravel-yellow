@@ -61,6 +61,7 @@ class SalesService
                 $rows[] = [
                     'variant' => $variant, // pulled back out for the stock move, then unset before insert
                     'product_variant_id' => $variant->id,
+                    'deal_id' => $line['deal_id'] ?? null,
                     'name_snapshot' => $variant->product?->name ?? 'Item',
                     'sku_snapshot' => $variant->sku,
                     'attributes_snapshot' => $variant->relationLoaded('attributeValues')
