@@ -25,7 +25,15 @@
         loading: false,
         loaded: false,
         endpoint: @js(route('admin.media.browse')),
-        openModal() { this.open = true; if (! this.loaded) this.loadMore(); },
+        openModal() {
+            this.open = true;
+            // Refresh from the gallery each open so images uploaded in another
+            // tab appear without reloading this page.
+            this.items = [];
+            this.nextPage = 1;
+            this.loaded = false;
+            this.loadMore();
+        },
         choose(m) { this.id = String(m.id); this.url = m.url; this.title = m.title; this.open = false; },
         clear() { this.id = ''; this.url = ''; this.title = ''; },
         async loadMore() {

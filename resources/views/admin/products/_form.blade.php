@@ -273,17 +273,22 @@
                                     <h3 class="text-lg font-bold text-on-surface">Variant image</h3>
                                     <button type="button" @click="pickerOpen = false" class="cursor-pointer p-1 -mr-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">close</span></button>
                                 </div>
-                                <template x-if="!mediaItems.length">
-                                    <div class="p-12 text-center text-sm text-on-surface-variant">No media yet. Upload images in the <a href="{{ route('admin.gallery.index') }}" class="text-primary font-semibold hover:underline">Gallery</a> first.</div>
-                                </template>
-                                <div x-show="mediaItems.length" class="p-5 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 max-h-[60vh] overflow-y-auto">
-                                    <template x-for="m in mediaItems" :key="m.id">
-                                        <button type="button" @click="chooseImage(m.id)"
-                                            :class="(pickingIndex !== null && variants[pickingIndex] && String(variants[pickingIndex].image_media_id) === String(m.id)) ? 'ring-2 ring-primary border-primary' : 'border-outline-variant/50 hover:border-primary/50'"
-                                            class="cursor-pointer rounded-xl border overflow-hidden">
-                                            <div class="aspect-square bg-surface-container-low overflow-hidden"><img :src="m.url" :alt="m.title" loading="lazy" class="w-full h-full object-cover"></div>
-                                        </button>
-                                    </template>
+                                {{-- Lazy grid: newest first, 12 per batch, refreshed each open. --}}
+                                <div x-ref="variantGrid" @scroll.passive="onScrollMedia($event)" class="p-5 max-h-[60vh] overflow-y-auto">
+                                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                                        <template x-for="m in browseItems" :key="m.id">
+                                            <button type="button" @click="chooseImage(m.id)"
+                                                :class="(pickingIndex !== null && variants[pickingIndex] && String(variants[pickingIndex].image_media_id) === String(m.id)) ? 'ring-2 ring-primary border-primary' : 'border-outline-variant/50 hover:border-primary/50'"
+                                                class="cursor-pointer rounded-xl border overflow-hidden">
+                                                <div class="aspect-square bg-surface-container-low overflow-hidden"><img :src="m.url" :alt="m.title" loading="lazy" class="w-full h-full object-cover"></div>
+                                            </button>
+                                        </template>
+                                    </div>
+                                    <div x-show="browseLoading" class="flex justify-center py-6">
+                                        <span class="material-symbols-outlined animate-spin text-outline">progress_activity</span>
+                                    </div>
+                                    <div x-show="browseLoaded && !browseLoading && browseItems.length === 0" class="p-12 text-center text-sm text-on-surface-variant">No media yet. Upload images in the <a href="{{ route('admin.gallery.index') }}" class="text-primary font-semibold hover:underline">Gallery</a> first.</div>
+                                    <p x-show="browseLoaded && browseItems.length > 0 && browseNext === null" class="text-center text-xs text-outline pt-4">That’s all your images.</p>
                                 </div>
                                 <div class="flex justify-between gap-3 p-5 border-t border-outline-variant/60">
                                     <button type="button" @click="chooseImage('')" class="cursor-pointer px-4 py-2.5 text-sm font-semibold text-on-surface-variant hover:text-error">Use none</button>
@@ -389,6 +394,11 @@
                 mediaItems: (media || []).map(m => ({ id: m.id, url: m.url, title: m.title })),
                 pickerOpen: false,
                 pickingIndex: null,
+                browseItems: [],          // live gallery grid for the variant picker (lazy)
+                browseNext: 1,
+                browseLoading: false,
+                browseLoaded: false,
+                mediaEndpoint: @js(route('admin.media.browse')),
                 options: ((state.options && state.options.length) ? state.options : [{ attributeId: '', valueIds: [] }])
                     .map(o => ({ attributeId: o.attributeId ? String(o.attributeId) : '', valueIds: (o.valueIds || []).map(Number) })),
                 variants: (state.variants || []).map(v => ({
@@ -486,7 +496,43 @@
                 },
 
                 mediaUrl(id) { const m = this.mediaItems.find(x => String(x.id) === String(id)); return m ? m.url : ''; },
-                openImagePicker(i) { this.pickingIndex = i; this.pickerOpen = true; },
+                openImagePicker(i) {
+                    this.pickingIndex = i;
+                    this.pickerOpen = true;
+                    // Refresh from the gallery each open so images uploaded in another tab appear.
+                    this.browseItems = [];
+                    this.browseNext = 1;
+                    this.browseLoaded = false;
+                    this.loadMoreMedia();
+                },
+                async loadMoreMedia() {
+                    if (this.browseLoading || this.browseNext === null) return;
+                    this.browseLoading = true;
+                    try {
+                        const sep = this.mediaEndpoint.includes('?') ? '&' : '?';
+                        const r = await fetch(this.mediaEndpoint + sep + 'page=' + this.browseNext, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                        if (r.ok) {
+                            const d = await r.json();
+                            const seen = new Set(this.browseItems.map(i => i.id));
+                            const known = new Set(this.mediaItems.map(i => i.id));
+                            (d.data || []).forEach(m => {
+                                if (! seen.has(m.id)) this.browseItems.push(m);
+                                if (! known.has(m.id)) this.mediaItems.push(m); // keep mediaUrl() resolvable
+                            });
+                            this.browseNext = d.next;
+                        }
+                    } catch (e) {}
+                    this.browseLoaded = true;
+                    this.browseLoading = false;
+                    this.$nextTick(() => {
+                        const g = this.$refs.variantGrid;
+                        if (this.browseNext !== null && g && g.scrollHeight <= g.clientHeight + 4) this.loadMoreMedia();
+                    });
+                },
+                onScrollMedia(e) {
+                    const el = e.target;
+                    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) this.loadMoreMedia();
+                },
                 chooseImage(id) {
                     if (this.pickingIndex !== null && this.variants[this.pickingIndex]) {
                         this.variants[this.pickingIndex].image_media_id = id ? String(id) : '';
