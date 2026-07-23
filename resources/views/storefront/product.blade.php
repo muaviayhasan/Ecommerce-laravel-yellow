@@ -86,7 +86,7 @@
                 })">
                 {{-- Gallery: main image (or embedded product video) on top, thumbnails below --}}
                 <div class="space-y-6">
-                    <div class="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center group"
+                    <div class="relative aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center group"
                         :class="showVideo ? 'bg-black' : 'p-6 sm:p-8 cursor-zoom-in'">
                         <template x-if="showVideo">
                             <iframe :src="video.embed + '?rel=0&autoplay=1'" class="w-full h-full" frameborder="0"
@@ -97,6 +97,11 @@
                             <img :src="gallery[active]" alt="{{ $product['name'] }}"
                                 class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
                         </template>
+                        {{-- Brand watermark over the main image (hidden while the video plays; never blocks the zoom) --}}
+                        <div x-show="! showVideo" aria-hidden="true"
+                            class="pointer-events-none select-none absolute inset-0 flex items-center justify-center">
+                            <span style="font-weight:700; color:rgba(0,0,0,0.10); letter-spacing:0.5em; font-size:clamp(1.5rem,5vw,2.75rem); padding-left:0.5em; white-space:nowrap;">Kingway</span>
+                        </div>
                     </div>
                     <div class="flex gap-3 sm:gap-4 overflow-x-auto pb-2 no-scrollbar">
                         @foreach ($product['gallery'] as $i => $img)
