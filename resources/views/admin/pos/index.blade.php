@@ -72,15 +72,18 @@
                     <div class="p-4 relative" @click.outside="open = false">
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-                            <input type="text" x-model="query" @focus="openList()" @input.debounce.250ms="search()" @keydown.escape="open = false" autofocus
+                            <input type="text" x-model="query" @focus="openList()" @input.debounce.250ms="search()" @keydown.escape="open = false"
+                                @keydown.arrow-down.prevent="moveHighlight(1)" @keydown.arrow-up.prevent="moveHighlight(-1)" @keydown.enter.prevent="chooseHighlighted()" autofocus
                                 placeholder="Search products by name, SKU or barcode…" maxlength="255"
                                 class="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-11 pr-3 py-2.5 text-sm text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary outline-none">
                         </div>
 
-                        {{-- Results --}}
-                        <div x-show="open" x-cloak @scroll.passive="onScroll($event)" class="absolute left-4 right-4 z-20 mt-1 bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-xl shadow-2xl max-h-80 overflow-y-auto">
-                            <template x-for="p in results" :key="(p.kind || 'v') + '-' + p.id">
-                                <button type="button" @click="p.kind === 'deal' ? addDeal(p) : add(p)" class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-surface-container-high transition-colors border-b border-outline-variant/40 last:border-0">
+                        {{-- Results (keyboard: ↑/↓ to move, Enter to add) --}}
+                        <div x-ref="resultsBox" x-show="open" x-cloak @scroll.passive="onScroll($event)" class="absolute left-4 right-4 z-20 mt-1 bg-surface-container-lowest dark:bg-surface-container border border-outline-variant rounded-xl shadow-2xl max-h-80 overflow-y-auto">
+                            <template x-for="(p, idx) in results" :key="(p.kind || 'v') + '-' + p.id">
+                                <button type="button" :data-idx="idx" @mouseenter="highlighted = idx" @click="p.kind === 'deal' ? addDeal(p) : add(p)"
+                                    :class="highlighted === idx ? 'bg-surface-container-high' : ''"
+                                    class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-surface-container-high transition-colors border-b border-outline-variant/40 last:border-0">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <template x-if="p.image"><img :src="p.image" alt="" loading="lazy" class="w-9 h-9 rounded-md object-cover bg-surface-container-high shrink-0"></template>
                                         <template x-if="!p.image"><div class="w-9 h-9 rounded-md bg-surface-container-high grid place-items-center shrink-0"><span class="material-symbols-outlined text-[18px] text-outline" x-text="p.kind === 'deal' ? 'sell' : 'image'"></span></div></template>
@@ -170,7 +173,8 @@
 
             {{-- Checkout --}}
             <div class="col-span-12 lg:col-span-5 lg:sticky lg:top-6 lg:self-start">
-                <form method="POST" action="{{ route('admin.pos.store') }}" @submit="if (!cart.length) $event.preventDefault()">
+                <form method="POST" action="{{ route('admin.pos.store') }}" @submit="if (!cart.length) $event.preventDefault()"
+                    x-ref="coForm" @keydown="onCoKey($event)">
                     @csrf
                     <input type="hidden" name="payment_method" :value="paymentMethod">
                     {{-- Deal discounts merge with the manual one into a single fixed amount. --}}
@@ -207,7 +211,7 @@
                             class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-medium text-on-surface-variant">Customer name <span class="text-outline font-normal">(optional)</span></label>
-                                <input type="text" name="walk_in_name" value="{{ old('walk_in_name') }}" maxlength="100" placeholder="e.g. Ahmed"
+                                <input type="text" name="walk_in_name" value="{{ old('walk_in_name') }}" maxlength="100" placeholder="e.g. Ahmed" data-nav
                                     class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none">
                                 @error('walk_in_name')<p class="text-xs text-error">{{ $message }}</p>@enderror
                             </div>
@@ -230,7 +234,7 @@
                                         <button type="button" @click="setDiscountType('fixed')" :class="discountType === 'fixed' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2 py-0.5 rounded">{{ $currency }}</button>
                                         <button type="button" @click="setDiscountType('percent')" :class="discountType === 'percent' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant'" class="px-2 py-0.5 rounded">%</button>
                                     </div>
-                                    <input type="number" step="any" min="0" :max="discountType === 'percent' ? 100 : Math.max(0, subtotal() - dealDiscountAmt())" x-model="discountValue" @input="clampDiscount()" placeholder="0"
+                                    <input type="number" step="any" min="0" :max="discountType === 'percent' ? 100 : Math.max(0, subtotal() - dealDiscountAmt())" x-model="discountValue" @input="clampDiscount()" placeholder="0" data-nav
                                            class="w-20 bg-surface-container-low border border-outline-variant rounded-lg px-2 py-1 text-sm text-right text-on-surface outline-none focus:ring-1 focus:ring-primary">
                                 </dd>
                             </div>
@@ -242,12 +246,12 @@
 
                         {{-- Delivery (optional) --}}
                         <div class="mt-5 border-t border-outline-variant/60 pt-4">
-                            <button type="button" @click="deliveryOpen = !deliveryOpen" class="flex items-center justify-between w-full text-sm font-semibold text-on-surface-variant">
+                            <button type="button" x-ref="deliveryToggle" data-nav @click="deliveryOpen = !deliveryOpen" class="flex items-center justify-between w-full text-sm font-semibold text-on-surface-variant">
                                 <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">local_shipping</span> Delivery <span class="text-outline font-normal">(optional)</span></span>
                                 <span class="material-symbols-outlined text-[18px]" x-text="deliveryOpen ? 'expand_less' : 'expand_more'"></span>
                             </button>
                             <div x-show="deliveryOpen" x-cloak class="mt-3 space-y-3">
-                                <select x-model="deliveryMethod" data-no-select2 class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+                                <select x-model="deliveryMethod" data-no-select2 data-nav class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary cursor-pointer">
                                     <option value="pickup">Store pickup (collected)</option>
                                     <option value="own_rider">Own rider</option>
                                     <option value="courier">Third-party courier</option>
@@ -255,11 +259,11 @@
                                 </select>
                                 <template x-if="deliveryMethod !== 'pickup'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="courier" maxlength="255" placeholder="Handled by (rider / courier / person)" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
-                                        <input type="text" x-model="tracking" maxlength="255" placeholder="Contact phone or tracking #" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                                        <input type="text" x-model="courier" maxlength="255" placeholder="Handled by (rider / courier / person)" data-nav class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                                        <input type="text" x-model="tracking" maxlength="255" placeholder="Contact phone or tracking #" data-nav class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
                                     </div>
                                 </template>
-                                <input type="number" step="any" min="0" x-model="shippingCharge" placeholder="Delivery charge (added to total)" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                                <input type="number" step="any" min="0" x-model="shippingCharge" placeholder="Delivery charge (added to total)" data-nav class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
                             </div>
                         </div>
 
@@ -267,7 +271,7 @@
                             <label class="block text-sm font-medium text-on-surface-variant mb-2">Payment</label>
                             <div class="grid grid-cols-3 gap-2">
                                 @foreach (['cash' => 'payments', 'card' => 'credit_card', 'qr' => 'qr_code_2'] as $m => $icon)
-                                    <button type="button" @click="paymentMethod = '{{ $m }}'"
+                                    <button type="button" data-nav data-pay @click="paymentMethod = '{{ $m }}'"
                                         :class="paymentMethod === '{{ $m }}' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'"
                                         class="flex flex-col items-center gap-1 py-3 rounded-lg border text-xs font-semibold capitalize transition-colors">
                                         <span class="material-symbols-outlined text-[22px]">{{ $icon }}</span> {{ $m }}
@@ -286,11 +290,11 @@
                                     <span x-text="'Pay full · ' + money(grand())"></span>
                                 </button>
                             </div>
-                            <input type="number" step="any" min="0" x-model="tendered" placeholder="0.00" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
+                            <input type="number" step="any" min="0" x-model="tendered" placeholder="0.00" data-nav class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface outline-none focus:ring-1 focus:ring-primary">
                             <p class="text-sm text-on-surface-variant">Change: <span class="font-semibold text-on-surface" x-text="money(change())"></span></p>
                         </div>
 
-                        <button type="submit" :disabled="!cart.length" :class="cart.length ? '' : 'opacity-50 cursor-not-allowed'"
+                        <button type="submit" data-nav :disabled="!cart.length" :class="cart.length ? '' : 'opacity-50 cursor-not-allowed'"
                             class="w-full mt-6 bg-primary text-on-primary py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all">
                             <span class="material-symbols-outlined">point_of_sale</span> Complete sale · <span x-text="money(grand())"></span>
                         </button>
@@ -315,6 +319,7 @@
                 allowNegative: !!cfg.allowNegative,
                 query: '', results: [],
                 open: false, offset: 0, limit: 15, hasMore: true, loading: false,
+                highlighted: -1, // keyboard-highlighted result index
                 cart: [],
                 deals: {}, // dealId -> { name, type, value } for lines currently in the cart
                 drafts: [], draftsOpen: false, draftBusy: false, resumedDraftId: '',
@@ -410,8 +415,98 @@
                 openList() { this.open = true; if (!this.results.length && !this.loading) this.reload(); },
                 search() { this.reload(); },
                 async reload() {
-                    this.offset = 0; this.results = []; this.hasMore = true; this.open = true;
+                    this.offset = 0; this.results = []; this.hasMore = true; this.open = true; this.highlighted = -1;
                     await this.loadMore();
+                },
+                // Keyboard: move the highlight through the results (wraps around).
+                moveHighlight(dir) {
+                    if (!this.open || !this.results.length) return;
+                    this.highlighted = (this.highlighted + dir + this.results.length) % this.results.length;
+                    this.$nextTick(() => {
+                        const el = this.$refs.resultsBox?.querySelector('[data-idx=\"' + this.highlighted + '\"]');
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                    });
+                },
+                // Enter: add the highlighted result (or the first one) and keep the list open.
+                chooseHighlighted() {
+                    if (!this.open || !this.results.length) return;
+                    const p = this.results[this.highlighted >= 0 ? this.highlighted : 0];
+                    if (!p) return;
+                    p.kind === 'deal' ? this.addDeal(p) : this.add(p);
+                    this.open = true;
+                },
+
+                // ── Checkout keyboard nav (POS/vendor only) ─────────────────────
+                // Enter advances field→field (opens Delivery, selects the focused
+                // payment, submits at the end); ↑/↓ move between fields but leave a
+                // <select>'s option cycling native; ←/→ move the caret inside a text
+                // field and only jump to the prev/next field at the field's edge.
+                navFields() {
+                    const form = this.$refs.coForm;
+                    if (!form) return [];
+                    return Array.from(form.querySelectorAll('[data-nav], input[type=tel]'))
+                        .filter((el) => el.offsetParent !== null && !el.disabled);
+                },
+                focusNavEl(el) {
+                    if (!el) return;
+                    el.focus();
+                    try { el.select(); } catch (_) {}
+                },
+                // Move focus to the next (dir=1) or previous (dir=-1) visible field.
+                focusStep(el, dir) {
+                    const fields = this.navFields();
+                    const i = fields.indexOf(el);
+                    if (i === -1) { if (fields.length) this.focusNavEl(fields[dir > 0 ? 0 : fields.length - 1]); return; }
+                    for (let s = i + dir; s >= 0 && s < fields.length; s += dir) {
+                        if (fields[s]) { this.focusNavEl(fields[s]); return; }
+                    }
+                },
+                onCoKey(e) {
+                    const el = e.target;
+                    if (!el || !(el.matches('[data-nav]') || (el.tagName === 'INPUT' && el.type === 'tel'))) return;
+                    const key = e.key;
+                    if (!['Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
+
+                    // Enter — advance, with a per-control action first.
+                    if (key === 'Enter') {
+                        if (el.type === 'submit') return; // let the form submit natively
+                        e.preventDefault();
+                        if (el === this.$refs.deliveryToggle) {          // open panel, step inside
+                            this.deliveryOpen = true;
+                            this.$nextTick(() => this.focusStep(el, 1));
+                            return;
+                        }
+                        if (el.hasAttribute('data-pay')) {               // select payment, jump past the group
+                            el.click();
+                            this.$nextTick(() => {
+                                const fields = this.navFields();
+                                let i = fields.indexOf(el); if (i < 0) i = 0;
+                                for (let s = i + 1; s < fields.length; s++) {
+                                    if (!fields[s].hasAttribute('data-pay')) { this.focusNavEl(fields[s]); break; }
+                                }
+                            });
+                            return;
+                        }
+                        this.focusStep(el, 1);
+                        return;
+                    }
+
+                    const isSelect = el.tagName === 'SELECT';
+                    const isText = el.tagName === 'INPUT' && ['text', 'tel', 'search', 'url', 'password'].includes((el.type || '').toLowerCase());
+
+                    // ↑/↓ — field nav, but a <select> keeps native option cycling.
+                    if (key === 'ArrowDown') { if (isSelect) return; e.preventDefault(); this.focusStep(el, 1); return; }
+                    if (key === 'ArrowUp')   { if (isSelect) return; e.preventDefault(); this.focusStep(el, -1); return; }
+
+                    // ←/→ — caret inside a text field; jump fields only at its edge.
+                    if (key === 'ArrowRight') {
+                        if (isText) { let at; try { at = el.selectionStart === el.selectionEnd && el.selectionStart === (el.value || '').length; } catch (_) { at = true; } if (!at) return; }
+                        e.preventDefault(); this.focusStep(el, 1); return;
+                    }
+                    if (key === 'ArrowLeft') {
+                        if (isText) { let at; try { at = el.selectionStart === el.selectionEnd && el.selectionStart === 0; } catch (_) { at = true; } if (!at) return; }
+                        e.preventDefault(); this.focusStep(el, -1); return;
+                    }
                 },
                 async loadMore() {
                     if (this.loading || !this.hasMore) return;
