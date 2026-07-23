@@ -7,9 +7,17 @@ use App\Models\Deal;
 use App\Support\Storefront;
 use Illuminate\View\View;
 
-/** Storefront deal page — a live deal's products with its combined price. */
+/** Storefront deal pages — the live-deal index and a single deal's products. */
 class DealController extends Controller
 {
+    /** All active deals, two cards per row. */
+    public function index(): View
+    {
+        return view('storefront.deals', [
+            'deals' => Storefront::liveDeals(),
+        ]);
+    }
+
     public function show(string $slug): View
     {
         $deal = Deal::live()->where('slug', $slug)

@@ -125,6 +125,21 @@ class Storefront
             ->values();
     }
 
+    /**
+     * All live deals as cards, in admin order — for the /deals index page.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public static function liveDeals(): Collection
+    {
+        return Deal::live()
+            ->with(['image', 'items.variant.product:id,name', 'items.variant.product.media', 'items.variant.image'])
+            ->orderBy('sort_order')->orderByDesc('id')->get()
+            ->map(fn (Deal $d) => self::dealCard($d))
+            ->filter(fn ($c) => $c['items_count'] > 0)
+            ->values();
+    }
+
     /** The single spotlight deal card, or null. */
     public static function spotlightDeal(): ?array
     {

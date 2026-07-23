@@ -260,6 +260,23 @@
                                     <span class="font-medium whitespace-nowrap">{{ format_money($item->line_total) }}</span>
                                 </div>
                             @endforeach
+
+                            @foreach ($dealGroups as $group)
+                                <div class="rounded-lg bg-primary-container/10 border border-primary-container/40 p-3">
+                                    <p class="flex items-center gap-1.5 font-bold text-on-surface text-label-sm mb-2">
+                                        <span class="material-symbols-outlined text-primary text-[16px]">sell</span>{{ $group->name }}
+                                        @if ($group->discount_label)
+                                            <span class="ml-auto px-1.5 py-0.5 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold">{{ $group->discount_label }}</span>
+                                        @endif
+                                    </p>
+                                    @foreach ($group->items as $item)
+                                        <div class="flex justify-between items-start gap-4 text-label-sm">
+                                            <span class="text-on-surface-variant truncate">{{ $item->name }} &times; {{ rtrim(rtrim(number_format($item->qty, 3), '0'), '.') }}</span>
+                                            <span class="whitespace-nowrap">{{ format_money($item->line_total) }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
                         </div>
 
                         {{-- Coupon code --}}
@@ -294,6 +311,9 @@
 
                         <div class="space-y-2.5 border-b border-outline-variant pb-4 mb-4 text-body-base">
                             <div class="flex justify-between"><span class="text-on-surface-variant">Subtotal</span><span class="font-medium">{{ format_money($subtotal) }}</span></div>
+                            @if ($dealDiscount > 0)
+                                <div class="flex justify-between text-green-700"><span>Deal discount</span><span class="font-medium">&minus;{{ format_money($dealDiscount) }}</span></div>
+                            @endif
                             @if ($discount > 0)
                                 <div class="flex justify-between text-green-700"><span>Discount{{ $coupon ? ' (' . $coupon->code . ')' : '' }}</span><span class="font-medium">&minus;{{ format_money($discount) }}</span></div>
                             @endif

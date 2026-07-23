@@ -32,6 +32,9 @@
     $cartCount = $cart->count();
     $cartTotal = 'Rs ' . number_format($cart->subtotal());
     $wishlistCount = app(\App\Services\WishlistService::class)->count();
+
+    // Show the Deals nav only when at least one live deal (with items) exists.
+    $hasDeals = \App\Models\Deal::live()->whereHas('items')->exists();
 @endphp
 
 <div x-data="{ mobileMenu: false, logoutConfirm: false }" @open-logout-confirm.window="logoutConfirm = true">
@@ -219,6 +222,12 @@
                         <a href="{{ route('home') }}"
                             class="pb-1 border-b-2 {{ request()->routeIs('home') ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">Home</a>
                     </li>
+                    @if ($hasDeals)
+                        <li class="shrink-0">
+                            <a href="{{ route('deals') }}"
+                                class="pb-1 border-b-2 {{ request()->routeIs('deals', 'deal.show') ? 'border-on-primary-container' : 'border-transparent' }} hover:text-on-primary-container transition-colors">Deals</a>
+                        </li>
+                    @endif
                     {{-- Root categories (e.g. Electronics) — links to the whole department --}}
                     @foreach ($rootCategories as $root)
                         <li class="shrink-0">
@@ -285,6 +294,9 @@
             </ul>
             {{-- Info / action links --}}
             <ul class="p-2 border-t border-outline-variant">
+                @if ($hasDeals)
+                    <li><a href="{{ route('deals') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container font-bold"><span class="material-symbols-outlined text-[20px] text-primary">sell</span> Deals</a></li>
+                @endif
                 <li><a href="{{ route('quote.request') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">request_quote</span> Get Quotation</a></li>
                 <li><a href="{{ route('about') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">info</span> About Us</a></li>
                 <li><a href="{{ route('contact') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">mail</span> Contact Us</a></li>

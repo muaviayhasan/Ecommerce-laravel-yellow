@@ -12,10 +12,22 @@
             <nav class="flex flex-wrap items-center gap-2 text-label-sm text-on-surface-variant mb-8" aria-label="Breadcrumb">
                 <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
                 <span class="material-symbols-outlined text-[14px]">chevron_right</span>
-                <a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Deals</a>
+                <a href="{{ route('deals') }}" class="hover:text-primary transition-colors">Deals</a>
                 <span class="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span class="text-on-surface line-clamp-1">{{ $deal->name }}</span>
             </nav>
+
+            {{-- Flash — confirms the deal was added, or surfaces an error/timeout. --}}
+            @if (session('status'))
+                <div class="mb-6 p-4 rounded-lg bg-secondary-container/40 text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary">check_circle</span> {{ session('status') }}
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="mb-6 p-4 rounded-lg bg-error-container/40 text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-error">error</span> {{ session('error') }}
+                </div>
+            @endif
 
             {{-- Deal hero --}}
             <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12 bg-white p-6 lg:p-8 rounded-lg shadow-sm border border-outline-variant">
@@ -49,9 +61,28 @@
                         </p>
                     @endif
 
-                    <a href="{{ route('shop') }}" class="inline-flex items-center justify-center gap-2 self-start bg-primary-container text-on-primary-container px-8 h-12 font-bold rounded hover:brightness-95 transition-all">
-                        <span class="material-symbols-outlined">storefront</span> Continue shopping
-                    </a>
+                    @php $inCart = app(\App\Services\CartService::class)->hasDeal($deal->id); @endphp
+                    <div class="flex flex-wrap items-center gap-3">
+                        @if ($inCart)
+                            <span class="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container px-6 h-12 font-bold rounded">
+                                <span class="material-symbols-outlined">check_circle</span> In your cart
+                            </span>
+                            <a href="{{ route('cart') }}" class="inline-flex items-center gap-2 text-primary font-bold hover:underline">
+                                View cart <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </a>
+                        @else
+                            {{-- Adds all the deal's items as one linked, auto-discounted group. --}}
+                            <form method="POST" action="{{ route('cart.add-deal', $deal) }}">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center justify-center gap-2 bg-primary-container text-on-primary-container px-8 h-12 font-bold rounded hover:brightness-95 active:scale-95 transition-all">
+                                    <span class="material-symbols-outlined">add_shopping_cart</span> Add deal to cart
+                                </button>
+                            </form>
+                        @endif
+                        <a href="{{ route('shop') }}" class="inline-flex items-center gap-2 text-on-surface-variant font-bold hover:text-primary transition-colors">
+                            Continue shopping
+                        </a>
+                    </div>
                 </div>
             </section>
 

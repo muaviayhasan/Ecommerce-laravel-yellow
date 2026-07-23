@@ -72,6 +72,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/deals', [\App\Http\Controllers\Storefront\DealController::class, 'index'])->name('deals');
 Route::get('/deals/{slug}', [\App\Http\Controllers\Storefront\DealController::class, 'show'])->name('deal.show');
 Route::post('/product/{product:slug}/reviews', [StorefrontReviewController::class, 'store'])->middleware('auth')->name('product.reviews.store');
 
@@ -90,6 +91,9 @@ Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
 Route::patch('/cart/{variant}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{variant}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
+// Deal groups: add all a deal's items (linked, discounted) or remove the whole group.
+Route::post('/cart/deal/{deal}', [CartController::class, 'addDeal'])->name('cart.add-deal');
+Route::delete('/cart/deal/{deal}', [CartController::class, 'removeDeal'])->name('cart.remove-deal');
 // Rehydrate a saved cart from an abandoned-cart reminder link, then send them to checkout.
 Route::get('/cart/recover/{token}', [CartController::class, 'recover'])->name('cart.recover');
 

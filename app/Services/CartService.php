@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Deal;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Support\Storefront;
@@ -9,12 +10,15 @@ use Illuminate\Support\Collection;
 
 /**
  * Session-backed shopping cart for the storefront. Stores a simple
- * {variant_id => qty} map; line items are resolved against the live catalog on
- * read so prices/availability are always current and stale variants drop out.
+ * {variant_id => qty} map for standalone items, plus a parallel deals map for
+ * linked deal groups (locked quantities + their discount). Line items are
+ * resolved against the live catalog on read so prices/availability stay current.
  */
 class CartService
 {
     private const KEY = 'cart';
+
+    private const DEALS_KEY = 'cart_deals';
 
     public function add(int $variantId, int $qty = 1): void
     {
@@ -49,17 +53,164 @@ class CartService
 
     public function clear(): void
     {
-        session()->forget(self::KEY);
+        session()->forget([self::KEY, self::DEALS_KEY]);
     }
 
     public function count(): int
     {
-        return (int) array_sum($this->raw());
+        $dealQty = collect($this->rawDeals())->sum(fn ($d) => array_sum($d['items'] ?? []));
+
+        return (int) (array_sum($this->raw()) + $dealQty);
     }
 
     public function isEmpty(): bool
     {
-        return $this->raw() === [];
+        return $this->raw() === [] && $this->rawDeals() === [];
+    }
+
+    // --- Deals (linked groups with locked quantities + their discount) ----------
+
+    /** How many of a variant the whole cart already holds (standalone + all deals). */
+    public function heldQuantityOf(int $variantId): int
+    {
+        $inDeals = collect($this->rawDeals())->sum(fn ($d) => (float) ($d['items'][$variantId] ?? 0));
+
+        return (int) round($this->quantityOf($variantId) + $inDeals);
+    }
+
+    public function hasDeal(int $dealId): bool
+    {
+        return isset($this->rawDeals()[$dealId]);
+    }
+
+    /** Snapshot a live deal's items + discount into the cart (quantities locked). */
+    public function addDeal(Deal $deal): void
+    {
+        $deal->loadMissing('items.variant');
+
+        $items = [];
+        foreach ($deal->items as $item) {
+            if ($item->variant && $item->variant->is_active) {
+                $items[$item->product_variant_id] = (float) $item->quantity;
+            }
+        }
+        if ($items === []) {
+            return;
+        }
+
+        $deals = $this->rawDeals();
+        $deals[$deal->id] = [
+            'name' => $deal->name,
+            'slug' => $deal->slug,
+            'discount_type' => $deal->discount_type,
+            'discount_value' => (float) $deal->discount_value,
+            'items' => $items,
+        ];
+        $this->saveDeals($deals);
+    }
+
+    public function removeDeal(int $dealId): void
+    {
+        $deals = $this->rawDeals();
+        unset($deals[$dealId]);
+        $this->saveDeals($deals);
+    }
+
+    /**
+     * Resolved deal groups: each with its live line items, subtotal, discount and
+     * total. A deal whose items have all gone unsellable drops out entirely.
+     *
+     * @return Collection<int, object>
+     */
+    public function dealGroups(): Collection
+    {
+        $deals = $this->rawDeals();
+        if ($deals === []) {
+            return collect();
+        }
+
+        $ids = collect($deals)->flatMap(fn ($d) => array_keys($d['items'] ?? []))->unique()->all();
+        $variants = ProductVariant::query()
+            ->whereIn('id', $ids)
+            ->where('is_active', true)
+            ->whereHas('product', fn ($q) => $q->where('is_active', true)->where('is_sellable', true))
+            ->with(['product.media', 'image'])
+            ->get()->keyBy('id');
+
+        return collect($deals)->map(function (array $d, $dealId) use ($variants) {
+            $lines = [];
+            $subtotal = 0.0;
+            foreach ($d['items'] as $variantId => $qty) {
+                $variant = $variants->get((int) $variantId);
+                if (! $variant) {
+                    continue;
+                }
+                $price = (float) $variant->retail_price;
+                $lineTotal = round($price * (float) $qty, 2);
+                $subtotal += $lineTotal;
+                $lines[] = (object) [
+                    'variant_id' => $variant->id,
+                    'name' => $variant->product?->name ?? 'Item',
+                    'sku' => $variant->sku,
+                    'image' => $variant->image?->thumbUrl(200) ?? $variant->product?->media->first()?->thumbUrl(200) ?? Storefront::placeholder(),
+                    'price' => $price,
+                    'qty' => (float) $qty,
+                    'line_total' => $lineTotal,
+                    'url' => $variant->product ? route('product.show', $variant->product->slug) : route('shop'),
+                    'stock' => (float) $variant->stock_quantity,
+                ];
+            }
+            if ($lines === []) {
+                return null;
+            }
+
+            $subtotal = round($subtotal, 2);
+            $discount = $d['discount_type'] === 'percent'
+                ? round($subtotal * min((float) $d['discount_value'], 100) / 100, 2)
+                : round(min((float) $d['discount_value'], $subtotal), 2);
+
+            return (object) [
+                'deal_id' => (int) $dealId,
+                'name' => $d['name'],
+                'slug' => $d['slug'],
+                'url' => route('deal.show', $d['slug']),
+                'items' => collect($lines),
+                'subtotal' => $subtotal,
+                'discount' => $discount,
+                'total' => round($subtotal - $discount, 2),
+                'discount_label' => (float) $d['discount_value'] <= 0 ? null
+                    : ($d['discount_type'] === 'percent'
+                        ? 'Save ' . rtrim(rtrim(number_format((float) $d['discount_value'], 2), '0'), '.') . '%'
+                        : 'Save ' . format_money($discount)),
+            ];
+        })->filter()->values();
+    }
+
+    /** Combined deal discount across all deal groups (recomputed on live prices). */
+    public function dealDiscount(): float
+    {
+        return round((float) $this->dealGroups()->sum('discount'), 2);
+    }
+
+    /**
+     * Flat order-line specs for checkout: standalone items (deal_id null) plus
+     * every deal's items (carrying their deal_id).
+     *
+     * @return list<array{variant_id:int, qty:float, deal_id:?int}>
+     */
+    public function lineSpecs(): array
+    {
+        $specs = [];
+        foreach ($this->raw() as $variantId => $qty) {
+            $specs[] = ['variant_id' => (int) $variantId, 'qty' => (float) $qty, 'deal_id' => null];
+        }
+        foreach ($this->rawDeals() as $dealId => $deal) {
+            foreach (($deal['items'] ?? []) as $variantId => $qty) {
+                $specs[] = ['variant_id' => (int) $variantId, 'qty' => (float) $qty, 'deal_id' => (int) $dealId];
+            }
+        }
+
+        return $specs;
     }
 
     /**
@@ -107,9 +258,10 @@ class CartService
             ->values();
     }
 
+    /** Standalone items plus all deal items (before the deal discount). */
     public function subtotal(): float
     {
-        return round((float) $this->items()->sum('line_total'), 2);
+        return round((float) $this->items()->sum('line_total') + (float) $this->dealGroups()->sum('subtotal'), 2);
     }
 
     /**
@@ -151,5 +303,21 @@ class CartService
     private function save(array $cart): void
     {
         session()->put(self::KEY, $cart);
+    }
+
+    /**
+     * @return array<int, array{name:string, slug:string, discount_type:string, discount_value:float, items:array<int, float>}>
+     */
+    private function rawDeals(): array
+    {
+        return (array) session(self::DEALS_KEY, []);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $deals
+     */
+    private function saveDeals(array $deals): void
+    {
+        session()->put(self::DEALS_KEY, $deals);
     }
 }

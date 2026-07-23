@@ -44,6 +44,7 @@ class CheckoutController extends Controller
         $shipping = $this->shipping($subtotal);
         $coupon = $this->activeCoupon($subtotal);
         $discount = $coupon ? $this->coupons->discountFor($coupon, $subtotal) : 0.0;
+        $dealDiscount = $this->cart->dealDiscount();
 
         // Remember they reached checkout so the support bot can nudge if they don't finish.
         if (auth()->check()) {
@@ -54,11 +55,13 @@ class CheckoutController extends Controller
 
         return view('storefront.checkout', [
             'items' => $this->cart->items(),
+            'dealGroups' => $this->cart->dealGroups(),
             'subtotal' => $subtotal,
             'shipping' => $shipping,
             'coupon' => $coupon,
             'discount' => $discount,
-            'total' => max(0, round($subtotal - $discount + $shipping, 2)),
+            'dealDiscount' => $dealDiscount,
+            'total' => max(0, round($subtotal - min($subtotal, $discount + $dealDiscount) + $shipping, 2)),
             'user' => auth()->user(),
             'addresses' => auth()->check()
                 ? auth()->user()->addresses()->orderByDesc('is_default_shipping')->orderByDesc('is_default_billing')->orderBy('id')->get()
@@ -106,15 +109,17 @@ class CheckoutController extends Controller
             'ship_city.required_if' => 'Enter the shipping city.',
         ]);
 
-        $items = $this->cart->items();
+        // Build order lines from standalone items and deal groups (each deal line
+        // carries its deal_id for reporting).
+        $specs = $this->cart->lineSpecs();
         $variants = ProductVariant::with('product:id,name')
-            ->whereIn('id', $items->pluck('variant_id'))->get()->keyBy('id');
+            ->whereIn('id', collect($specs)->pluck('variant_id'))->get()->keyBy('id');
 
         $lines = [];
-        foreach ($items as $item) {
-            $variant = $variants->get($item->variant_id);
+        foreach ($specs as $spec) {
+            $variant = $variants->get($spec['variant_id']);
             if ($variant) {
-                $lines[] = ['variant' => $variant, 'quantity' => (float) $item->qty];
+                $lines[] = ['variant' => $variant, 'quantity' => (float) $spec['qty'], 'deal_id' => $spec['deal_id']];
             }
         }
         if ($lines === []) {
@@ -129,11 +134,13 @@ class CheckoutController extends Controller
 
         $subtotal = $this->cart->subtotal();
         $shipping = $this->shipping($subtotal);
+        $dealDiscount = $this->cart->dealDiscount();
 
         // Re-validate the applied coupon against the final cart + this shopper — the
         // session value is only a hint; this is the authoritative check. A coupon that
         // lapsed between apply and submit bounces back rather than silently charging full price.
-        $couponOpts = [];
+        $couponDiscount = 0.0;
+        $couponId = null;
         if ($code = session(self::COUPON_KEY)) {
             [$coupon, $couponError] = $this->coupons->evaluate((string) $code, $subtotal, auth()->id(), $data['email']);
             if (! $coupon) {
@@ -141,11 +148,18 @@ class CheckoutController extends Controller
 
                 return back()->withInput()->with('coupon_error', $couponError);
             }
-            $couponOpts = [
-                'discount_type' => $coupon->type,
-                'discount_value' => (float) $coupon->value,
-                'coupon_id' => $coupon->id,
-            ];
+            $couponDiscount = (float) $this->coupons->discountFor($coupon, $subtotal);
+            $couponId = $coupon->id;
+        }
+
+        // Deal + coupon discounts stack into one fixed amount (capped at subtotal);
+        // the coupon id is still recorded for usage tracking.
+        $discountOpts = [
+            'discount_type' => 'fixed',
+            'discount_value' => round(min($subtotal, $dealDiscount + $couponDiscount), 2),
+        ];
+        if ($couponId) {
+            $discountOpts['coupon_id'] = $couponId;
         }
 
         try {
@@ -154,14 +168,14 @@ class CheckoutController extends Controller
                 'shipping_total' => $shipping,
                 'paid' => 0, // COD / bank transfer — settled later
                 'user_id' => auth()->id(), // so it shows in the customer's account
-            ] + $couponOpts);
+            ] + $discountOpts);
         } catch (Throwable $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
 
         // Redeemed — bump the coupon's global usage counter and drop it from the session.
-        if (! empty($couponOpts['coupon_id'])) {
-            Coupon::whereKey($couponOpts['coupon_id'])->increment('used_count');
+        if ($couponId) {
+            Coupon::whereKey($couponId)->increment('used_count');
         }
         session()->forget([self::COUPON_KEY, 'checkout_email']);
 

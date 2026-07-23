@@ -25,7 +25,7 @@
                 </div>
             @endif
 
-            @if ($items->isEmpty())
+            @if ($items->isEmpty() && $dealGroups->isEmpty())
                 <div class="bg-white rounded-lg border border-outline-variant p-16 text-center">
                     <span class="material-symbols-outlined text-gray-300" style="font-size:72px;">shopping_cart</span>
                     <p class="mt-4 text-xl font-light text-on-surface-variant">Your cart is empty.</p>
@@ -35,7 +35,55 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     {{-- Items --}}
                     @php $allowOversell = (bool) setting('inventory', 'allow_negative_stock', false); @endphp
-                    <div class="lg:col-span-2 bg-white rounded-lg border border-outline-variant overflow-hidden">
+                    <div class="lg:col-span-2 space-y-6">
+                    {{-- Deal groups: linked items with locked quantities; remove as one. --}}
+                    @foreach ($dealGroups as $group)
+                        <div class="bg-white rounded-lg border border-primary-container/60 overflow-hidden">
+                            <div class="flex items-center justify-between gap-3 px-4 py-3 bg-primary-container/10 border-b border-primary-container/40">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="material-symbols-outlined text-primary text-[20px]">sell</span>
+                                    <a href="{{ $group->url }}" class="font-bold text-on-surface truncate hover:text-primary transition-colors">{{ $group->name }}</a>
+                                    @if ($group->discount_label)
+                                        <span class="shrink-0 px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container text-[11px] font-bold">{{ $group->discount_label }}</span>
+                                    @endif
+                                </div>
+                                <form method="POST" action="{{ route('cart.remove-deal', $group->deal_id) }}" class="shrink-0">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-label-sm font-bold text-on-surface-variant hover:text-error transition-colors flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[16px]">delete</span> Remove deal
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="divide-y divide-outline-variant">
+                                @foreach ($group->items as $item)
+                                    <div class="p-4 flex gap-3 sm:gap-4 items-center">
+                                        <a href="{{ $item->url }}" class="w-16 h-16 shrink-0 border border-outline-variant rounded-lg overflow-hidden bg-white p-1">
+                                            <img src="{{ $item->image }}" alt="{{ $item->name }}" class="w-full h-full object-contain">
+                                        </a>
+                                        <div class="flex-1 min-w-0">
+                                            <a href="{{ $item->url }}" class="font-semibold hover:text-primary transition-colors line-clamp-1">{{ $item->name }}</a>
+                                            <p class="text-label-sm text-on-surface-variant mt-0.5">{{ $item->sku }} · Rs {{ number_format($item->price) }} each</p>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <span class="text-on-surface-variant text-label-sm">× {{ rtrim(rtrim(number_format($item->qty, 3), '0'), '.') }}</span>
+                                            <p class="font-bold whitespace-nowrap">Rs {{ number_format($item->line_total) }}</p>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="flex items-center justify-between px-4 py-3 bg-surface-container-low text-sm">
+                                <span class="text-on-surface-variant">Deal price</span>
+                                <span class="font-bold">
+                                    <span class="text-error">Rs {{ number_format($group->total) }}</span>
+                                    @if ($group->discount > 0)
+                                        <span class="text-on-surface-variant line-through font-normal ml-1">Rs {{ number_format($group->subtotal) }}</span>
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <div class="bg-white rounded-lg border border-outline-variant overflow-hidden" @if ($items->isEmpty()) hidden @endif>
                         <div class="divide-y divide-outline-variant">
                             @foreach ($items as $item)
                                 @php $max = $allowOversell ? 999 : max(0, (int) floor($item->stock)); @endphp
@@ -84,23 +132,30 @@
                                 </div>
                             @endforeach
                         </div>
-                        <div class="p-4 flex justify-between items-center border-t border-outline-variant">
-                            <a href="{{ route('shop') }}" class="text-primary font-bold hover:underline flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">arrow_back</span> Continue shopping</a>
-                            <form method="POST" action="{{ route('cart.clear') }}">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="text-on-surface-variant font-bold hover:text-error transition-colors text-label-sm">Clear cart</button>
-                            </form>
-                        </div>
+                    </div>
+
+                    {{-- Footer — always visible while the cart has anything. --}}
+                    <div class="bg-white rounded-lg border border-outline-variant p-4 flex justify-between items-center">
+                        <a href="{{ route('shop') }}" class="text-primary font-bold hover:underline flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">arrow_back</span> Continue shopping</a>
+                        <form method="POST" action="{{ route('cart.clear') }}">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="text-on-surface-variant font-bold hover:text-error transition-colors text-label-sm">Clear cart</button>
+                        </form>
+                    </div>
                     </div>
 
                     {{-- Summary --}}
+                    @php $cartTotal = max(0, $subtotal - $dealDiscount); @endphp
                     <div class="bg-white rounded-lg border border-outline-variant p-6">
                         <h2 class="text-xl font-bold mb-6">Cart Totals</h2>
                         <div class="space-y-3 text-body-base border-b border-outline-variant pb-4 mb-4">
                             <div class="flex justify-between"><span class="text-on-surface-variant">Subtotal</span><span class="font-bold">Rs {{ number_format($subtotal) }}</span></div>
+                            @if ($dealDiscount > 0)
+                                <div class="flex justify-between text-green-700"><span>Deal discount</span><span class="font-bold">&minus; Rs {{ number_format($dealDiscount) }}</span></div>
+                            @endif
                             <div class="flex justify-between"><span class="text-on-surface-variant">Shipping</span><span class="text-on-surface-variant">Calculated at checkout</span></div>
                         </div>
-                        <div class="flex justify-between text-lg font-black mb-6"><span>Total</span><span>Rs {{ number_format($subtotal) }}</span></div>
+                        <div class="flex justify-between text-lg font-black mb-6"><span>Total</span><span>Rs {{ number_format($cartTotal) }}</span></div>
                         <a href="{{ route('checkout') }}" class="w-full bg-primary-container text-on-primary-container py-3 rounded font-bold flex items-center justify-center gap-2 hover:brightness-95 transition-all">
                             Proceed to Checkout <span class="material-symbols-outlined">arrow_forward</span>
                         </a>

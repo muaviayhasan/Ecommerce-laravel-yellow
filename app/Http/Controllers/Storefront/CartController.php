@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Models\AbandonedCart;
+use App\Models\Deal;
 use App\Models\ProductVariant;
 use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
@@ -19,8 +20,49 @@ class CartController extends Controller
     {
         return view('storefront.cart', [
             'items' => $this->cart->items(),
+            'dealGroups' => $this->cart->dealGroups(),
             'subtotal' => $this->cart->subtotal(),
+            'dealDiscount' => $this->cart->dealDiscount(),
         ]);
+    }
+
+    /** Add every item of a live deal as one linked, discounted group. */
+    public function addDeal(Deal $deal): RedirectResponse
+    {
+        $deal = Deal::live()->whereKey($deal->id)->with('items.variant.product:id,is_active,is_sellable,is_stock_tracked')->first();
+
+        if (! $deal) {
+            return back()->with('error', 'That deal is no longer available.');
+        }
+        if ($this->cart->hasDeal($deal->id)) {
+            return back()->with('status', 'That deal is already in your cart.');
+        }
+
+        // Every item must fit in stock (counting what the cart already holds).
+        $allowOversell = (bool) setting('inventory', 'allow_negative_stock', false);
+        foreach ($deal->items as $item) {
+            $variant = $item->variant;
+            if (! $variant || ! $variant->product?->is_active || ! $variant->product->is_sellable) {
+                return back()->with('error', 'A product in this deal is not available right now.');
+            }
+            if ((bool) $variant->product->is_stock_tracked && ! $allowOversell) {
+                $stock = max(0, (int) floor((float) $variant->stock_quantity));
+                if ($this->cart->heldQuantityOf($variant->id) + (float) $item->quantity > $stock) {
+                    return back()->with('error', "“{$variant->product->name}” doesn't have enough stock for this deal.");
+                }
+            }
+        }
+
+        $this->cart->addDeal($deal);
+
+        return back()->with('status', 'Deal added to your cart.');
+    }
+
+    public function removeDeal(Deal $deal): RedirectResponse
+    {
+        $this->cart->removeDeal($deal->id);
+
+        return redirect()->route('cart')->with('status', 'Deal removed.');
     }
 
     public function add(Request $request): RedirectResponse
