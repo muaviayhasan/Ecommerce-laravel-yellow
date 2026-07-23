@@ -128,7 +128,7 @@
                         <h3 class="text-lg font-bold text-on-surface">Cart <span class="text-xs font-normal text-outline">· wholesale</span></h3>
                         <div class="flex items-center gap-3">
                             <span class="text-xs text-outline" x-text="count() + ' item(s)'"></span>
-                            <button type="button" x-show="cart.length" @click="clearCart()" class="text-xs font-semibold text-error hover:opacity-70 transition-opacity flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">delete_sweep</span> Clear</button>
+                            <button type="button" x-show="cart.length" @click="$store.pageConfirm.ask('Clear the cart?', 'All items in the current sale will be removed. This cannot be undone.', () => clearCart(), 'delete_sweep')" class="text-xs font-semibold text-error hover:opacity-70 transition-opacity flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">delete_sweep</span> Clear</button>
                         </div>
                     </div>
                     <div x-show="stockNote" x-cloak class="px-6 py-2 bg-error-container/40 text-error text-xs font-medium border-b border-outline-variant/60 flex items-center gap-2">
