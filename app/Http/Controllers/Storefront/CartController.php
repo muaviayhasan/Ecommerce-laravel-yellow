@@ -29,7 +29,7 @@ class CartController extends Controller
     /** Add every item of a live deal as one linked, discounted group. */
     public function addDeal(Deal $deal): RedirectResponse
     {
-        $deal = Deal::live()->whereKey($deal->id)->with('items.variant.product:id,is_active,is_sellable,is_stock_tracked')->first();
+        $deal = Deal::live()->whereKey($deal->id)->with('items.variant.product:id,name,is_active,is_sellable,is_stock_tracked')->first();
 
         if (! $deal) {
             return back()->with('error', 'That deal is no longer available.');
