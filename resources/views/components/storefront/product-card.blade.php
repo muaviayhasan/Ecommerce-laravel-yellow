@@ -9,6 +9,7 @@
     $url = data_get($product, 'url', '#');
     $slug = data_get($product, 'slug');
     $variantId = data_get($product, 'variant_id');
+    $inStock = data_get($product, 'in_stock', true);
     $onSale = $compare !== null && (float) $compare > $price;
     // TODO: swap "Rs " formatting for format_money() once the Settings helpers land.
 @endphp
@@ -39,7 +40,7 @@
                 <p class="text-price-lg text-on-surface">Rs {{ number_format($price) }}</p>
             @endif
         </div>
-        <x-storefront.add-to-cart :variant-id="$variantId" :name="$name" :url="$url"
+        <x-storefront.add-to-cart :variant-id="$variantId" :in-stock="$inStock" :name="$name" :url="$url"
             class="w-8 h-8 rounded-full bg-surface-container text-secondary flex items-center justify-center transition-colors group-hover:bg-primary-container group-hover:text-white hover:!bg-primary-fixed-dim" />
     </div>
 

@@ -8,6 +8,7 @@
     $image = data_get($product, 'image');
     $url = data_get($product, 'url', '#');
     $variantId = data_get($product, 'variant_id');
+    $inStock = data_get($product, 'in_stock', true);
     $onSale = $compare !== null && (float) $compare > (float) $price;
 @endphp
 
@@ -33,7 +34,7 @@
                 <div class="text-price-lg font-bold">Rs {{ number_format($price) }}</div>
             @endif
         </div>
-        <x-storefront.add-to-cart :variant-id="$variantId" :name="$name" :url="$url" icon="add_shopping_cart" icon-class=""
+        <x-storefront.add-to-cart :variant-id="$variantId" :in-stock="$inStock" :name="$name" :url="$url" icon="add_shopping_cart" icon-class=""
             class="bg-surface p-2 rounded-full hover:bg-primary-container transition-colors shrink-0" />
     </div>
 </div>

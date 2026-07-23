@@ -49,10 +49,29 @@ class Storefront
             'category' => $product->category?->name,
             'price' => $retail,
             'compare' => $compare,
+            'in_stock' => self::variantSellable($variant, (bool) $product->is_stock_tracked),
             'image' => $product->media->first()?->thumbUrl(400) ?? $variant?->image?->thumbUrl(400) ?? self::placeholder(),
             'url' => route('product.show', $product->slug),
             'slug' => $product->slug,
         ];
+    }
+
+    /**
+     * Whether a card's add-to-cart should be active. Mirrors the cart's add rule
+     * (§CartController): a stock-tracked variant with nothing on hand — and no
+     * overselling allowed — can't be added, so the card shows a crossed-out cart.
+     */
+    private static function variantSellable(?ProductVariant $variant, bool $tracked): bool
+    {
+        if (! $variant) {
+            return true; // no add button is shown anyway — the card links to the product page
+        }
+
+        if (! $tracked || (bool) setting('inventory', 'allow_negative_stock', false)) {
+            return true;
+        }
+
+        return (int) floor((float) $variant->stock_quantity) > 0;
     }
 
     /**
@@ -228,6 +247,7 @@ class Storefront
             'category' => $product->category?->name,
             'price' => $retail,
             'compare' => $compare,
+            'in_stock' => self::variantSellable($variant, (bool) $product->is_stock_tracked),
             'image' => $variant->image?->thumbUrl(400) ?? $product->media->first()?->thumbUrl(400) ?? self::placeholder(),
             'url' => route('product.show', $product->slug) . '?variant=' . $variant->id,
             'slug' => $product->slug,
