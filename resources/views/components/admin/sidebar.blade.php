@@ -48,7 +48,7 @@
 <div x-data x-show="$store.adminNav.open" x-cloak @click="$store.adminNav.open = false"
     x-transition.opacity class="fixed inset-0 z-30 bg-black/40 md:hidden"></div>
 
-<aside x-data
+<aside id="admin-sidebar" x-data
     :class="$store.adminNav.open ? 'translate-x-0' : '-translate-x-full'"
     class="w-64 bg-surface-container-lowest dark:bg-surface-container border-r border-outline-variant flex-shrink-0
            fixed inset-y-0 left-0 z-40 flex flex-col overflow-y-auto no-scrollbar

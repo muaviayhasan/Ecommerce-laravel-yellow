@@ -10,13 +10,18 @@
 
     @include('partials.favicon')
 
-    {{-- Apply the saved theme before paint to avoid a flash of the wrong mode. --}}
+    {{-- Apply the saved theme + sidebar state before paint to avoid a flash of the wrong layout. --}}
     <script>
         (function () {
             try {
                 var t = localStorage.getItem('admin-theme');
                 var dark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 document.documentElement.classList.toggle('dark', dark);
+
+                document.documentElement.classList.toggle(
+                    'sidebar-collapsed',
+                    localStorage.getItem('admin-sidebar') === 'collapsed'
+                );
             } catch (e) {}
         })();
     </script>

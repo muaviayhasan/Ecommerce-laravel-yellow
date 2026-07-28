@@ -3,11 +3,24 @@
 <header class="h-20 flex items-center justify-between gap-4 px-4 sm:px-8 bg-surface-container-lowest dark:bg-surface
                border-b border-outline-variant sticky top-0 z-20">
 
-    {{-- Hamburger (mobile menu toggle) --}}
+    {{-- Menu toggle: off-canvas drawer on mobile, collapse/expand from `md` up
+         (persisted in localStorage like the theme, applied pre-paint in the layout). --}}
     <div class="flex items-center flex-1 min-w-0">
         <button x-data @click="$store.adminNav.toggle()"
-            class="md:hidden p-2 -ml-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors">
+            class="md:hidden p-2 -ml-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors"
+            title="Open menu">
             <span class="material-symbols-outlined">menu</span>
+        </button>
+
+        <button x-data
+            @click="
+                const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('admin-sidebar', collapsed ? 'collapsed' : 'expanded');
+            "
+            class="hidden md:inline-flex p-2 -ml-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors"
+            title="Toggle sidebar">
+            <span class="material-symbols-outlined nav-collapsed:hidden">menu_open</span>
+            <span class="material-symbols-outlined hidden nav-collapsed:inline">menu</span>
         </button>
     </div>
 

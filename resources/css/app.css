@@ -64,6 +64,24 @@
  */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Admin sidebar collapse (tablet/desktop). Like dark mode, it is a class on
+ * <html> (`.sidebar-collapsed`) applied pre-paint from localStorage, so the
+ * layout never flashes the sidebar before Alpine boots. The `nav-collapsed:`
+ * variant lets the header button swap its icon the same way `dark:` does.
+ */
+@custom-variant nav-collapsed (&:where(.sidebar-collapsed, .sidebar-collapsed *));
+
+/* Collapsed admin sidebar — only from `md` up, where the sidebar is part of the
+   layout. Below that it is an off-canvas drawer driven by $store.adminNav.
+   Deliberately UNLAYERED: the aside carries the `flex` utility, and Tailwind's
+   utilities layer would beat this rule in any @layer regardless of specificity. */
+@media (width >= 48rem) {
+    .sidebar-collapsed #admin-sidebar {
+        display: none;
+    }
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source "../**/*.blade.php";
