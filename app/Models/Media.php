@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class Media extends Model
@@ -30,6 +31,81 @@ class Media extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    /**
+     * Everything in the app that can point at a media row, as
+     * label => [base query, qualified column holding the media id].
+     * Soft-deleted owners are skipped: their image isn't on any live screen, so
+     * flagging it as "in use" would be a reference the admin can't go and see.
+     *
+     * @return array<string, array{0: \Illuminate\Database\Query\Builder, 1: string}>
+     */
+    private static function usageSources(): array
+    {
+        return [
+            'Products' => [
+                DB::table('product_media')
+                    ->join('products', 'products.id', '=', 'product_media.product_id')
+                    ->whereNull('products.deleted_at'),
+                'product_media.media_id',
+            ],
+            'Product variants' => [DB::table('product_variants'), 'product_variants.image_media_id'],
+            'Product social images' => [DB::table('products')->whereNull('deleted_at'), 'products.og_image_media_id'],
+            'Categories' => [DB::table('categories'), 'categories.image_media_id'],
+            'Category social images' => [DB::table('categories'), 'categories.meta_image_media_id'],
+            'Brands' => [DB::table('brands'), 'brands.logo_media_id'],
+            'Attribute values' => [DB::table('attribute_values'), 'attribute_values.image_media_id'],
+            'Deals' => [DB::table('deals')->whereNull('deleted_at'), 'deals.image_media_id'],
+            'Hero slides' => [DB::table('hero_slides'), 'hero_slides.image_media_id'],
+            'Promo cards' => [DB::table('promo_cards'), 'promo_cards.image_media_id'],
+            'Blog posts' => [DB::table('blog_posts')->whereNull('deleted_at'), 'blog_posts.cover_media_id'],
+            'Blog social images' => [DB::table('blog_posts')->whereNull('deleted_at'), 'blog_posts.og_image_media_id'],
+        ];
+    }
+
+    /**
+     * Where the given media are referenced across the app — powers the Gallery's
+     * "In use" badge and the warning before a file is deleted. One grouped query
+     * per source, so a whole page of assets costs a fixed handful of queries.
+     *
+     * @param  array<int, int|string>  $ids
+     * @return array<int, array<string, int>>  media id => ['Products' => 3, …]
+     */
+    public static function usageFor(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $usage = [];
+
+        foreach (static::usageSources() as $label => [$query, $column]) {
+            $counts = $query
+                ->whereIn($column, $ids)
+                ->groupBy($column)
+                ->selectRaw("{$column} as media_id, count(*) as total")
+                ->pluck('total', 'media_id');
+
+            foreach ($counts as $mediaId => $total) {
+                $usage[(int) $mediaId][$label] = (int) $total;
+            }
+        }
+
+        // Settings keep a bare media id as their value (site logo, favicon).
+        $settings = DB::table('settings')
+            ->where('group', 'general')
+            ->whereIn('key', ['logo', 'favicon'])
+            ->whereIn('value', array_map('strval', $ids))
+            ->pluck('key', 'value');
+
+        foreach ($settings as $mediaId => $key) {
+            $usage[(int) $mediaId]['Site ' . $key] = 1;
+        }
+
+        return $usage;
     }
 
     public function getUrlAttribute(): string

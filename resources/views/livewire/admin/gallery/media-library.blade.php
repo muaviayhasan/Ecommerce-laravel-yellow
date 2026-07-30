@@ -1,5 +1,10 @@
 @php
     use Illuminate\Support\Str;
+
+    // "Products (2), Hero slides" — the tooltip behind an "In use" badge.
+    $usageLabel = fn (array $usage) => collect($usage)
+        ->map(fn ($count, $label) => $count > 1 ? "{$label} ({$count})" : $label)
+        ->implode(', ');
 @endphp
 
 <div class="space-y-6">
@@ -176,6 +181,13 @@
                 <option value="largest">Largest</option>
             </select>
 
+            <select wire:model.live="perPage" data-no-select2 title="Items per page"
+                class="bg-surface-container-low border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-1 focus:ring-primary outline-none cursor-pointer">
+                @foreach ($this->perPageOptions as $n)
+                    <option value="{{ $n }}">{{ $n }} / page</option>
+                @endforeach
+            </select>
+
             <div class="flex items-center bg-surface-container-low rounded-lg p-1">
                 <button type="button" wire:click="$set('view', 'grid')" title="Grid view"
                     @class([
@@ -230,6 +242,15 @@
                                 ])>
                                 <img src="{{ $m->url }}" alt="{{ $m->alt }}" loading="lazy"
                                     class="max-h-full max-w-full object-contain transition-transform group-hover:scale-105">
+
+                                @if (! empty($this->usage[$m->id]))
+                                    <span title="Used in: {{ $usageLabel($this->usage[$m->id]) }}"
+                                        class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                                               bg-tertiary-container text-on-tertiary-container text-[10px] font-bold shadow-sm">
+                                        <span class="material-symbols-outlined text-[12px] leading-none">link</span>
+                                        In use
+                                    </span>
+                                @endif
                             </div>
                             <p class="mt-2 text-sm font-medium text-on-surface-variant group-hover:text-primary line-clamp-1">
                                 {{ $m->title ?: basename($m->path) }}
@@ -267,6 +288,14 @@
                                                 <img src="{{ $m->url }}" alt="{{ $m->alt }}" loading="lazy" class="max-w-full max-h-full object-contain p-1">
                                             </div>
                                             <span class="font-semibold text-on-surface line-clamp-1">{{ $m->title ?: basename($m->path) }}</span>
+                                            @if (! empty($this->usage[$m->id]))
+                                                <span title="Used in: {{ $usageLabel($this->usage[$m->id]) }}"
+                                                    class="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+                                                           bg-tertiary-container text-on-tertiary-container text-[10px] font-bold">
+                                                    <span class="material-symbols-outlined text-[12px] leading-none">link</span>
+                                                    In use
+                                                </span>
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="px-6 py-3 text-on-surface-variant">{{ Str::upper(Str::afterLast($m->mime ?? 'file', '/')) }}</td>
@@ -346,6 +375,20 @@
                         </div>
                     </div>
 
+                    {{-- Where this asset is referenced --}}
+                    @if ($this->selectedUsage)
+                        <div class="mb-5">
+                            <p class="text-[10px] font-bold text-outline uppercase tracking-widest mb-1.5">In use</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach ($this->selectedUsage as $label => $count)
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container text-[11px] font-semibold">
+                                        {{ $label }}@if ($count > 1)<span class="opacity-70">×{{ $count }}</span>@endif
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Edit metadata --}}
                     @can('gallery.edit')
                         <div class="space-y-3 pt-5 border-t border-outline-variant">
@@ -407,6 +450,12 @@
                                             <span class="font-semibold">{{ $sel->title ?: basename($sel->path) }}</span>
                                             will be removed from the gallery permanently. This cannot be undone.
                                         </p>
+                                        @if ($this->selectedUsage)
+                                            <p class="-mt-4 mb-6 text-sm text-error flex items-start gap-1.5 text-left">
+                                                <span class="material-symbols-outlined text-[18px] shrink-0">warning</span>
+                                                <span>This file is still used by <span class="font-semibold">{{ $usageLabel($this->selectedUsage) }}</span> — those places will lose their image.</span>
+                                            </p>
+                                        @endif
                                         <div class="flex gap-3">
                                             <button type="button" @click="confirmDelete = false"
                                                 class="flex-1 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">Cancel</button>

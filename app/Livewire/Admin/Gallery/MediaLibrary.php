@@ -33,6 +33,9 @@ class MediaLibrary extends Component
     /** Layout of the asset list: 'grid' | 'list'. */
     public string $view = 'grid';
 
+    /** Assets per page — starts at the configured page size (§6.1). */
+    public int $perPage = 15;
+
     public ?int $selectedId = null;
 
     /** Whether the upload panel is open. */
@@ -52,6 +55,7 @@ class MediaLibrary extends Component
     public function mount(): void
     {
         $this->authorize('gallery.view');
+        $this->perPage = per_page();
     }
 
     // Filters reset pagination so you never land on an empty page.
@@ -68,6 +72,28 @@ class MediaLibrary extends Component
     public function updatedFolder(): void
     {
         $this->resetPage();
+    }
+
+    public function updatedPerPage(): void
+    {
+        // Snap anything hand-crafted back to an offered size.
+        if (! in_array($this->perPage, $this->perPageOptions, true)) {
+            $this->perPage = per_page();
+        }
+
+        $this->resetPage();
+    }
+
+    /**
+     * Sizes offered in the per-page dropdown — the standard ladder plus the
+     * configured default, so it's always selectable (mirrors x-admin.per-page).
+     *
+     * @return array<int, int>
+     */
+    #[Computed]
+    public function perPageOptions(): array
+    {
+        return collect([15, 25, 50, 100])->push(per_page())->unique()->sort()->values()->all();
     }
 
     /** Validation rules + messages shared by staging and saving. */
@@ -275,6 +301,34 @@ class MediaLibrary extends Component
         return $this->selectedId ? Media::with('uploader')->find($this->selectedId) : null;
     }
 
+    /**
+     * Where each asset on the current page is referenced — drives the "In use"
+     * badge.
+     *
+     * @return array<int, array<string, int>>
+     */
+    #[Computed]
+    public function usage(): array
+    {
+        return Media::usageFor($this->media->pluck('id')->all());
+    }
+
+    /**
+     * Usage of the selected asset — looked up on its own, since the detail panel
+     * can outlive the page its asset was on.
+     *
+     * @return array<string, int>
+     */
+    #[Computed]
+    public function selectedUsage(): array
+    {
+        if (! $this->selectedId) {
+            return [];
+        }
+
+        return Media::usageFor([$this->selectedId])[$this->selectedId] ?? [];
+    }
+
     #[Computed]
     public function media(): LengthAwarePaginator
     {
@@ -295,7 +349,7 @@ class MediaLibrary extends Component
                 'largest' => $query->orderByDesc('size'),
                 default => $query->latest('id'),
             })
-            ->paginate(per_page());
+            ->paginate($this->perPage);
     }
 
     public function render(): View
