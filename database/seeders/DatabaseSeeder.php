@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             UnitSeeder::class,
             AttributeSeeder::class,
             CatalogSeeder::class,
+            AlaskaBatterySeeder::class,
             HeroSlideSeeder::class,
             PromoCardSeeder::class,
             InfoBarItemSeeder::class,
