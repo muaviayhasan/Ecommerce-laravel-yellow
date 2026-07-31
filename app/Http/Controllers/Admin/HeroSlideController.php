@@ -21,7 +21,7 @@ class HeroSlideController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('can:hero-slides.view', only: ['index']),
-            new Middleware('can:hero-slides.create', only: ['create', 'store']),
+            new Middleware('can:hero-slides.create', only: ['create', 'store', 'duplicate']),
             new Middleware('can:hero-slides.edit', only: ['edit', 'update']),
             new Middleware('can:hero-slides.delete', only: ['destroy']),
         ];
@@ -65,6 +65,27 @@ class HeroSlideController extends Controller implements HasMiddleware
         return redirect()
             ->route('admin.hero-slides.index')
             ->with('status', 'Hero slide created.');
+    }
+
+    /**
+     * Copy a slide so a near-identical one (same layout, different image or offer)
+     * doesn't have to be retyped. Mirrors products.duplicate: the copy is created
+     * switched OFF, so duplicating can never quietly add a slide to the live
+     * carousel, and you land on its edit form to make the changes you copied it for.
+     */
+    public function duplicate(HeroSlide $heroSlide): RedirectResponse
+    {
+        $copy = $heroSlide->replicate();
+        $copy->line1 = trim($heroSlide->line1 . ' (Copy)');
+        $copy->is_active = false;
+        // Park it at the end rather than beside the original — renumbering the
+        // others would reorder a carousel that is live right now.
+        $copy->sort_order = (int) HeroSlide::max('sort_order') + 1;
+        $copy->save();
+
+        return redirect()
+            ->route('admin.hero-slides.edit', $copy)
+            ->with('status', 'Slide duplicated. The copy is inactive and last in order — edit it, then switch it on.');
     }
 
     public function edit(HeroSlide $heroSlide): View

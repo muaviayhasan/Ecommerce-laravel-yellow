@@ -227,6 +227,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('brands', BrandController::class)->except('show');
+    Route::post('hero-slides/{hero_slide}/duplicate', [HeroSlideController::class, 'duplicate'])->name('hero-slides.duplicate');
     Route::resource('hero-slides', HeroSlideController::class)->except('show');
     Route::resource('promo-cards', PromoCardController::class)->except('show');
     Route::resource('info-bar-items', InfoBarItemController::class)->except('show');

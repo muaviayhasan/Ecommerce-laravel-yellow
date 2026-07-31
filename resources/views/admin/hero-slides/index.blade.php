@@ -77,6 +77,12 @@
                             </td>
                             <td class="px-6 py-3">
                                 <div class="flex items-center justify-end gap-1">
+                                    {{-- x-data gives the @click an Alpine scope — without it the directive never binds --}}
+                                    <button type="button" title="Duplicate" x-data
+                                        @click="$store.pageConfirm.ask(@js('Duplicate this slide?'), @js('A copy of “' . ($slide->line1 ?: 'this slide') . '” will be created — switched off and placed last — and you will be taken to it.'), () => window.__postForm(@js(route('admin.hero-slides.duplicate', $slide))))"
+                                        class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">content_copy</span>
+                                    </button>
                                     <a href="{{ route('admin.hero-slides.edit', $slide) }}" title="Edit"
                                         class="inline-flex items-center justify-center p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
                                         <span class="material-symbols-outlined text-[20px]">edit</span>
@@ -115,4 +121,7 @@
             </div>
         @endif
     </x-admin.panel>
+
+    {{-- Backs the Duplicate button's confirm dialog and defines window.__postForm. --}}
+    <x-admin.confirm-modal />
 @endsection
