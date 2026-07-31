@@ -59,9 +59,21 @@
 
             {{-- Drag & drop zone. Files are checked in the browser first (type +
                  5 MB size) so oversized picks get a friendly, named error instead
-                 of the server's generic "failed to upload". --}}
+                 of the server's generic "failed to upload".
+
+                 Progress is tracked here in Alpine rather than with `wire:loading
+                 wire:target="uploads"`. Livewire only emits the livewire-upload-*
+                 events that wire:loading keys off from its own `wire:model` file-input
+                 binding; uploading by hand with $wire.uploadMultiple() (which we do, to
+                 keep the client-side type/size filtering below) never emits them, so a
+                 wire:loading spinner here would be permanently dead. uploadMultiple's
+                 5th argument is a progress callback receiving `e.detail.progress` as a
+                 0-100 integer, which is what actually drives the bar. --}}
             <div x-data="{
                     over: false,
+                    uploading: false,
+                    progress: 0,
+                    pending: 0,
                     clientErrors: [],
                     stage(list) {
                         this.clientErrors = [];
@@ -76,9 +88,21 @@
                             }
                         }
                         if (ok.length) {
-                            $wire.uploadMultiple('uploads', ok, () => {}, () => {
-                                this.clientErrors.push('Upload failed — the file may be larger than the server allows. Try a smaller image.');
-                            });
+                            this.uploading = true;
+                            this.progress = 0;
+                            this.pending = ok.length;
+                            $wire.uploadMultiple(
+                                'uploads',
+                                ok,
+                                () => { this.uploading = false; this.progress = 0; },
+                                () => {
+                                    this.uploading = false;
+                                    this.progress = 0;
+                                    this.clientErrors.push('Upload failed — the file may be larger than the server allows. Try a smaller image.');
+                                },
+                                (e) => { this.progress = e.detail.progress; },
+                                () => { this.uploading = false; this.progress = 0; },
+                            );
                         }
                         this.$refs.input.value = '';
                     },
@@ -94,12 +118,29 @@
                     <span class="material-symbols-outlined text-primary" style="font-size:36px;">cloud_upload</span>
                     <p class="text-sm font-medium text-on-surface">Drop images here or <span class="text-primary">browse</span></p>
                     <p class="text-[11px] text-outline">PNG, JPG, WEBP · up to 5 MB each</p>
-                    <span wire:loading wire:target="uploads"
-                        class="flex items-center gap-1.5 text-primary text-xs font-semibold">
-                        <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
-                        Uploading…
-                    </span>
                 </label>
+
+                {{-- Live upload progress. A percentage rather than a bare spinner: on a
+                     slow connection a large image can sit at 30% for a while, and a
+                     number that keeps moving is the difference between "it's working"
+                     and "it's hung". Announced politely for screen readers. --}}
+                <div x-show="uploading" x-cloak class="mt-4" role="status" aria-live="polite">
+                    <div class="flex items-center justify-between mb-1.5 text-xs font-semibold">
+                        <span class="flex items-center gap-1.5 text-on-surface">
+                            <span class="material-symbols-outlined text-[18px] animate-spin text-primary">progress_activity</span>
+                            <span x-text="pending === 1 ? 'Uploading 1 image…' : `Uploading ${pending} images…`"></span>
+                        </span>
+                        <span class="tabular-nums text-on-surface-variant" x-text="progress + '%'"></span>
+                    </div>
+                    <div class="h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+                        <div class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
+                            :style="`width: ${progress}%`"></div>
+                    </div>
+                    {{-- At 100% the bytes are on the server but the thumbnails are still
+                         being generated, so say so instead of leaving a full bar sitting
+                         there looking stuck. --}}
+                    <p x-show="progress >= 100" class="mt-1.5 text-[11px] text-on-surface-variant">Processing images…</p>
+                </div>
 
                 <template x-for="err in clientErrors" :key="err">
                     <p class="mt-3 text-sm text-error flex items-center gap-1.5">
