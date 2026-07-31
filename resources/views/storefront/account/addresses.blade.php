@@ -22,7 +22,7 @@
             {{-- List --}}
             @if ($addresses->isEmpty())
                 <div class="bg-white rounded-lg border border-outline-variant p-16 text-center text-on-surface-variant">
-                    <span class="material-symbols-outlined text-gray-300" style="font-size:64px;">location_off</span>
+                    <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">location_off</span>
                     <p class="mt-3 text-lg font-light">You have no saved addresses.</p>
                     <button type="button" @click="openCreate()" class="inline-block mt-5 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded-full hover:brightness-105 transition">Add your first address</button>
                 </div>

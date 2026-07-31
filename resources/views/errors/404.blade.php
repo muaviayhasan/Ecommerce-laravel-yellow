@@ -46,9 +46,9 @@
                     {{-- Featured Products --}}
                     <section>
                         <x-storefront.section-title title="Featured Products" />
-                        <div class="grid grid-cols-2 md:grid-cols-3 border-t border-l border-gray-200">
+                        <div class="grid grid-cols-2 md:grid-cols-3 border-t border-l border-outline-variant">
                             @foreach ($products->take(3) as $item)
-                                <x-storefront.product-card :product="$item" class="border-b border-gray-200 hover:border-transparent" />
+                                <x-storefront.product-card :product="$item" class="border-b border-outline-variant hover:border-transparent" />
                             @endforeach
                         </div>
                     </section>
@@ -56,9 +56,9 @@
                     {{-- Popular Products --}}
                     <section>
                         <x-storefront.section-title title="Popular Products" />
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-t border-l border-gray-200">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 border-t border-l border-outline-variant">
                             @foreach ($products->slice(3, 4) as $item)
-                                <x-storefront.product-card :product="$item" class="border-b border-gray-200 hover:border-transparent" />
+                                <x-storefront.product-card :product="$item" class="border-b border-outline-variant hover:border-transparent" />
                             @endforeach
                         </div>
                     </section>
@@ -69,13 +69,13 @@
                 {{-- Sidebar --}}
                 <aside class="lg:col-span-3 space-y-8">
                     {{-- Product categories --}}
-                    <div class="border border-gray-200 rounded overflow-hidden">
-                        <div class="bg-surface-container px-4 py-3 border-b border-gray-200">
+                    <div class="border border-outline-variant rounded overflow-hidden">
+                        <div class="bg-surface-container px-4 py-3 border-b border-outline-variant">
                             <h3 class="font-bold">Product categories</h3>
                         </div>
                         <ul>
                             @foreach ($categories as $name => $count)
-                                <li class="border-b border-gray-200 last:border-0">
+                                <li class="border-b border-outline-variant last:border-0">
                                     <a href="{{ route('shop') }}"
                                         class="flex justify-between items-center px-4 py-3 text-body-base hover:text-primary hover:bg-surface-container-low transition-colors group">
                                         <span class="flex items-center gap-2 min-w-0">

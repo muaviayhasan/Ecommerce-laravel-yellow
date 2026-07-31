@@ -29,7 +29,7 @@
                 </a>
             @empty
                 <div class="p-16 text-center text-on-surface-variant">
-                    <span class="material-symbols-outlined text-gray-300" style="font-size:64px;">receipt_long</span>
+                    <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">receipt_long</span>
                     <p class="mt-3 text-lg font-light">You haven't placed any orders yet.</p>
                     <a href="{{ route('shop') }}" class="inline-block mt-5 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded-full hover:brightness-105 transition">Start shopping</a>
                 </div>

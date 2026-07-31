@@ -11,6 +11,11 @@ use Illuminate\View\View;
 
 class ShopController extends Controller
 {
+    private const PER_PAGE = 12;
+
+    /** Ceiling on `?loaded=` — 25 pages is 300 cards, far past any real session. */
+    private const MAX_LOADED_PAGES = 25;
+
     private const SORTS = [
         'newness' => 'Newest first',
         'price_low' => 'Price: low to high',
@@ -54,7 +59,23 @@ class ShopController extends Controller
 
         $this->applySort($query, $request->string('sort')->toString());
 
-        $paginator = $query->paginate(12)->withQueryString();
+        // `?loaded=N` is how the mobile "Load more" listing remembers its depth: N is
+        // the number of pages the customer has on screen. Honouring it means a refresh,
+        // a browser restoring the tab hours later, the back button, or the redirect that
+        // follows add-to-cart all rebuild what they were looking at instead of dropping
+        // them back among the first 12 products. Capped so a hand-edited URL can't ask
+        // for the whole catalogue in one query. The partial endpoint ignores it — it
+        // always serves exactly one page, which is what the client appends.
+        $page = max(1, (int) $request->input('page', 1));
+        $loaded = $request->boolean('partial')
+            ? 1
+            : max(1, min((int) $request->input('loaded', 1), self::MAX_LOADED_PAGES));
+
+        $paginator = $query
+            ->paginate(self::PER_PAGE * $loaded, ['*'], 'page', $loaded > 1 ? 1 : $page)
+            // Deliberately not withQueryString(): `loaded` and `partial` must not leak
+            // into the desktop pagination links, which page in ordinary PER_PAGE units.
+            ->appends($request->except(['page', 'loaded', 'partial']));
         $paginator->setCollection(Storefront::variantCards($paginator->getCollection()));
 
         // Mobile infinite scroll fetches subsequent pages as a lightweight items partial.
@@ -71,6 +92,10 @@ class ShopController extends Controller
 
         return view('storefront.shop', [
             'products' => $paginator,
+            // The client's Load more counter works in PER_PAGE units, which stop matching
+            // the paginator's own once `loaded` widens a "page", so they're passed explicitly.
+            'shownPages' => $loaded > 1 ? $loaded : $page,
+            'totalPages' => (int) ceil($paginator->total() / self::PER_PAGE),
             'activeCategory' => $activeCategory,
             'recommended' => Storefront::cards(Storefront::query()->latest('published_at')->take(8)->get()),
             'latest' => Storefront::cards(Storefront::query()->latest('published_at')->take(3)->get()),

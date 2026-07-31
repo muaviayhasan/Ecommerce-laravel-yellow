@@ -14,7 +14,7 @@
         <img src="{{ $image }}" alt="{{ $name }}" loading="lazy" class="w-full h-full object-contain">
     </div>
     <div class="flex-1 min-w-0">
-        <h4 class="text-product-title font-semibold text-primary group-hover:underline line-clamp-2 mb-1">{{ $name }}</h4>
+        <h4 class="text-product-title font-semibold text-on-surface group-hover:underline line-clamp-2 mb-1">{{ $name }}</h4>
         @if ($rating)
             <div class="text-primary-container text-sm leading-none mb-1" aria-label="{{ $rating }} out of 5 stars">★★★★★</div>
         @endif

@@ -30,7 +30,7 @@
 
             @if ($rows->isEmpty())
                 <div class="bg-white rounded-lg border border-outline-variant p-16 text-center">
-                    <span class="material-symbols-outlined text-gray-300" style="font-size:72px;">sync</span>
+                    <span class="material-symbols-outlined text-outline-variant" style="font-size:72px;">sync</span>
                     <p class="mt-4 text-xl font-light text-on-surface-variant">No products to compare yet.</p>
                     <p class="text-on-surface-variant text-label-sm mt-1">Add products from the shop (up to 4) to see them side by side.</p>
                     <a href="{{ route('shop') }}" class="inline-block mt-6 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded hover:brightness-95 transition-all">Browse products</a>

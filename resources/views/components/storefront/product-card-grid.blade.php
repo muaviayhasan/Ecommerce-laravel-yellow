@@ -21,7 +21,7 @@
             <span class="material-symbols-outlined text-[18px] align-middle">favorite</span>
         </span>
     </a>
-    <div class="text-[11px] text-primary font-bold uppercase mb-1 truncate">{{ $category }}</div>
+    <div class="text-[11px] text-on-surface-variant font-bold uppercase mb-1 truncate">{{ $category }}</div>
     <h3 class="text-product-title min-h-9 line-clamp-2 group-hover:text-primary transition-colors">
         <a href="{{ $url }}">{{ $name }}</a>
     </h3>

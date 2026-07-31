@@ -21,7 +21,7 @@
 
     <div class="flex-1 min-w-0 pl-4 flex flex-col">
         <p class="text-label-sm text-secondary mb-1 line-clamp-1 min-h-4">{{ $category }}</p>
-        <h4 class="text-product-title text-primary mb-1 line-clamp-2 min-h-9">
+        <h4 class="text-product-title text-on-surface mb-1 line-clamp-2 min-h-9">
             <a href="{{ $url }}" class="hover:underline">{{ $name }}</a>
         </h4>
         @if ($variantLabel = data_get($product, 'variant_label'))
@@ -38,13 +38,13 @@
                 @endif
             </div>
             <x-storefront.add-to-cart :variant-id="$variantId" :in-stock="$inStock" :name="$name" :url="$url"
-                class="w-8 h-8 shrink-0 rounded-full bg-surface-container text-secondary flex items-center justify-center transition-colors group-hover:bg-primary-container group-hover:text-white hover:!bg-primary-fixed-dim" />
+                class="w-8 h-8 shrink-0 rounded-full bg-surface-container text-secondary flex items-center justify-center transition-colors group-hover:bg-primary-container group-hover:text-on-primary-container hover:!bg-primary-fixed-dim" />
         </div>
     </div>
 
     {{-- Hover actions: Wishlist / Compare (drops over the card below) --}}
     <div class="absolute left-0 right-0 top-full -mt-px bg-white px-6 pb-4 z-10 opacity-0 invisible translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 shadow-[0_3px_6px_0_rgba(1,1,1,0.3)]">
-        <div class="flex items-center justify-center gap-6 border-t border-gray-200 pt-3 text-label-sm font-medium text-on-surface-variant">
+        <div class="flex items-center justify-center gap-6 border-t border-outline-variant pt-3 text-label-sm font-medium text-on-surface-variant">
             @if ($slug)
                 <form method="POST" action="{{ route('wishlist.toggle', $slug) }}">@csrf
                     <button type="submit" class="flex items-center gap-1.5 hover:text-primary transition-colors" aria-label="Add to wishlist">

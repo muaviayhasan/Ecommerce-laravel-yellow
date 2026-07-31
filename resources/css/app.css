@@ -101,28 +101,68 @@
     --font-sans: 'Work Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Primary (brand yellow) */
-    --color-primary: #6f5d00;
+    /*
+     | Primary (brand yellow). Two distinct jobs, deliberately different values:
+     | `primary-container` (#fed700) is the FILL — buttons, category bar, badges.
+     | `primary` is the accent used for TEXT and ICONS, where #fed700 is unusable
+     | (1.4:1 on white). It stays in the brand's yellow family but deepened to
+     | #7d5e00 (6.1:1) — richer and warmer than the old muddy #6f5d00.
+     | Ink (`on-surface`) remains the colour for content text: headings, product
+     | titles, prices. `primary` is for interaction and emphasis, not for prose.
+     */
+    --color-primary: #7d5e00;
     --color-on-primary: #ffffff;
     --color-primary-container: #fed700;
-    --color-on-primary-container: #705e00;
+    /* Near-black on the yellow fill: 12.4:1, up from #705e00's 4.54:1. */
+    --color-on-primary-container: #1f1a00;
     --color-primary-fixed: #ffe169;
     --color-primary-fixed-dim: #e8c400;
     --color-on-primary-fixed: #221b00;
     --color-on-primary-fixed-variant: #544600;
     --color-inverse-primary: #e8c400;
 
-    /* Secondary */
-    --color-secondary: #54606a;
+    /*
+     | Secondary. Was #54606a / #d8e4f1 — a cool slate pair carried over from a
+     | *blue* Material export, which fought the warm brand and the neutral greys.
+     | Now a plain neutral so the palette holds one temperature story: neutral
+     | greys everywhere, with yellow as the only warm thing on the page.
+     */
+    --color-secondary: #545454;
     --color-on-secondary: #ffffff;
-    --color-secondary-container: #d8e4f1;
-    --color-on-secondary-container: #5a6671;
+    --color-secondary-container: #e6e6e6;
+    --color-on-secondary-container: #3a3a3a;
 
     /* Tertiary */
     --color-tertiary: #4c6700;
     --color-on-tertiary: #ffffff;
     --color-tertiary-container: #baea4b;
     --color-on-tertiary-container: #4c6800;
+
+    /*
+     | Status roles. The palette originally stopped at `error`, so anything that
+     | needed to say "done", "waiting" or "in progress" reached past the token set
+     | into raw Tailwind (green-700, amber-100, blue-700, indigo-100). These hues
+     | ARE the information on an order chip, so they stay distinct — but they are
+     | part of the system now rather than one-off literals.
+     |   success = delivered / completed / in stock / discount applied
+     |   warning = pending, awaiting action
+     |   info    = confirmed, processing, shipped — anything in flight
+     | Every container/on-container pair below clears 8:1.
+     */
+    --color-success: #0f7a3d;
+    --color-on-success: #ffffff;
+    --color-success-container: #d3f5e0;
+    --color-on-success-container: #044a22;
+
+    --color-warning: #8a5300;
+    --color-on-warning: #ffffff;
+    --color-warning-container: #ffdcb8;
+    --color-on-warning-container: #5c3600;
+
+    --color-info: #1a4fb8;
+    --color-on-info: #ffffff;
+    --color-info-container: #dbe4ff;
+    --color-on-info-container: #123176;
 
     /* Error */
     --color-error: #ba1a1a;
@@ -136,7 +176,9 @@
     --color-surface: #f9f9f9;
     --color-on-surface: #1a1c1c;
     --color-surface-variant: #e2e2e2;
-    --color-on-surface-variant: #4d4732;
+    /* Neutral, was #4d4732 — an olive-brown "on" colour paired with a chroma-zero
+       grey surface, which read as sepia rather than warm. ~250 uses. */
+    --color-on-surface-variant: #4a4a4a;
     --color-surface-dim: #dadada;
     --color-surface-bright: #f9f9f9;
     --color-surface-container-lowest: #ffffff;
@@ -147,9 +189,14 @@
     --color-inverse-surface: #2f3131;
     --color-inverse-on-surface: #f1f1f1;
 
-    /* Lines */
-    --color-outline: #7e775f;
-    --color-outline-variant: #d0c6ab;
+    /*
+     | Lines. Both were khaki/beige (#7e775f / #d0c6ab) drawn on neutral greys,
+     | which read as yellowed paper. `outline` also failed WCAG AA as a text
+     | colour at 4.25:1; it is 5.1:1 now, and strong enough to serve as a form
+     | control border (3:1 minimum for UI boundaries), which is its Material job.
+     */
+    --color-outline: #6b6b6b;
+    --color-outline-variant: #dcdcdc;
 
     /*
      | Admin-only token NAMES (theme #2 / #3). These don't exist in the storefront

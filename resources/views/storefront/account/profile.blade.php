@@ -48,12 +48,12 @@
                     <div class="flex items-center gap-2 mb-1">
                         <label class="block text-label-sm font-medium">Email</label>
                         @if ($user->hasVerifiedEmail())
-                            <span class="inline-flex items-center gap-1 text-blue-600 text-label-sm font-semibold"
+                            <span class="inline-flex items-center gap-1 text-info text-label-sm font-semibold"
                                 @if ($user->email_verified_at) title="Verified on {{ $user->email_verified_at->format('d M Y') }}" @endif>
                                 <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1;">verified</span> Verified
                             </span>
                         @elseif (setting('emails', 'email_verification', true))
-                            <span class="inline-flex items-center gap-1 text-amber-600 text-label-sm font-semibold">
+                            <span class="inline-flex items-center gap-1 text-warning text-label-sm font-semibold">
                                 <span class="material-symbols-outlined text-[16px]">gpp_maybe</span> Not verified
                             </span>
                         @endif

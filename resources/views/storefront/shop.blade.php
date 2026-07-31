@@ -28,7 +28,7 @@
 
             {{-- Mobile: open the filters modal --}}
             <button type="button" @click="filtersOpen = true"
-                class="lg:hidden mb-4 w-full flex items-center justify-center gap-2 bg-surface-container-low border border-gray-300 rounded-full py-3 font-bold hover:bg-surface-container transition-colors">
+                class="lg:hidden mb-4 w-full flex items-center justify-center gap-2 bg-surface-container-low border border-outline rounded-full py-3 font-bold hover:bg-surface-container transition-colors">
                 <span class="material-symbols-outlined text-[20px]">tune</span>
                 Categories &amp; Filters
             </button>
@@ -43,7 +43,7 @@
 
                     {{-- Latest Products --}}
                     <div class="mt-10">
-                        <h3 class="font-bold border-b border-gray-200 pb-3 mb-6 text-lg">Latest Products</h3>
+                        <h3 class="font-bold border-b border-outline-variant pb-3 mb-6 text-lg">Latest Products</h3>
                         <div class="space-y-6">
                             @foreach ($latest as $product)
                                 <x-storefront.product-list-item :product="$product" />
@@ -91,24 +91,26 @@
 
                     {{-- Grid view --}}
                     <div id="shop-grid" x-show="view === 'grid'"
-                        data-current-page="{{ $products->currentPage() }}" data-last-page="{{ $products->lastPage() }}"
-                        class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t border-l border-gray-200">
+                        {{-- In PER_PAGE units, which diverge from the paginator's own once
+                             ?loaded= has widened the first "page" — see ShopController. --}}
+                        data-current-page="{{ $shownPages }}" data-last-page="{{ $totalPages }}"
+                        class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t border-l border-outline-variant">
                         @foreach ($products as $product)
-                            <x-storefront.product-card :product="$product" class="border-b border-gray-200 hover:border-transparent" />
+                            <x-storefront.product-card :product="$product" class="border-b border-outline-variant hover:border-transparent" />
                         @endforeach
                     </div>
 
                     {{-- List view --}}
-                    <div id="shop-list" x-show="view === 'list'" x-cloak class="border border-gray-200">
+                    <div id="shop-list" x-show="view === 'list'" x-cloak class="border border-outline-variant">
                         @foreach ($products as $product)
-                            <x-storefront.product-card-wide :product="$product" class="border-b border-gray-200 last:border-b-0 hover:border-transparent" />
+                            <x-storefront.product-card-wide :product="$product" class="border-b border-outline-variant last:border-b-0 hover:border-transparent" />
                         @endforeach
                     </div>
 
                     {{-- Empty state --}}
                     @if ($products->isEmpty())
-                        <div class="text-center py-20 border border-gray-200 border-t-0">
-                            <span class="material-symbols-outlined text-gray-300" style="font-size:64px;">search_off</span>
+                        <div class="text-center py-20 border border-outline-variant border-t-0">
+                            <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">search_off</span>
                             <p class="mt-4 text-xl font-light text-on-surface-variant">No products match your filters.</p>
                             <a href="{{ route('shop') }}" class="inline-block mt-4 text-primary font-bold hover:underline">Clear all filters</a>
                         </div>
@@ -154,10 +156,10 @@
                             <x-storefront.carousel title="Recommended Products" :count="$recommendedSlides->count()">
                                 @foreach ($recommendedSlides as $slide)
                                     <div class="w-full shrink-0">
-                                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t border-l border-gray-200">
+                                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 border-t border-l border-outline-variant">
                                             @foreach ($slide as $product)
                                                 <x-storefront.product-card :product="$product"
-                                                    class="border-b border-gray-200 hover:border-transparent" />
+                                                    class="border-b border-outline-variant hover:border-transparent" />
                                             @endforeach
                                         </div>
                                     </div>
@@ -174,7 +176,7 @@
                 <div class="absolute inset-y-0 left-0 w-full bg-white shadow-2xl flex flex-col"
                     x-transition:enter="transition duration-200 ease-out" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
                     x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full">
-                    <div class="flex items-center justify-between px-4 py-4 border-b border-gray-200 shrink-0">
+                    <div class="flex items-center justify-between px-4 py-4 border-b border-outline-variant shrink-0">
                         <h2 class="font-bold text-lg flex items-center gap-2"><span class="material-symbols-outlined">tune</span> Categories &amp; Filters</h2>
                         <button type="button" @click="filtersOpen = false" aria-label="Close" class="w-9 h-9 grid place-items-center rounded-full hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
                     </div>
@@ -182,7 +184,7 @@
                         <div class="flex-1 overflow-y-auto px-4 py-2">
                             @include('storefront.partials.shop-filters')
                         </div>
-                        <div class="px-4 py-3 border-t border-gray-200 shrink-0">
+                        <div class="px-4 py-3 border-t border-outline-variant shrink-0">
                             <button type="submit" class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-full hover:brightness-105 transition">View results</button>
                         </div>
                     </form>
@@ -199,6 +201,13 @@
         <script>
             // Mobile "Load more": append the next page of products on each click, until the last page.
             (function () {
+                // How deep the customer has loaded lives in the URL (`?loaded=3`), not in
+                // memory. A plain page-1 render was previously all a reload could produce, so
+                // every "Load more" was undone by a refresh, by the browser restoring this tab
+                // hours later, by the back button, or by add-to-cart (which POSTs and
+                // redirects back here). Keeping it in the URL fixes all four at once, and the
+                // generic scroll restore in layouts/storefront.blade.php then lands correctly
+                // because the products it saved a position against are actually on the page.
                 const start = () => {
                     const grid = document.getElementById('shop-grid');
                     const box = document.getElementById('shop-loadmore');
@@ -225,6 +234,7 @@
                         setLoading(true);
                         try {
                             const url = new URL(window.location.href);
+                            url.searchParams.delete('loaded'); // the partial endpoint always serves one page
                             url.searchParams.set('page', page + 1);
                             url.searchParams.set('partial', '1');
                             const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
@@ -235,6 +245,14 @@
                             if (list) tmp.querySelectorAll('[data-shop-list-items] > *').forEach((el) => list.appendChild(el));
                             page++;
                             if (shown) shown.textContent = grid.children.length;
+                            // replaceState, not pushState: the back button should leave the
+                            // listing, not step back through each batch the customer loaded.
+                            try {
+                                const here = new URL(window.location.href);
+                                here.searchParams.delete('page'); // `loaded` supersedes it — never carry both
+                                here.searchParams.set('loaded', page);
+                                history.replaceState(history.state, '', here);
+                            } catch (err) {}
                         } catch (e) {
                             setLoading(false); // keep the button so it can be retried
                             return;

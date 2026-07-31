@@ -78,7 +78,7 @@
                                     <span x-text="m.at"></span>
                                     <template x-if="!m.from_admin">
                                         <span class="material-symbols-outlined text-[14px] leading-none"
-                                            :class="m.status === 'read' ? 'text-blue-700' : 'text-on-primary-container/50'"
+                                            :class="m.status === 'read' ? 'text-info' : 'text-on-primary-container/50'"
                                             x-text="(m.status === 'sending' || m.status === 'sent') ? 'check' : 'done_all'"></span>
                                     </template>
                                 </p>
@@ -97,7 +97,7 @@
                         <textarea x-model="body" @keydown.enter.prevent="send()" rows="1" maxlength="1000" placeholder="Write a message…"
                             class="w-full resize-none border border-outline-variant rounded-lg px-3 py-2 pr-14 text-sm outline-none focus:ring-1 focus:ring-primary-container focus:border-primary-container max-h-24"></textarea>
                         <span class="absolute bottom-1.5 right-2 text-[10px] tabular-nums pointer-events-none select-none"
-                            :class="body.length >= 1000 ? 'text-error' : (body.length >= 900 ? 'text-amber-500' : 'text-outline')"
+                            :class="body.length >= 1000 ? 'text-error' : (body.length >= 900 ? 'text-warning' : 'text-outline')"
                             x-text="body.length + '/1000'"></span>
                     </div>
                     <button type="submit" :disabled="!body.trim() || sending" class="w-10 h-10 grid place-items-center rounded-lg bg-primary-container text-on-primary-container disabled:opacity-50 hover:brightness-110 transition shrink-0"><span class="material-symbols-outlined text-[20px]">send</span></button>

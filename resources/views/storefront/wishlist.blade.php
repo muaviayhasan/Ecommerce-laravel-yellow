@@ -29,7 +29,7 @@
 
             @if ($products->isEmpty())
                 <div class="bg-white rounded-lg border border-outline-variant p-16 text-center">
-                    <span class="material-symbols-outlined text-gray-300" style="font-size:72px;">favorite</span>
+                    <span class="material-symbols-outlined text-outline-variant" style="font-size:72px;">favorite</span>
                     <p class="mt-4 text-xl font-light text-on-surface-variant">Your wishlist is empty.</p>
                     <a href="{{ route('shop') }}" class="inline-block mt-6 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded hover:brightness-95 transition-all">Browse products</a>
                 </div>

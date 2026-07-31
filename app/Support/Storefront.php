@@ -216,7 +216,12 @@ class Storefront
             ->where('product_variants.is_active', true)
             ->whereHas('product', fn ($p) => $p->webListed())
             ->with([
-                'product:id,name,slug,category_id',
+                // `is_stock_tracked` is required: variantCard() feeds it to
+                // variantSellable(), which short-circuits to "sellable" when it is
+                // false. Leaving the column out of the select made it read as null
+                // on every card, so out-of-stock variants rendered a live cart
+                // button instead of the crossed-out one the home page shows.
+                'product:id,name,slug,category_id,is_stock_tracked',
                 'product.category:id,name,slug',
                 'product.media',
                 'image',

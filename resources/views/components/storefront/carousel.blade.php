@@ -39,7 +39,7 @@
         <template x-for="i in count" :key="i">
             <button type="button" @click="go(i - 1)" :aria-label="`Go to slide ${i}`"
                 class="h-2.5 rounded-full transition-all"
-                :class="current === (i - 1) ? 'w-8 bg-primary-container' : 'w-2.5 bg-gray-300 hover:bg-gray-400'"></button>
+                :class="current === (i - 1) ? 'w-8 bg-primary-container' : 'w-2.5 bg-outline-variant hover:bg-outline'"></button>
         </template>
     </div>
 </div>

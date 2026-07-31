@@ -40,7 +40,7 @@
                         <p class="text-label-sm text-on-surface-variant flex items-center gap-1 min-w-0">
                             <span class="truncate">{{ $user->email }}</span>
                             @if ($user->hasVerifiedEmail())
-                                <span class="material-symbols-outlined text-blue-600 text-[15px] shrink-0"
+                                <span class="material-symbols-outlined text-info text-[15px] shrink-0"
                                     style="font-variation-settings:'FILL' 1;" title="Email verified">verified</span>
                             @endif
                         </p>

@@ -78,7 +78,7 @@
                         <x-storefront.blog-post-card :post="$post" />
                     @empty
                         <div class="bg-white rounded-xl border border-outline-variant p-16 text-center">
-                            <span class="material-symbols-outlined text-gray-300" style="font-size:64px;">{{ $activeFilter ? 'search_off' : 'article' }}</span>
+                            <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">{{ $activeFilter ? 'search_off' : 'article' }}</span>
                             @if ($activeFilter)
                                 <p class="mt-4 text-xl font-light text-on-surface-variant">No posts found for “{{ $activeFilter['label'] }}”.</p>
                                 <a href="{{ route('blog') }}" class="inline-block mt-4 text-primary font-semibold hover:underline">← Back to all posts</a>

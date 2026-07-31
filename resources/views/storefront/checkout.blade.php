@@ -32,8 +32,8 @@
             @endguest
 
             @if (session('status'))
-                <div class="mb-5 p-4 rounded-lg bg-green-50 text-green-800 border border-green-200 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-green-600">check_circle</span> {{ session('status') }}
+                <div class="mb-5 p-4 rounded-lg bg-success-container text-on-success-container border border-success/30 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-success">check_circle</span> {{ session('status') }}
                 </div>
             @endif
 
@@ -284,7 +284,7 @@
                             @if ($coupon)
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
-                                        <p class="font-bold text-green-700 flex items-center gap-1.5">
+                                        <p class="font-bold text-success flex items-center gap-1.5">
                                             <span class="material-symbols-outlined text-[20px]">sell</span>{{ $coupon->code }}
                                         </p>
                                         <p class="text-label-sm text-on-surface-variant truncate">{{ $coupon->description ?: 'Discount applied' }}</p>
@@ -312,10 +312,10 @@
                         <div class="space-y-2.5 border-b border-outline-variant pb-4 mb-4 text-body-base">
                             <div class="flex justify-between"><span class="text-on-surface-variant">Subtotal</span><span class="font-medium">{{ format_money($subtotal) }}</span></div>
                             @if ($dealDiscount > 0)
-                                <div class="flex justify-between text-green-700"><span>Deal discount</span><span class="font-medium">&minus;{{ format_money($dealDiscount) }}</span></div>
+                                <div class="flex justify-between text-success"><span>Deal discount</span><span class="font-medium">&minus;{{ format_money($dealDiscount) }}</span></div>
                             @endif
                             @if ($discount > 0)
-                                <div class="flex justify-between text-green-700"><span>Discount{{ $coupon ? ' (' . $coupon->code . ')' : '' }}</span><span class="font-medium">&minus;{{ format_money($discount) }}</span></div>
+                                <div class="flex justify-between text-success"><span>Discount{{ $coupon ? ' (' . $coupon->code . ')' : '' }}</span><span class="font-medium">&minus;{{ format_money($discount) }}</span></div>
                             @endif
                             <div class="flex justify-between"><span class="text-on-surface-variant">Shipping</span><span class="font-medium">{{ $shipping > 0 ? format_money($shipping) : 'Free' }}</span></div>
                             <div class="flex justify-between pt-1"><span class="text-lg font-bold">Total</span><span class="text-lg font-bold text-primary">{{ format_money($total) }}</span></div>

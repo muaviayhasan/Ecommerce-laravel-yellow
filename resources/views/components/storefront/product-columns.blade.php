@@ -22,7 +22,7 @@
 @endphp
 
 {{-- Featured / Top Selling / On-sale product lists + a SolarMax promo banner. --}}
-<section class="py-12 bg-white border-t border-gray-200">
+<section class="py-12 bg-white border-t border-outline-variant">
     <div class="app-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         @foreach ($columns as $column)
             <div>

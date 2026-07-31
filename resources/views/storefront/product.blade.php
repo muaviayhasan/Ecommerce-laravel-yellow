@@ -206,7 +206,7 @@
                     {{-- Availability + price + actions --}}
                     @php $tracked = (bool) ($product['tracked'] ?? true); $availExpr = $tracked ? 'stock > 0' : 'true'; @endphp
                     <div class="border-t border-outline-variant pt-6 mt-6">
-                        <div class="text-label-sm font-bold mb-2" :class="{{ $availExpr }} ? 'text-green-600' : 'text-error'">
+                        <div class="text-label-sm font-bold mb-2" :class="{{ $availExpr }} ? 'text-success' : 'text-error'">
                             @if ($tracked)
                                 <span x-show="stock > 0">Availability: <span x-text="stock"></span> in stock</span>
                                 <span x-show="stock <= 0" x-cloak>Out of stock</span>

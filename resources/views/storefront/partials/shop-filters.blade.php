@@ -9,9 +9,9 @@
 {{-- Price --}}
 <x-storefront.filter-section title="Price">
     <div class="flex items-center gap-2">
-        <input type="number" name="min" min="0" value="{{ $filters['min'] ?? '' }}" placeholder="Min" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
-        <span class="text-gray-400">&mdash;</span>
-        <input type="number" name="max" min="0" value="{{ $filters['max'] ?? '' }}" placeholder="Max" class="w-full border border-gray-300 rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
+        <input type="number" name="min" min="0" value="{{ $filters['min'] ?? '' }}" placeholder="Min" class="w-full border border-outline rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
+        <span class="text-outline">&mdash;</span>
+        <input type="number" name="max" min="0" value="{{ $filters['max'] ?? '' }}" placeholder="Max" class="w-full border border-outline rounded px-2 py-1.5 text-label-sm outline-none focus:border-primary">
     </div>
 </x-storefront.filter-section>
 
@@ -22,8 +22,8 @@
             <li>
                 <label class="flex items-center gap-2.5 cursor-pointer hover:text-on-surface transition-colors">
                     <input type="checkbox" name="category[]" value="{{ $cat->slug }}" @checked(in_array($cat->slug, $filters['category'] ?? [], true))
-                        class="w-4 h-4 rounded border-gray-300 text-primary-container focus:ring-primary-container">
-                    <span class="flex-1 {{ in_array($cat->slug, $filters['category'] ?? [], true) ? 'font-semibold text-on-surface' : '' }}">{{ $cat->name }} <span class="font-normal text-gray-400">({{ $cat->products_count }})</span></span>
+                        class="w-4 h-4 rounded border-outline text-primary-container focus:ring-primary-container">
+                    <span class="flex-1 {{ in_array($cat->slug, $filters['category'] ?? [], true) ? 'font-semibold text-on-surface' : '' }}">{{ $cat->name }} <span class="font-normal text-outline">({{ $cat->products_count }})</span></span>
                 </label>
                 @if ($cat->children->isNotEmpty())
                     <ul class="pl-6 mt-2 space-y-2">
@@ -31,7 +31,7 @@
                             <li>
                                 <label class="flex items-center gap-2.5 cursor-pointer hover:text-on-surface transition-colors">
                                     <input type="checkbox" name="category[]" value="{{ $child->slug }}" @checked(in_array($child->slug, $filters['category'] ?? [], true))
-                                        class="w-4 h-4 rounded border-gray-300 text-primary-container focus:ring-primary-container">
+                                        class="w-4 h-4 rounded border-outline text-primary-container focus:ring-primary-container">
                                     <span class="{{ in_array($child->slug, $filters['category'] ?? [], true) ? 'font-semibold text-on-surface' : '' }}">{{ $child->name }}</span>
                                 </label>
                             </li>
@@ -50,9 +50,9 @@
             @foreach ($brands as $brand)
                 <label class="flex items-center gap-2.5 cursor-pointer hover:text-on-surface transition-colors">
                     <input type="checkbox" name="brand[]" value="{{ $brand->slug }}" @checked(in_array($brand->slug, $filters['brand'] ?? [], true))
-                        class="w-4 h-4 rounded border-gray-300 text-primary-container focus:ring-primary-container">
+                        class="w-4 h-4 rounded border-outline text-primary-container focus:ring-primary-container">
                     <span class="flex-1 {{ in_array($brand->slug, $filters['brand'] ?? [], true) ? 'font-semibold text-on-surface' : '' }}">{{ $brand->name }}</span>
-                    <span class="text-gray-400">({{ $brand->products_count }})</span>
+                    <span class="text-outline">({{ $brand->products_count }})</span>
                 </label>
             @endforeach
         </div>

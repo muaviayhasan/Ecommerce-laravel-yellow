@@ -48,8 +48,10 @@
                                     @if ($slide->tail || $slide->highlight)<br>{{ $slide->tail }} <span class="font-bold text-primary">{{ $slide->highlight }}</span>@endif
                                 </h1>
                                 @if ($slide->cta_label)
+                                    {{-- Hover darkens the yellow itself (primary-fixed-dim) rather than
+                                         fading the whole pill, so the label stays at full contrast. --}}
                                     <a href="{{ $slide->cta_link }}"
-                                        class="inline-block bg-primary-container px-10 py-4 rounded-full font-bold text-on-surface hover:opacity-90 transition-all shadow-lg">
+                                        class="inline-block bg-primary-container px-10 py-4 rounded-full font-bold text-on-surface hover:bg-primary-fixed-dim active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-surface transition-all">
                                         {{ $slide->cta_label }}
                                     </a>
                                 @endif
@@ -281,7 +283,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                             @foreach ($slide as $product)
                                 <x-storefront.product-card-wide :product="$product"
-                                    class="border-l border-gray-200 hover:border-transparent" />
+                                    class="border-l border-outline-variant hover:border-transparent" />
                             @endforeach
                         </div>
                     </div>
@@ -301,7 +303,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                             @foreach ($slide as $product)
                                 <x-storefront.product-card-wide :product="$product"
-                                    class="border-r border-gray-200 last:border-r-0 hover:border-transparent" />
+                                    class="border-r border-outline-variant last:border-r-0 hover:border-transparent" />
                             @endforeach
                         </div>
                     </div>
@@ -322,14 +324,14 @@
         <div class="app-container">
             <x-storefront.section-title title="Bestsellers" />
 
-            <div class="grid grid-cols-2 lg:grid-cols-6 border-t border-l border-gray-200">
+            <div class="grid grid-cols-2 lg:grid-cols-6 border-t border-l border-outline-variant">
                 @foreach ($bestsellers as $product)
                     <x-storefront.product-card :product="$product"
-                        class="border-b border-gray-200 hover:border-transparent" />
+                        class="border-b border-outline-variant hover:border-transparent" />
                 @endforeach
 
                 <x-storefront.product-card-feature :product="$bestsellerFeature" :thumbnails="$bsThumbs"
-                    class="col-span-2 lg:col-start-5 lg:row-start-1 lg:row-span-2 border-r border-b border-gray-200 hover:border-transparent" />
+                    class="col-span-2 lg:col-start-5 lg:row-start-1 lg:row-span-2 border-r border-b border-outline-variant hover:border-transparent" />
             </div>
         </div>
     </section>
@@ -340,7 +342,7 @@
         <div class="app-container">
             <x-storefront.section-title title="Top Categories this Month" />
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:[&>*]:border-gray-200 lg:[&>*:not(:nth-child(4n+1))]:border-l">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:[&>*]:border-outline-variant lg:[&>*:not(:nth-child(4n+1))]:border-l">
                 @foreach ($topCategories->take(8) as $cat)
                     <div class="flex items-start gap-4 px-6 py-4">
                         <a href="{{ route('shop', ['category' => $cat->slug]) }}" class="w-20 h-20 shrink-0">
@@ -440,7 +442,7 @@
         <section class="py-12 bg-white">
             <div class="app-container">
                 <x-storefront.section-title title="Your Recently Viewed Products" />
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 border border-gray-200">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 border border-outline-variant">
                     @foreach ($recentlyViewed as $product)
                         <x-storefront.product-card :product="$product" class="hover:border-transparent" />
                     @endforeach

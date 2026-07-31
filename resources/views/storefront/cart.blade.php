@@ -27,7 +27,7 @@
 
             @if ($items->isEmpty() && $dealGroups->isEmpty())
                 <div class="bg-white rounded-lg border border-outline-variant p-16 text-center">
-                    <span class="material-symbols-outlined text-gray-300" style="font-size:72px;">shopping_cart</span>
+                    <span class="material-symbols-outlined text-outline-variant" style="font-size:72px;">shopping_cart</span>
                     <p class="mt-4 text-xl font-light text-on-surface-variant">Your cart is empty.</p>
                     <a href="{{ route('shop') }}" class="inline-block mt-6 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded hover:brightness-95 transition-all">Start shopping</a>
                 </div>
@@ -151,7 +151,7 @@
                         <div class="space-y-3 text-body-base border-b border-outline-variant pb-4 mb-4">
                             <div class="flex justify-between"><span class="text-on-surface-variant">Subtotal</span><span class="font-bold">Rs {{ number_format($subtotal) }}</span></div>
                             @if ($dealDiscount > 0)
-                                <div class="flex justify-between text-green-700"><span>Deal discount</span><span class="font-bold">&minus; Rs {{ number_format($dealDiscount) }}</span></div>
+                                <div class="flex justify-between text-success"><span>Deal discount</span><span class="font-bold">&minus; Rs {{ number_format($dealDiscount) }}</span></div>
                             @endif
                             <div class="flex justify-between"><span class="text-on-surface-variant">Shipping</span><span class="text-on-surface-variant">Calculated at checkout</span></div>
                         </div>
