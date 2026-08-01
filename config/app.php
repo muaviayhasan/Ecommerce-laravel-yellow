@@ -69,6 +69,35 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | HSTS Max Age
+    |--------------------------------------------------------------------------
+    |
+    | How long browsers should refuse plain HTTP for this host, in seconds, as
+    | sent by App\Http\Middleware\SecurityHeaders. One year is the usual value
+    | and the minimum the HSTS preload list accepts. Lower it while you are
+    | still validating HTTPS — the header cannot be withdrawn early once a
+    | browser has cached it.
+    |
+    */
+
+    'hsts_max_age' => (int) env('HSTS_MAX_AGE', 31536000),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Content-Security-Policy (Report-Only)
+    |--------------------------------------------------------------------------
+    |
+    | Sends Content-Security-Policy-Report-Only from SecurityHeaders. Report-Only
+    | never blocks anything — the browser just logs what a real policy would have
+    | stopped, so you can tighten the policy against evidence instead of guesses.
+    | Set CSP_REPORT_ONLY=false to send nothing at all.
+    |
+    */
+
+    'csp_report_only' => (bool) env('CSP_REPORT_ONLY', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

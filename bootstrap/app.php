@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Unauthenticated admin visitors get the staff login; everyone else the storefront login.
         $middleware->redirectGuestsTo(fn ($request) => $request->is('admin', 'admin/*') ? route('admin.login') : route('login'));
+
+        // Baseline security response headers on every route — the app sent none.
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Persist unhandled exceptions to the database (Admin → Error Logs) on top
