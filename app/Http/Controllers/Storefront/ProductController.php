@@ -68,6 +68,10 @@ class ProductController extends Controller
             'name' => $product->name,
             'slug' => $product->slug,
             'category' => $product->category?->name,
+            // Feeds schema.org Product.brand — Search Console reports "Missing field
+            // brand" against product rich results without it, and brand is one of the
+            // fields Google matches on for shopping surfaces.
+            'brand' => $product->brand?->name,
             'categories' => $crumbs ?: ($product->category?->name ?? 'Shop'),
             'price' => $retail,
             'compare' => $compare,

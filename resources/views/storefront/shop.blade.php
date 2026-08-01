@@ -5,13 +5,27 @@
      Google indexes each category page instead of folding them into /shop. --}}
 @php
     $seoCat = $activeCategory ?? null;
-    $shopTitle = ($seoCat ? ($seoCat->meta_title ?: $seoCat->name . ' — Best Prices in Pakistan') : 'Shop') . ' — ' . config('app.name');
+    $shopTitle = ($seoCat ? ($seoCat->meta_title ?: $seoCat->name . ' — Best Prices in Pakistan') : 'Shop All Home Appliances & Electronics') . ' — ' . config('app.name');
     $shopDesc = $seoCat
         ? ($seoCat->meta_description ?: 'Shop ' . $seoCat->name . ' at ' . config('app.name') . ' — genuine brands, updated prices and delivery across Lahore & all Pakistan.')
-        : 'Browse all products at ' . config('app.name') . '.';
+        // Kept under ~155 characters — Google truncates the snippet past roughly there.
+        : 'Air coolers, geysers, fans, washing machines, kitchen and gas appliances, solar and batteries — genuine brands, fair prices, delivery across Pakistan.';
+
+    /*
+     | Searched, sorted, price-filtered and "load more" views of the shop show the
+     | same products the plain category pages already cover, so they are kept out of
+     | the index — Google's own guidance is that internal search results shouldn't be
+     | indexed. `follow` so the crawler still walks through to the products. The
+     | canonical below points every one of them back at the real page.
+     */
+    $shopIsFiltered = collect(['q', 'sort', 'min', 'max', 'brand', 'loaded', 'page'])
+        ->contains(fn ($p) => request()->filled($p));
 @endphp
 @section('title', $shopTitle)
 @section('meta_description', $shopDesc)
+@if ($shopIsFiltered)
+    @section('robots', 'noindex, follow')
+@endif
 @if ($seoCat)
     @section('canonical', route('shop', ['category' => $seoCat->slug]))
 @endif

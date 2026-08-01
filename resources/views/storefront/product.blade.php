@@ -18,11 +18,17 @@
         'description' => \Illuminate\Support\Str::limit(strip_tags($product['description'] ?: ($product['short_description'] ?: $product['name'])), 500),
         'sku' => $product['sku'] ?: null,
         'category' => $product['category'] ?: null,
+        'brand' => ($product['brand'] ?? null) ? ['@type' => 'Brand', 'name' => $product['brand']] : null,
         'offers' => array_filter([
             '@type' => 'Offer',
             'url' => $product['url'],
             'priceCurrency' => $currency,
             'price' => number_format((float) $product['price'], 2, '.', ''),
+            // Google warns on an Offer with no priceValidUntil and may stop showing the
+            // price once it considers the offer stale. A rolling year keeps it valid
+            // without claiming a real promotion end date we don't have.
+            'priceValidUntil' => now()->addYear()->toDateString(),
+            'itemCondition' => 'https://schema.org/NewCondition',
             'availability' => 'https://schema.org/' . (($product['availability'] ?? '') === 'In stock' ? 'InStock' : 'OutOfStock'),
         ]),
     ]);
