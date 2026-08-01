@@ -34,15 +34,16 @@ class MediaBrowseTest extends TestCase
         $this->getJson(route('admin.media.browse'))->assertUnauthorized();
     }
 
-    public function test_it_returns_ten_newest_items_with_a_next_page(): void
+    /** The picker scroll-loads a batch at a time; bc99026 set that batch to 12. */
+    public function test_it_returns_a_full_first_batch_with_a_next_page(): void
     {
-        $this->makeMedia(12);
+        $this->makeMedia(13);
 
         $res = $this->actingAs($this->admin())->getJson(route('admin.media.browse'))
             ->assertOk()
             ->assertJsonStructure(['data' => [['id', 'url', 'title']], 'next']);
 
-        $this->assertCount(10, $res->json('data'));
+        $this->assertCount(12, $res->json('data'));
         $this->assertNotNull($res->json('next'));
     }
 

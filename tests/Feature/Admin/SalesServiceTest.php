@@ -51,7 +51,10 @@ class SalesServiceTest extends TestCase
 
         $order = $this->service()->place('pos', null, [['variant' => $v, 'quantity' => 2]], ['payment_method' => 'cash', 'paid' => 200]);
 
-        $this->assertSame('paid', $order->status);
+        // Order status and payment status are separate concerns — see 893ef51 and the
+        // comment in SalesService::place(). A counter sale settled in full is
+        // 'completed' as an order; 'paid' describes only its payment, asserted below.
+        $this->assertSame('completed', $order->status);
         $this->assertSame('paid', $order->payment_status);
         $this->assertSame('200.00', (string) $order->grand_total);
         $this->assertSame('8.000', (string) $v->fresh()->stock_quantity);      // 10 − 2

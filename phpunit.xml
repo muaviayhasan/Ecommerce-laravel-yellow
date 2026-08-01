@@ -22,8 +22,22 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+        <!--
+            The suite runs against its own database, never the development one.
+
+            Two things went wrong while it shared `usman_ecommerce`: tests collided
+            with real seeded rows (CouponTest fails with "The code has already been
+            taken" because a WELCOME10 coupon exists), and the whole dev catalogue sat
+            one `RefreshDatabase` away from being dropped by a future test.
+
+            MySQL rather than sqlite :memory: on purpose — production is MySQL, and a
+            suite that runs on a different engine stops catching engine-specific bugs
+            in the raw SQL this app uses.
+
+            Create it once with "CREATE DATABASE usman_ecommerce_testing", then run
+            artisan migrate against it.
+        -->
+        <env name="DB_DATABASE" value="usman_ecommerce_testing"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
