@@ -23,3 +23,8 @@ yarn-error.log
 /.zed
 /public/stich
 
+# Locally installed Claude Code skills — personal tooling, not part of the app.
+# Scoped to skills/ rather than all of .claude/ so a shared .claude/settings.json
+# can still be committed if the team ever wants one.
+/.claude/skills
+
