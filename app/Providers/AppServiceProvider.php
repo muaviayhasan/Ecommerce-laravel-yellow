@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Listeners\SendWelcomeEmail;
 use App\Listeners\SendWelcomeSupportMessage;
 use App\Observers\AuditObserver;
+use App\Support\IndexNow;
 use App\Support\SettingsApplier;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
@@ -62,6 +63,25 @@ class AppServiceProvider extends ServiceProvider
         foreach (self::AUDITED as $model) {
             $model::observe(AuditObserver::class);
         }
+
+        /*
+         | IndexNow — tell Bing/Yandex/Seznam/Naver a page changed rather than waiting
+         | to be re-crawled. Fires on save, but only for records that are actually
+         | public: submitting a draft would push a URL that 404s, which is worse than
+         | submitting nothing. No-ops entirely unless INDEXNOW_ENABLED is set, and the
+         | submission itself is queued, so nothing here touches request latency.
+         */
+        Product::saved(function (Product $product) {
+            if ($product->is_web_listed && $product->is_active && $product->published_at?->isPast()) {
+                IndexNow::submit(route('product.show', $product->slug));
+            }
+        });
+
+        BlogPost::saved(function (BlogPost $post) {
+            if ($post->published_at?->isPast()) {
+                IndexNow::submit(route('blog.show', $post->slug));
+            }
+        });
 
         // Register the Microsoft driver for Socialite (admin SSO).
         Event::listen(function (SocialiteWasCalled $event) {

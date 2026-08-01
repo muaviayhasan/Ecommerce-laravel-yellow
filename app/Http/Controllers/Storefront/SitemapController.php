@@ -7,6 +7,7 @@ use App\Models\BlogPost;
 use App\Models\Category;
 use App\Models\Deal;
 use App\Models\Product;
+use App\Support\IndexNow;
 use Illuminate\Http\Response;
 
 /** Dynamic sitemap.xml + robots.txt for search engines. */
@@ -111,6 +112,18 @@ class SitemapController extends Controller
         $xml .= '</urlset>';
 
         return response($xml, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+    }
+
+    /**
+     * IndexNow ownership proof. The protocol wants a text file at /{key}.txt whose
+     * only content is the key; serving it from a route means there is no file to
+     * upload and nothing to go stale if the key ever changes.
+     */
+    public function indexNowKey(string $key): Response
+    {
+        abort_unless(hash_equals(IndexNow::key(), $key), 404);
+
+        return response(IndexNow::key(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 
     public function robots(): Response

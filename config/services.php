@@ -56,4 +56,24 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | IndexNow
+    |--------------------------------------------------------------------------
+    |
+    | Pushes changed URLs to Bing, Yandex, Seznam and Naver instead of waiting to
+    | be re-crawled. Google does not participate — the sitemap still covers it —
+    | but Bing powers ChatGPT's web results, so this is worth having.
+    |
+    | Off by default: it submits your URLs to third parties, which should be an
+    | explicit choice. Set INDEXNOW_ENABLED=true to turn it on. The key defaults
+    | to a stable value derived from APP_KEY, so there is nothing to generate.
+    |
+    */
+
+    'indexnow' => [
+        'enabled' => (bool) env('INDEXNOW_ENABLED', false),
+        'key' => env('INDEXNOW_KEY'),
+    ],
+
 ];
