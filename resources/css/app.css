@@ -567,6 +567,34 @@
     }
 
     /*
+     * Indeterminate progress bar. Used when work is known to be in flight but its
+     * duration is unknowable — chiefly the gap after an upload's last byte has
+     * been sent, while the server is still processing it. A bar parked at 100%
+     * for that stretch reads as frozen; a moving one reads as working.
+     * Put on a narrow child of an `overflow-hidden` track.
+     */
+    @keyframes indeterminate-bar {
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(400%);
+        }
+    }
+
+    .indeterminate-bar {
+        animation: indeterminate-bar 1.2s ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .indeterminate-bar {
+            animation: none;
+            width: 100%;
+            opacity: 0.6;
+        }
+    }
+
+    /*
      * CONVENTIONS.md §1.5 — every clickable affordance shows a pointer cursor.
      * Tailwind v4 resets buttons to `cursor: default`, so re-assert it here.
      */

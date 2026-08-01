@@ -71,10 +71,18 @@
                  0-100 integer, which is what actually drives the bar. --}}
             <div x-data="{
                     over: false,
-                    uploading: false,
+                    phase: 'idle',  // idle | sending | processing
                     progress: 0,
                     pending: 0,
+                    elapsed: 0,
+                    timer: null,
                     clientErrors: [],
+                    reset() {
+                        this.phase = 'idle';
+                        this.progress = 0;
+                        this.elapsed = 0;
+                        if (this.timer) { clearInterval(this.timer); this.timer = null; }
+                    },
                     stage(list) {
                         this.clientErrors = [];
                         const ok = [];
@@ -88,20 +96,30 @@
                             }
                         }
                         if (ok.length) {
-                            this.uploading = true;
-                            this.progress = 0;
+                            this.reset();
+                            this.phase = 'sending';
                             this.pending = ok.length;
                             $wire.uploadMultiple(
                                 'uploads',
                                 ok,
-                                () => { this.uploading = false; this.progress = 0; },
+                                () => this.reset(),
                                 () => {
-                                    this.uploading = false;
-                                    this.progress = 0;
+                                    this.reset();
                                     this.clientErrors.push('Upload failed — the file may be larger than the server allows. Try a smaller image.');
                                 },
-                                (e) => { this.progress = e.detail.progress; },
-                                () => { this.uploading = false; this.progress = 0; },
+                                (e) => {
+                                    this.progress = e.detail.progress;
+                                    // The last byte is off the browser, but Livewire still has a
+                                    // _finishUpload round trip to make and the previews to render.
+                                    // Switch to an open-ended 'processing' state instead of parking
+                                    // a full bar there, which reads as a hang.
+                                    if (this.progress >= 100 && this.phase === 'sending') {
+                                        this.phase = 'processing';
+                                        this.elapsed = 0;
+                                        this.timer = setInterval(() => this.elapsed++, 1000);
+                                    }
+                                },
+                                () => this.reset(),
                             );
                         }
                         this.$refs.input.value = '';
@@ -120,26 +138,37 @@
                     <p class="text-[11px] text-outline">PNG, JPG, WEBP · up to 5 MB each</p>
                 </label>
 
-                {{-- Live upload progress. A percentage rather than a bare spinner: on a
-                     slow connection a large image can sit at 30% for a while, and a
-                     number that keeps moving is the difference between "it's working"
-                     and "it's hung". Announced politely for screen readers. --}}
-                <div x-show="uploading" x-cloak class="mt-4" role="status" aria-live="polite">
+                {{-- An upload has two phases and they need saying differently.
+                     SENDING is measurable — the browser reports bytes pushed, so show a
+                     real percentage. On a fast link to a busy server this finishes almost
+                     at once, which is why the bar appears to jump straight to 100%.
+                     PROCESSING is the rest: Livewire's _finishUpload round trip, the move
+                     out of temp storage, and re-rendering the previews (a temporaryUrl()
+                     per file). None of that reports progress and it can run 20s+, so it
+                     gets an indeterminate bar and a seconds counter rather than a full bar
+                     parked at 100% — which is what read as a hang. --}}
+                <div x-show="phase !== 'idle'" x-cloak class="mt-4" role="status" aria-live="polite">
                     <div class="flex items-center justify-between mb-1.5 text-xs font-semibold">
                         <span class="flex items-center gap-1.5 text-on-surface">
                             <span class="material-symbols-outlined text-[18px] animate-spin text-primary">progress_activity</span>
-                            <span x-text="pending === 1 ? 'Uploading 1 image…' : `Uploading ${pending} images…`"></span>
+                            <span x-show="phase === 'sending'"
+                                x-text="pending === 1 ? 'Uploading 1 image…' : `Uploading ${pending} images…`"></span>
+                            <span x-show="phase === 'processing'"
+                                x-text="pending === 1 ? 'Processing 1 image…' : `Processing ${pending} images…`"></span>
                         </span>
-                        <span class="tabular-nums text-on-surface-variant" x-text="progress + '%'"></span>
+                        <span class="tabular-nums text-on-surface-variant"
+                            x-text="phase === 'sending' ? progress + '%' : elapsed + 's'"></span>
                     </div>
                     <div class="h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
-                        <div class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
+                        <div x-show="phase === 'sending'"
+                            class="h-full rounded-full bg-primary transition-[width] duration-150 ease-out"
                             :style="`width: ${progress}%`"></div>
+                        <div x-show="phase === 'processing'"
+                            class="h-full w-1/4 rounded-full bg-primary indeterminate-bar"></div>
                     </div>
-                    {{-- At 100% the bytes are on the server but the thumbnails are still
-                         being generated, so say so instead of leaving a full bar sitting
-                         there looking stuck. --}}
-                    <p x-show="progress >= 100" class="mt-1.5 text-[11px] text-on-surface-variant">Processing images…</p>
+                    <p x-show="phase === 'processing'" class="mt-1.5 text-[11px] text-on-surface-variant">
+                        The images are on the server and being resized. Keep this window open.
+                    </p>
                 </div>
 
                 <template x-for="err in clientErrors" :key="err">
