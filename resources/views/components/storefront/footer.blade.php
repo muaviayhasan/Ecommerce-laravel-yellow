@@ -50,7 +50,9 @@
         <div>
             <a class="text-headline-lg font-bold text-on-surface mb-6 block" href="{{ route('home') }}">
                 @if ($logo = logo_url())
-                    <img src="{{ $logo }}" alt="{{ config('app.name') }}" class="h-12 w-auto max-w-full object-contain">
+                    <img src="{{ $logo }}" alt="{{ config('app.name') }}"
+                        @if ($logoDims = logo_dimensions()) width="{{ $logoDims[0] }}" height="{{ $logoDims[1] }}" @endif
+                        class="h-12 w-auto max-w-full object-contain">
                 @else
                     {{ config('app.name') }}<span class="text-primary-container">.</span>
                 @endif

@@ -70,6 +70,35 @@ if (! function_exists('favicon_url')) {
     }
 }
 
+if (! function_exists('logo_dimensions')) {
+    /**
+     * The logo's intrinsic size, for width/height attributes on the <img>.
+     *
+     * The logo is sized in CSS by height with `w-auto`, so its width is unknown
+     * until the file loads — and the header reflows sideways when it arrives. That
+     * is layout shift on the first thing a visitor sees, on every page. Handing the
+     * browser the real aspect ratio up front lets it reserve the box immediately.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    function logo_dimensions(): ?array
+    {
+        static $resolved = false;
+        static $dims = null;
+
+        if ($resolved) {
+            return $dims;
+        }
+
+        $resolved = true;
+        $id = setting('general', 'logo');
+        $media = $id ? \App\Models\Media::find($id) : null;
+        $dims = ($media?->width && $media?->height) ? [(int) $media->width, (int) $media->height] : null;
+
+        return $dims;
+    }
+}
+
 if (! function_exists('logo_url')) {
     /**
      * The admin-configured website logo (Settings → General), or null when none

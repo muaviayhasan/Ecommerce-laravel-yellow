@@ -274,6 +274,44 @@ class Storefront
     }
 
     /**
+     * Cache-key suffix that changes whenever the catalogue does.
+     *
+     * The database cache store has no tag support, so anything derived from the
+     * catalogue is keyed by this number instead. Bumping it retires every such
+     * entry at once, which is what makes caching product cards safe to do on a
+     * live shop: a price edit, a new product or a stock movement invalidates the
+     * lot immediately rather than leaving customers on a stale page.
+     *
+     * Bumped from model events in AppServiceProvider. StockService writes stock
+     * through the model (`$variant->save()`), so stock changes land here too.
+     */
+    public static function catalogVersion(): int
+    {
+        return (int) \Illuminate\Support\Facades\Cache::rememberForever('storefront:catalog-version', fn () => 1);
+    }
+
+    public static function bumpCatalogVersion(): void
+    {
+        \Illuminate\Support\Facades\Cache::forever('storefront:catalog-version', self::catalogVersion() + 1);
+    }
+
+    /**
+     * Remember a catalogue-derived value until the catalogue changes.
+     *
+     * The TTL is a backstop, not the mechanism — invalidation is by version. It
+     * exists so a missed bump degrades to "stale for a few minutes" rather than
+     * "stale until someone clears the cache".
+     */
+    public static function remember(string $key, \Closure $callback): mixed
+    {
+        return \Illuminate\Support\Facades\Cache::remember(
+            "storefront:v" . self::catalogVersion() . ":{$key}",
+            now()->addMinutes(10),
+            $callback,
+        );
+    }
+
+    /**
      * "Rs 850 – Rs 125,000" across everything currently listed, for the
      * LocalBusiness priceRange property. Derived rather than configured — the
      * catalogue already knows it, and a hand-entered range goes stale the first
@@ -281,7 +319,7 @@ class Storefront
      */
     public static function priceRangeLabel(): ?string
     {
-        return \Illuminate\Support\Facades\Cache::remember('storefront:price-range', now()->addDay(), function (): ?string {
+        return self::remember('price-range', function (): ?string {
             $prices = ProductVariant::query()
                 ->where('is_active', true)
                 ->where('retail_price', '>', 0)

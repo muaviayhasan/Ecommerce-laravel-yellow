@@ -101,7 +101,12 @@
                 </button>
                 <a class="flex items-baseline min-w-0 font-bold text-on-surface" href="{{ route('home') }}">
                     @if ($logo = logo_url())
-                        <img src="{{ $logo }}" alt="{{ config('app.name') }}" class="h-9 sm:h-10 lg:h-12 w-auto max-w-full object-contain self-center">
+                        {{-- Intrinsic size so the header reserves the logo's width before it
+                             loads. Sized by height in CSS with w-auto, so without this the
+                             whole top bar reflows sideways on first paint, on every page. --}}
+                        <img src="{{ $logo }}" alt="{{ config('app.name') }}"
+                            @if ($logoDims = logo_dimensions()) width="{{ $logoDims[0] }}" height="{{ $logoDims[1] }}" @endif
+                            class="h-9 sm:h-10 lg:h-12 w-auto max-w-full object-contain self-center">
                     @else
                         <span class="truncate text-xl sm:text-2xl lg:text-headline-lg">{{ config('app.name') }}</span>
                         <span class="shrink-0 text-xl sm:text-2xl lg:text-headline-lg text-primary-container">.</span>

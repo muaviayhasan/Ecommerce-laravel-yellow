@@ -9,8 +9,10 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Customer;
+use App\Models\Deal;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Purchase;
 use App\Models\Quotation;
 use App\Models\Review;
@@ -21,6 +23,7 @@ use App\Listeners\SendWelcomeSupportMessage;
 use App\Observers\AuditObserver;
 use App\Support\IndexNow;
 use App\Support\SettingsApplier;
+use App\Support\Storefront;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -62,6 +65,18 @@ class AppServiceProvider extends ServiceProvider
         // §23 audit logging — record admin mutations on the core entities.
         foreach (self::AUDITED as $model) {
             $model::observe(AuditObserver::class);
+        }
+
+        /*
+         | Retire the cached storefront blocks whenever the catalogue moves. Covers
+         | the obvious edits, and also stock: StockService writes through the model
+         | (`$variant->save()`), so a sale or a delivery lands here too. Without the
+         | variant hook a cached card could keep advertising an item as in stock
+         | after the last one sold.
+         */
+        foreach ([Product::class, ProductVariant::class, Deal::class, Category::class, Brand::class] as $model) {
+            $model::saved(fn () => Storefront::bumpCatalogVersion());
+            $model::deleted(fn () => Storefront::bumpCatalogVersion());
         }
 
         /*

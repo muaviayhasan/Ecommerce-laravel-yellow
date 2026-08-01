@@ -21,23 +21,59 @@ class HomeController extends Controller
      */
     public function index(): View
     {
-        $latest = Storefront::cards(Storefront::query()->latest('published_at')->take(12)->get());
+        /*
+         | The home page shows around ten separate product blocks, each its own query
+         | plus eager loads — 111 queries a request, more than double any other page,
+         | on the page that gets visited most and whose TTFB feeds LCP.
+         |
+         | None of it varies per visitor, so it is computed once and reused until the
+         | catalogue changes. Invalidation is by version rather than by clock: a price
+         | edit, a new product, a stock movement or a deal change bumps the version and
+         | retires this entry immediately (see Storefront::catalogVersion). That is what
+         | makes it safe to cache prices and stock on a live shop; the ten-minute TTL
+         | inside remember() is only a backstop against a missed bump.
+         |
+         | recentlyViewed is deliberately left outside — it is per-session, and caching
+         | it would show one customer another's browsing history.
+         */
+        $blocks = Storefront::remember('home-blocks', function (): array {
+            $latest = Storefront::cards(Storefront::query()->latest('published_at')->take(12)->get());
 
-        $orLatest = fn (Collection $cards, int $n): Collection => $cards->isEmpty() ? $latest->take($n)->values() : $cards;
+            $orLatest = fn (Collection $cards, int $n): Collection => $cards->isEmpty() ? $latest->take($n)->values() : $cards;
 
-        $featured = $orLatest(Storefront::cards(Storefront::query()->featured()->latest('published_at')->take(6)->get()), 6);
-        $trending = $orLatest(Storefront::cards(Storefront::query()->trending()->latest('published_at')->take(8)->get()), 8);
-        $bestsellers = $orLatest(Storefront::cards(Storefront::query()->bestseller()->latest('published_at')->take(8)->get()), 8);
-        $onSale = Storefront::cards(Storefront::onSaleQuery()->take(6)->get());
-        $topRated = $orLatest(Storefront::cards(Storefront::query()->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating')->take(6)->get()), 6);
+            $bestsellers = $orLatest(Storefront::cards(Storefront::query()->bestseller()->latest('published_at')->take(8)->get()), 8);
 
-        // Real category tree: "departments" are the children of the top-level roots
-        // (Coolers, Geysers, Fans, …). They drive the two spotlight sliders and the
-        // "Top Categories" grid, and carry their own sub-categories + image.
-        $departments = $this->departments();
+            // Real category tree: "departments" are the children of the top-level roots
+            // (Coolers, Geysers, Fans, …). They drive the two spotlight sliders and the
+            // "Top Categories" grid, and carry their own sub-categories + image.
+            $departments = $this->departments();
 
-        // Admin-managed deals featured on the home page (slider + two-card block).
-        $homeDeals = Storefront::homeDeals();
+            return [
+                'latest' => $latest,
+                'featured' => $orLatest(Storefront::cards(Storefront::query()->featured()->latest('published_at')->take(6)->get()), 6),
+                'trending' => $orLatest(Storefront::cards(Storefront::query()->trending()->latest('published_at')->take(8)->get()), 8),
+                'bestsellers' => $bestsellers,
+                'onSale' => Storefront::cards(Storefront::onSaleQuery()->take(6)->get()),
+                'topRated' => $orLatest(Storefront::cards(Storefront::query()->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating')->take(6)->get()), 6),
+                'departments' => $departments,
+                'spotlights' => $this->spotlights($departments),
+                // Admin-managed deals featured on the home page (slider + two-card block).
+                'homeDeals' => Storefront::homeDeals(),
+                'promoBanners' => [
+                    'coolers' => Storefront::categoryImage('coolers'),
+                    'solar' => Storefront::categoryImage('solar-plates'),
+                ],
+            ];
+        });
+
+        $latest = $blocks['latest'];
+        $bestsellers = $blocks['bestsellers'];
+        $departments = $blocks['departments'];
+        $homeDeals = $blocks['homeDeals'];
+        $featured = $blocks['featured'];
+        $onSale = $blocks['onSale'];
+        $topRated = $blocks['topRated'];
+        $trending = $blocks['trending'];
 
         return view('storefront.home', [
             'heroSlides' => $this->heroSlides(),
@@ -51,15 +87,13 @@ class HomeController extends Controller
             'bestsellers' => $bestsellers,
             'bestsellerFeature' => $bestsellers->first() ?? $latest->first() ?? [],
             'topCategories' => $departments,
-            'spotlights' => $this->spotlights($departments),
+            'spotlights' => $blocks['spotlights'],
             'latestFallback' => $latest,
+            // Per-session, so never cached with the rest.
             'recentlyViewed' => RecentlyViewed::cards(6),
             // Representative images for the two hardcoded promo banners so they
             // mirror the real catalog instead of leftover demo art.
-            'promoBanners' => [
-                'coolers' => Storefront::categoryImage('coolers'),
-                'solar' => Storefront::categoryImage('solar-plates'),
-            ],
+            'promoBanners' => $blocks['promoBanners'],
         ]);
     }
 

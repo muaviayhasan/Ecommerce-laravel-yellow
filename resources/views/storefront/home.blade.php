@@ -248,8 +248,15 @@
             <div class="app-container py-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 {{-- Left: category visual (uses the category's admin image; falls back to a placeholder) --}}
                 <div class="flex justify-center">
+                    {{-- w-full with no height means this box has no size until the image
+                         arrives, and everything below it jumps when it does. The media
+                         record already knows the real ratio, so hand it over. --}}
                     <img src="{{ $spotCategory->image?->thumbUrl(800) ?: '/assets/images/television-entertainment-tv.png' }}"
-                        alt="{{ $spotCategory->name }}" loading="lazy" decoding="async" class="w-full max-w-xl object-contain">
+                        alt="{{ $spotCategory->name }}" loading="lazy" decoding="async"
+                        @if ($spotCategory->image?->width && $spotCategory->image?->height)
+                            width="{{ $spotCategory->image->width }}" height="{{ $spotCategory->image->height }}"
+                        @endif
+                        class="w-full max-w-xl object-contain">
                 </div>
 
                 {{-- Right: slider --}}
