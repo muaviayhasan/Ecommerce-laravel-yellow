@@ -43,6 +43,18 @@ return [
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                //
+                // Our events are ShouldBroadcastNow, so this HTTP call to Reverb happens
+                // INSIDE the web request. With no timeout set, an unreachable Reverb does
+                // not fail — it hangs until PHP's max_execution_time kills the whole
+                // request (the "Maximum execution time of 30 seconds exceeded" fatals in
+                // storage/logs). On the single-worker `php -S` dev server that stalls
+                // every other request too, so the site looks like it has died; in
+                // production it would hold a customer's checkout open for 30 seconds.
+                // Fail fast instead: a realtime notification is worth a couple of seconds
+                // at most, never the request itself.
+                'connect_timeout' => env('BROADCAST_CONNECT_TIMEOUT', 2),
+                'timeout' => env('BROADCAST_TIMEOUT', 4),
             ],
         ],
 
