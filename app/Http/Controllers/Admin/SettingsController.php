@@ -209,6 +209,22 @@ class SettingsController extends Controller implements HasMiddleware
                         ],
                     ],
                     [
+                        'title' => 'Location (for Google)',
+                        'description' => 'Publishes your shop as a local business to Google, which is what puts you in the map pack for searches like “air cooler shop near me”. The address above is used as the street line; these break out the parts Google needs separately. Fill in at least the city — nothing is published without it.',
+                        'fields' => [
+                            'city' => ['input' => 'text', 'label' => 'City', 'max' => 120, 'rules' => ['nullable', 'string', 'max:120'], 'help' => 'e.g. Lahore. Required before anything is published.'],
+                            'region' => ['input' => 'text', 'label' => 'Province / state', 'max' => 120, 'rules' => ['nullable', 'string', 'max:120'], 'help' => 'e.g. Punjab'],
+                            'postal_code' => ['input' => 'text', 'label' => 'Postal code', 'max' => 20, 'rules' => ['nullable', 'string', 'max:20']],
+                            'country' => ['input' => 'text', 'label' => 'Country code', 'max' => 2, 'rules' => ['nullable', 'string', 'size:2'], 'help' => 'Two letters, e.g. PK.'],
+                            // Kept as text, not number: a number input would round away the decimals.
+                            'latitude' => ['input' => 'text', 'label' => 'Latitude', 'max' => 20, 'rules' => ['nullable', 'numeric', 'between:-90,90'], 'help' => 'From Google Maps: right-click your shop → the first line is “latitude, longitude”.'],
+                            'longitude' => ['input' => 'text', 'label' => 'Longitude', 'max' => 20, 'rules' => ['nullable', 'numeric', 'between:-180,180']],
+                            'opening_days' => ['input' => 'select', 'label' => 'Open on', 'options' => ['' => '— not set —', 'mon-sat' => 'Monday to Saturday', 'mon-fri' => 'Monday to Friday', 'mon-sun' => 'Every day', 'sat-thu' => 'Saturday to Thursday'], 'rules' => ['nullable', 'in:mon-sat,mon-fri,mon-sun,sat-thu']],
+                            'opens' => ['input' => 'text', 'label' => 'Opens at', 'max' => 5, 'rules' => ['nullable', 'date_format:H:i'], 'help' => '24-hour, e.g. 10:00'],
+                            'closes' => ['input' => 'text', 'label' => 'Closes at', 'max' => 5, 'rules' => ['nullable', 'date_format:H:i'], 'help' => '24-hour, e.g. 20:00'],
+                        ],
+                    ],
+                    [
                         'title' => 'Invoice & receipt',
                         'description' => 'How a printed order bill is formatted.',
                         'fields' => [

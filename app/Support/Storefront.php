@@ -272,4 +272,31 @@ class Storefront
     {
         return 'https://placehold.co/400x400/f1f5f9/94a3b8?text=No+Image';
     }
+
+    /**
+     * "Rs 850 – Rs 125,000" across everything currently listed, for the
+     * LocalBusiness priceRange property. Derived rather than configured — the
+     * catalogue already knows it, and a hand-entered range goes stale the first
+     * time a price changes. Cached for a day; this runs on every page render.
+     */
+    public static function priceRangeLabel(): ?string
+    {
+        return \Illuminate\Support\Facades\Cache::remember('storefront:price-range', now()->addDay(), function (): ?string {
+            $prices = ProductVariant::query()
+                ->where('is_active', true)
+                ->where('retail_price', '>', 0)
+                ->whereHas('product', fn ($p) => $p->webListed())
+                ->selectRaw('MIN(retail_price) as lo, MAX(retail_price) as hi')
+                ->first();
+
+            if (! $prices?->lo) {
+                return null;
+            }
+
+            $symbol = setting('general', 'currency_symbol', 'Rs');
+
+            return trim($symbol . ' ' . number_format((float) $prices->lo))
+                . ' – ' . trim($symbol . ' ' . number_format((float) $prices->hi));
+        });
+    }
 }

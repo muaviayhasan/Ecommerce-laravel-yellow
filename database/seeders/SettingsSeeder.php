@@ -74,6 +74,18 @@ class SettingsSeeder extends Seeder
             'whatsapp' => ['value' => '', 'type' => 'string'],
             'support_email' => ['value' => '', 'type' => 'string'],
             'business_hours' => ['value' => '', 'type' => 'string'],
+            // Structured location for LocalBusiness schema. All blank by default —
+            // the markup is only emitted once a city is filled in, so an unconfigured
+            // install never publishes a half-built address to Google.
+            'city' => ['value' => '', 'type' => 'string'],
+            'region' => ['value' => '', 'type' => 'string'],
+            'postal_code' => ['value' => '', 'type' => 'string'],
+            'country' => ['value' => 'PK', 'type' => 'string'],
+            'latitude' => ['value' => '', 'type' => 'string'],
+            'longitude' => ['value' => '', 'type' => 'string'],
+            'opening_days' => ['value' => '', 'type' => 'string'],
+            'opens' => ['value' => '', 'type' => 'string'],
+            'closes' => ['value' => '', 'type' => 'string'],
             'bill_type' => ['value' => 'a4', 'type' => 'string'],     // a4|thermal — printed order bill format
             'invoice_footer' => ['value' => '', 'type' => 'string'],
         ],

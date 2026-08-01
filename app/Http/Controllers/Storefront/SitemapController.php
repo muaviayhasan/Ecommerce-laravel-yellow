@@ -126,26 +126,106 @@ class SitemapController extends Controller
         return response(IndexNow::key(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 
+    /**
+     * llms.txt — a plain-Markdown map of the site for AI assistants, in the same
+     * spirit as robots.txt but aimed at what should be *read* rather than what may
+     * be crawled. Generated from the live catalogue so it can never drift from the
+     * real category tree the way a hand-written file would.
+     *
+     * Worth having here specifically: ChatGPT's web results run on Bing, which the
+     * IndexNow work already feeds, and "which air cooler should I buy in Lahore"
+     * is exactly the shape of question an assistant answers rather than a SERP.
+     */
+    public function llms(): Response
+    {
+        $name = config('app.name');
+
+        $lines = [
+            '# ' . $name,
+            '',
+            '> ' . (setting('seo', 'meta_description')
+                ?: 'Home appliances, electronics and batteries, with delivery across Pakistan.'),
+            '',
+            'Prices are in ' . setting('general', 'currency', 'PKR') . ' and shown on each product page.',
+            'Stock and prices change; always read the product page rather than a cached copy.',
+            '',
+            '## Departments',
+            '',
+        ];
+
+        Category::query()
+            ->where('is_active', true)
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')->orderBy('name')
+            ->with(['children' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+            ->each(function (Category $root) use (&$lines) {
+                $lines[] = '- [' . $root->name . '](' . route('shop', ['category' => $root->slug]) . ')';
+                foreach ($root->children as $child) {
+                    $lines[] = '  - [' . $child->name . '](' . route('shop', ['category' => $child->slug]) . ')';
+                }
+            });
+
+        $lines = array_merge($lines, [
+            '',
+            '## Key pages',
+            '',
+            '- [All products](' . route('shop') . ')',
+            '- [About](' . route('about') . ')',
+            '- [Contact](' . route('contact') . ')',
+            '- [Track an order](' . route('track.order') . ')',
+            '- [Blog — buying guides](' . route('blog') . ')',
+            '',
+            '## Machine-readable',
+            '',
+            '- [Sitemap](' . url('sitemap.xml') . ') — every indexable URL',
+            '- Product pages carry schema.org Product JSON-LD with price, availability and specifications.',
+            '',
+        ]);
+
+        return response(implode("\n", $lines), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+    }
+
     public function robots(): Response
     {
-        $lines = ['User-agent: *'];
+        if (! (bool) setting('seo', 'indexable', true)) {
+            return response("User-agent: *\nDisallow: /\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+        }
 
-        if ((bool) setting('seo', 'indexable', true)) {
+        // Private areas, and anything that only makes sense with a session behind it.
+        //
+        // Filtered/searched/sorted views of /shop are deliberately NOT here. They carry
+        // `noindex, follow` in the page head instead (see shop.blade.php) — a crawler
+        // has to be able to fetch a page to see that directive, and blocking it here
+        // would leave any already-indexed ones stuck in the index with no way to drop.
+        $disallow = ['/admin', '/account', '/cart', '/checkout', '/wishlist', '/compare', '/login', '/register', '/support'];
+
+        /*
+         | AI crawlers are named and ALLOWED — a decision, not an oversight. Being read
+         | by ChatGPT, Claude and Perplexity is how a shop gets mentioned when someone
+         | asks "where do I buy a Dawlance washing machine in Lahore"; that is free
+         | distribution rather than scraping to defend against. Naming them keeps the
+         | policy visible and reversible in one place. Google-Extended governs Gemini
+         | *training* only — it has no bearing on Google Search or AI Overviews.
+         |
+         | Each one needs its own copy of the Disallow list: a named group replaces the
+         | `*` group for that bot rather than adding to it, so a bare "Allow: /" here
+         | would hand GPTBot the admin panel and checkout. Built from the same array so
+         | the two can never drift apart.
+         */
+        $agents = array_merge(['*'], ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'PerplexityBot', 'Google-Extended']);
+
+        $lines = [];
+        foreach ($agents as $agent) {
+            $lines[] = 'User-agent: ' . $agent;
             $lines[] = 'Allow: /';
-            foreach (['/admin', '/account', '/cart', '/checkout', '/wishlist', '/compare', '/login', '/register', '/support'] as $path) {
+            foreach ($disallow as $path) {
                 $lines[] = 'Disallow: ' . $path;
             }
-
-            // Filtered/searched/sorted views of /shop are deliberately NOT disallowed
-            // here. They carry `noindex, follow` in the page head instead (see
-            // shop.blade.php) — a crawler has to be able to fetch a page to see that
-            // directive, and blocking it in robots.txt would leave any already-indexed
-            // ones stuck in the index with no way to drop them.
             $lines[] = '';
-            $lines[] = 'Sitemap: ' . url('sitemap.xml');
-        } else {
-            $lines[] = 'Disallow: /';
         }
+
+        $lines[] = 'Sitemap: ' . url('sitemap.xml');
+        $lines[] = 'Llms: ' . url('llms.txt');
 
         return response(implode("\n", $lines) . "\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }

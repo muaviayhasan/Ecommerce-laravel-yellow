@@ -84,6 +84,7 @@ Route::post('/blog/{post:slug}/comments', [BlogController::class, 'storeComment'
 // SEO — dynamic sitemap + robots
 Route::get('/sitemap.xml', [\App\Http\Controllers\Storefront\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [\App\Http\Controllers\Storefront\SitemapController::class, 'robots'])->name('robots');
+Route::get('/llms.txt', [\App\Http\Controllers\Storefront\SitemapController::class, 'llms'])->name('llms');
 // IndexNow ownership proof — /{key}.txt must echo the key back. Constrained to the
 // key's own shape so this never shadows a real page.
 Route::get('/{key}.txt', [\App\Http\Controllers\Storefront\SitemapController::class, 'indexNowKey'])

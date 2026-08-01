@@ -29,6 +29,68 @@
 
     $sameAs = array_values(array_filter([setting('seo', 'facebook_url'), setting('seo', 'instagram_url')]));
 
+    /*
+     | LocalBusiness. This is the node that feeds the Google map pack — the results
+     | for "air cooler shop near me" and similar — which for a shop with a counter
+     | is worth more than most on-page work. Emitted only when a city has been set
+     | in Admin → Settings → Store → Location, because a LocalBusiness with a
+     | half-built address is worse than none: Google will happily show a wrong or
+     | incomplete location to someone trying to drive to you.
+     |
+     | HomeGoodsStore is a LocalBusiness subtype and the closest match to a shop
+     | selling appliances; being specific gives Google more to work with than the
+     | generic type would.
+     */
+    $localBusiness = null;
+    if ($city = trim((string) setting('store', 'city', ''))) {
+        $dayMap = [
+            'mon-sat' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+            'mon-fri' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+            'mon-sun' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            'sat-thu' => ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+        ];
+        $days = $dayMap[setting('store', 'opening_days', '')] ?? null;
+        $opens = trim((string) setting('store', 'opens', ''));
+        $closes = trim((string) setting('store', 'closes', ''));
+
+        $lat = trim((string) setting('store', 'latitude', ''));
+        $lng = trim((string) setting('store', 'longitude', ''));
+
+        $localBusiness = array_filter([
+            '@type' => 'HomeGoodsStore',
+            '@id' => url('/') . '#localbusiness',
+            'name' => $siteName,
+            'url' => url('/'),
+            'image' => $ogImage ?: null,
+            'telephone' => setting('store', 'phone') ?: null,
+            'email' => setting('store', 'support_email') ?: null,
+            'parentOrganization' => ['@id' => url('/') . '#organization'],
+            'address' => array_filter([
+                '@type' => 'PostalAddress',
+                'streetAddress' => trim((string) setting('store', 'address', '')) ?: null,
+                'addressLocality' => $city,
+                'addressRegion' => setting('store', 'region') ?: null,
+                'postalCode' => setting('store', 'postal_code') ?: null,
+                'addressCountry' => setting('store', 'country') ?: 'PK',
+            ]),
+            'geo' => ($lat !== '' && $lng !== '') ? [
+                '@type' => 'GeoCoordinates',
+                'latitude' => (float) $lat,
+                'longitude' => (float) $lng,
+            ] : null,
+            'openingHoursSpecification' => ($days && $opens && $closes) ? [[
+                '@type' => 'OpeningHoursSpecification',
+                'dayOfWeek' => $days,
+                'opens' => $opens,
+                'closes' => $closes,
+            ]] : null,
+            // Derived from the live catalogue rather than asked for — it is a fact the
+            // database already knows, and Google uses it to qualify local results.
+            'priceRange' => ($range = \App\Support\Storefront::priceRangeLabel()) ?: null,
+            'sameAs' => $sameAs ?: null,
+        ]);
+    }
+
     $graph = [
         array_filter([
             '@type' => 'Organization',
@@ -51,6 +113,10 @@
             ],
         ],
     ];
+
+    if ($localBusiness) {
+        $graph[] = $localBusiness;
+    }
 @endphp
 <title>{{ $title }}</title>
 @if ($desc)<meta name="description" content="{{ $desc }}">@endif
