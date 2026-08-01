@@ -259,6 +259,16 @@ class SettingsController extends Controller implements HasMiddleware
                             'free_over' => ['type' => 'int', 'input' => 'number', 'label' => 'Free shipping over', 'rules' => ['required', 'integer', 'min:0'], 'help' => 'Order subtotal that unlocks free shipping (0 = never).'],
                         ],
                     ],
+                    [
+                        'title' => 'Returns',
+                        'description' => 'Published to Google as your product return policy. It appears in product results and in Search Console, so it must match the policy you actually honour. Leave "Accept returns" off and nothing is published.',
+                        'fields' => [
+                            'returns_enabled' => ['type' => 'bool', 'input' => 'toggle', 'label' => 'Accept returns', 'help' => 'Off = no return policy is published to search engines.'],
+                            'returns_days' => ['type' => 'int', 'input' => 'number', 'label' => 'Return window (days)', 'rules' => ['required', 'integer', 'min:0', 'max:365'], 'help' => 'How many days a customer has to start a return.'],
+                            'returns_method' => ['input' => 'select', 'label' => 'How returns are made', 'options' => ['mail' => 'By post / courier', 'store' => 'In store'], 'rules' => ['required', 'in:mail,store']],
+                            'returns_fees' => ['input' => 'select', 'label' => 'Who pays return shipping', 'options' => ['free' => 'We do — free returns', 'customer' => 'The customer'], 'rules' => ['required', 'in:free,customer']],
+                        ],
+                    ],
                 ],
             ],
 

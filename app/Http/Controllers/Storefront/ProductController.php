@@ -81,6 +81,8 @@ class ProductController extends Controller
             'video' => video_embed($product->video_url),
             'url' => route('product.show', $product->slug),
             'sku' => $variant?->sku ?? $product->sku,
+            // Feeds schema.org gtin13/gtin14/mpn — see product.blade.php.
+            'barcode' => $variant?->barcode,
             'stock' => (float) ($variant?->stock_quantity ?? 0),
             // Dropship products (not stock-tracked) are sourced per order — always available.
             'tracked' => (bool) $product->is_stock_tracked,

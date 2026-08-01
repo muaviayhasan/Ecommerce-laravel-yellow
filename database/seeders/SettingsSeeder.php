@@ -50,6 +50,13 @@ class SettingsSeeder extends Seeder
         'shipping' => [
             'flat_rate' => ['value' => 200, 'type' => 'int'],
             'free_over' => ['value' => 5000, 'type' => 'int'],
+            // Returns default to OFF. These values are published to Google as a
+            // policy the store is held to, so nothing is claimed until someone
+            // turns it on in Admin → Settings → Shipping and enters the real terms.
+            'returns_enabled' => ['value' => false, 'type' => 'bool'],
+            'returns_days' => ['value' => 7, 'type' => 'int'],
+            'returns_method' => ['value' => 'store', 'type' => 'string'],
+            'returns_fees' => ['value' => 'customer', 'type' => 'string'],
         ],
         'tax' => [
             'enabled' => ['value' => true, 'type' => 'bool'],

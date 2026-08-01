@@ -1,12 +1,53 @@
 @extends('layouts.storefront')
 
+@php
+    /*
+     | Snippet copy. A product description that is only the first line of the spec
+     | blurb wastes the one piece of SERP real estate a shopper actually scans, so
+     | lead with the product, carry the price, and end on what they can do next.
+     | Capped so Google doesn't truncate it mid-sentence (~155 characters).
+     */
+    $metaLead = trim(strip_tags($product['short_description'] ?: ($product['description'] ?: '')));
+    // Short descriptions usually repeat the product name — saying it twice inside a
+    // 155-character budget wastes the half of the snippet a shopper actually reads.
+    $metaHead = \Illuminate\Support\Str::contains($metaLead, $product['name'])
+        ? $metaLead
+        : trim($product['name'] . '. ' . $metaLead);
+    $metaHead = \Illuminate\Support\Str::limit($metaHead, 100, '');
+    $metaDesc = rtrim($metaHead, " .,-—")
+        . '. Rs ' . number_format((float) $product['price'])
+        . '. Order online — delivery across Pakistan.';
+@endphp
+
 @section('title', $product['name'] . ' — ' . config('app.name'))
-@section('meta_description', \Illuminate\Support\Str::limit(strip_tags($product['short_description'] ?: ($product['description'] ?: ($product['features'][0] ?? $product['name']))), 155))
+@section('meta_description', $metaDesc)
 @section('og_type', 'product')
 @section('og_image', $product['og_image'] ?? $product['image'])
 
 @php
     $currency = setting('general', 'currency', 'PKR');
+
+    /*
+     | Return policy, straight from Admin → Settings → Shipping → Returns. Emitted
+     | only when the store has switched returns on: this markup is a commitment
+     | Google shows to shoppers and Search Console holds you to, so a default must
+     | never invent one. Off = the property is simply absent, which is honest.
+     */
+    $returnPolicy = null;
+    if (setting('shipping', 'returns_enabled', false)) {
+        $returnPolicy = [
+            '@type' => 'MerchantReturnPolicy',
+            'applicableCountry' => 'PK',
+            'returnPolicyCategory' => 'https://schema.org/MerchantReturnFiniteReturnWindow',
+            'merchantReturnDays' => (int) setting('shipping', 'returns_days', 7),
+            'returnMethod' => setting('shipping', 'returns_method', 'store') === 'mail'
+                ? 'https://schema.org/ReturnByMail'
+                : 'https://schema.org/ReturnInStore',
+            'returnFees' => setting('shipping', 'returns_fees', 'customer') === 'free'
+                ? 'https://schema.org/FreeReturn'
+                : 'https://schema.org/ReturnShippingFees',
+        ];
+    }
     // Store WhatsApp number for the "Order on WhatsApp" button, digits only
     // (wa.me takes no + or spaces). Blank hides the button.
     $waNumber = preg_replace('/\D+/', '', (string) setting('store', 'whatsapp'));
@@ -17,6 +58,14 @@
         'image' => $product['gallery'] ?: [$product['image']],
         'description' => \Illuminate\Support\Str::limit(strip_tags($product['description'] ?: ($product['short_description'] ?: $product['name'])), 500),
         'sku' => $product['sku'] ?: null,
+        // Global trade identifiers, from the variant's barcode. No variant carries one
+        // yet, so these stay absent — but the moment barcodes are entered in Admin the
+        // markup fills itself in, rather than needing this file changed again. A 13- or
+        // 14-digit barcode is an EAN/GTIN; anything else is treated as a manufacturer
+        // part number, because publishing a malformed gtin is worse than omitting it.
+        'gtin13' => ($bc = preg_replace('/\D+/', '', (string) ($product['barcode'] ?? ''))) && strlen($bc) === 13 ? $bc : null,
+        'gtin14' => $bc && strlen($bc) === 14 ? $bc : null,
+        'mpn' => ($product['barcode'] ?? null) && ! in_array(strlen($bc), [13, 14], true) ? $product['barcode'] : null,
         'category' => $product['category'] ?: null,
         'brand' => ($product['brand'] ?? null) ? ['@type' => 'Brand', 'name' => $product['brand']] : null,
         'offers' => array_filter([
@@ -30,7 +79,40 @@
             'priceValidUntil' => now()->addYear()->toDateString(),
             'itemCondition' => 'https://schema.org/NewCondition',
             'availability' => 'https://schema.org/' . (($product['availability'] ?? '') === 'In stock' ? 'InStock' : 'OutOfStock'),
+            'seller' => ['@type' => 'Organization', 'name' => config('app.name')],
+            // Real rate from Admin → Settings → Shipping, not a guess. Google shows
+            // delivery cost in product results and treats a missing shippingDetails
+            // as an unknown, which reads worse than a stated charge.
+            'shippingDetails' => [
+                '@type' => 'OfferShippingDetails',
+                'shippingRate' => [
+                    '@type' => 'MonetaryAmount',
+                    'value' => (string) (float) setting('shipping', 'flat_rate', 0),
+                    'currency' => $currency,
+                ],
+                // The store's own copy is "delivery across Lahore & all Pakistan".
+                'shippingDestination' => [
+                    '@type' => 'DefinedRegion',
+                    'addressCountry' => 'PK',
+                ],
+            ],
+            'hasMerchantReturnPolicy' => $returnPolicy,
         ]),
+        // Individual reviews, where there are any. $reviews is already scoped to
+        // approved in the controller, so nothing unmoderated can reach the markup.
+        'review' => collect($reviews)->take(5)->map(fn ($r) => array_filter([
+            '@type' => 'Review',
+            'author' => ['@type' => 'Person', 'name' => $r->user?->name ?: 'Customer'],
+            'datePublished' => $r->created_at?->toDateString(),
+            'name' => $r->title ?: null,
+            'reviewBody' => $r->body ?: null,
+            'reviewRating' => [
+                '@type' => 'Rating',
+                'ratingValue' => (string) $r->rating,
+                'bestRating' => '5',
+                'worstRating' => '1',
+            ],
+        ]))->values()->all() ?: null,
     ]);
     if ((int) ($product['reviews_count'] ?? 0) > 0) {
         $productSchema['aggregateRating'] = [
