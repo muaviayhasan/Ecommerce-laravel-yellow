@@ -10,7 +10,29 @@
     $plain = fn (string $v): string => html_entity_decode(trim($v), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
     $title = $plain($__env->yieldContent('title', $siteName));
+
+    /*
+     | Description, with a terminal length clamp.
+     |
+     | The fallback chain lives where the data does — a product page @sections its
+     | own (meta_description, else a trimmed description), a shop page builds one
+     | from the category, everything else falls through to the site default. That
+     | is the right shape: this partial has no product or category in scope and
+     | should not go looking for one.
+     |
+     | What was missing is a floor under all of them. The homepage was emitting 165
+     | characters, which Google truncates mid-sentence. Clamping here rather than at
+     | each call site makes an over-length description structurally impossible no
+     | matter which page sets it, or who adds a page later. Cut back to the last
+     | whole word so it never ends on a fragment.
+     */
     $desc = $plain($__env->yieldContent('meta_description', (string) setting('seo', 'meta_description', '')));
+    if (mb_strlen($desc) > 155) {
+        $desc = Str::limit($desc, 155, '');
+        $break = mb_strrpos($desc, ' ');
+        $desc = rtrim($break ? mb_substr($desc, 0, $break) : $desc, " ,;:-—");
+    }
+
     $canonical = $plain($__env->yieldContent('canonical', url()->current()));
 
     $ogType = trim($__env->yieldContent('og_type', 'website'));

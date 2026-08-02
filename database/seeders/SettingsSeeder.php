@@ -32,8 +32,29 @@ class SettingsSeeder extends Seeder
         ],
         'seo' => [
             'title_suffix' => ['value' => 'Usman Ecommerce', 'type' => 'string'],
-            'default_meta_description' => ['value' => '', 'type' => 'string'],
-            'default_og_image' => ['value' => '', 'type' => 'string'],
+            /*
+             | These were seeded as `default_meta_description` / `default_og_image`,
+             | but the admin form (SettingsController "Search engines" / "Social
+             | sharing") and storefront/partials/seo.blade.php both read
+             | `meta_description` / `og_image`. The seeded values were dead keys that
+             | nothing ever read — which is why og:image was empty site-wide and every
+             | shared link rendered without a preview image.
+             |
+             | The old rows are left in place rather than deleted; they are inert, and
+             | removing settings rows is not something a seeder should do silently.
+             */
+            'meta_description' => [
+                'value' => 'Home appliances & electronics in Lahore — coolers, geysers, fans, washing machines & solar. Genuine brands, cash on delivery across Pakistan.',
+                'type' => 'string',
+            ],
+            // Deliberately blank: Google dropped meta keywords as a ranking signal in
+            // 2009, and nothing in this codebase queries the column — it is written by
+            // the admin form and read only to emit the tag.
+            'meta_keywords' => ['value' => '', 'type' => 'string'],
+            // Point this at a 1200x630 image in Admin → Settings → SEO → Social sharing.
+            // Until then seo.blade.php falls back to the logo, which shares but is the
+            // wrong shape for a social card.
+            'og_image' => ['value' => '', 'type' => 'string'],
             'google_analytics_id' => ['value' => '', 'type' => 'string'],
             'google_site_verification' => ['value' => '', 'type' => 'string'],
             'social_links' => ['value' => [], 'type' => 'json'],

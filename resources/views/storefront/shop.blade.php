@@ -28,6 +28,11 @@
 @endif
 @if ($seoCat)
     @section('canonical', route('shop', ['category' => $seoCat->slug]))
+    {{-- Share a category link and you got the site logo, because nothing on this page
+         set a social image. The category's own artwork is a far better preview. --}}
+    @if ($seoCat->image?->url)
+        @section('og_image', $seoCat->image->thumbUrl(1200))
+    @endif
 @endif
 
 @php
