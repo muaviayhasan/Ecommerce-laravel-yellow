@@ -35,17 +35,22 @@ class AuditProductSlugs extends Command
         $fix = (bool) $this->option('fix');
         $problems = 0;
 
-        // 1. Mixed case ------------------------------------------------------------
-        // A case-insensitive database resolves /product/PEL-x and /product/pel-x to
-        // the same row, so both are addressable and compete as duplicate content.
-        $mixed = $products->filter(fn ($p) => $p->slug !== Str::lower($p->slug));
+        // 1. Malformed slugs -------------------------------------------------------
+        // Two shapes, same fix. Mixed case, because a case-insensitive database
+        // resolves /product/PEL-x and /product/pel-x to the same row so both are
+        // addressable and compete as duplicate content. And slugs holding characters
+        // that have no business in a URL — chiefly literal spaces, which arrive as
+        // %20 and make a link that is ugly to read, awkward to share and easy for
+        // other software to mangle:
+        //     /product/pak-gas%20Super%20gas-domestic-lpg-gas-cylinders
+        $mixed = $products->filter(fn ($p) => $p->slug !== $this->canonical($p->slug));
 
         $this->newLine();
-        $this->components->info("Mixed-case slugs: {$mixed->count()}");
+        $this->components->info("Malformed slugs (case, spaces, stray punctuation): {$mixed->count()}");
 
         foreach ($mixed as $p) {
-            $target = Str::lower($p->slug);
-            $taken = $products->first(fn ($o) => $o->id !== $p->id && Str::lower($o->slug) === $target);
+            $target = $this->canonical($p->slug);
+            $taken = $products->first(fn ($o) => $o->id !== $p->id && $this->canonical($o->slug) === $target);
 
             if ($taken) {
                 $this->components->twoColumnDetail(
@@ -102,6 +107,17 @@ class AuditProductSlugs extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The URL-safe form of a slug: lowercase, spaces and punctuation collapsed to
+     * single hyphens. Deliberately the same transformation ProductController applies
+     * to an incoming slug before its second lookup, so a URL that was indexed under
+     * the old messy form still finds the product and 301s here.
+     */
+    private function canonical(string $slug): string
+    {
+        return Str::slug(urldecode($slug));
     }
 
     /** Whether a row is actually reachable, so you know what you're looking at. */

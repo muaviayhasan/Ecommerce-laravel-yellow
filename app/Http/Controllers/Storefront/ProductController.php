@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Support\RecentlyViewed;
 use App\Support\Storefront;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -14,9 +15,18 @@ class ProductController extends Controller
     /** Product detail page — real product, gallery, specs, highlights and approved reviews. */
     public function show(string $slug): View|RedirectResponse
     {
+        /*
+         | Look the slug up as given, then — only if that misses — as its URL-safe
+         | form. Some slugs were stored with literal spaces and capitals
+         | ("pak-gas Super gas-domestic-lpg-gas-cylinders"), and cleaning those up
+         | changes the URL in a way a case-insensitive database cannot paper over.
+         | Normalising the *incoming* slug the same way means every link that was
+         | indexed under the old messy form still resolves, and gets 301'd to the
+         | tidy one below — so `catalog:slugs --fix` never strands a live URL.
+         */
         $product = Product::query()
             ->webListed()
-            ->where('slug', $slug)
+            ->where(fn ($q) => $q->where('slug', $slug)->orWhere('slug', Str::slug(urldecode($slug))))
             ->with([
                 'defaultVariant.image',
                 'variants' => fn ($q) => $q->where('is_active', true),

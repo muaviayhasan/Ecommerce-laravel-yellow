@@ -28,3 +28,7 @@ yarn-error.log
 # can still be committed if the team ever wants one.
 /.claude/skills
 
+
+# Third-party sitemap snapshots (xml-sitemaps.com and friends). Never commit or
+# deploy these: a static /sitemap.xml in the web root shadows the dynamic route.
+/sitemap.xml
