@@ -3,13 +3,13 @@
     $sections = [
         [
             'title' => 'Headline',
-            'description' => 'The hero renders these on separate lines: line 2 is bold, and the tail + highlight share the last line with the highlight coloured.',
+            'description' => 'The hero renders these on separate lines: line 2 is bold, and the tail + highlight share the last line with the highlight coloured. Any of these fields accepts a live price token — [min:category-slug] or [max:category-slug] — which is replaced with the real lowest or highest price in that category when the page renders.',
             'fields' => [
                 'kicker' => ['input' => 'text', 'label' => 'Kicker', 'max' => 255, 'help' => 'Small uppercase label above the heading (e.g. “Power meets portability”).'],
                 'line1' => ['input' => 'text', 'label' => 'Heading line 1', 'max' => 255, 'help' => 'Required. First line of the heading.'],
                 'line2' => ['input' => 'text', 'label' => 'Heading line 2 (bold)', 'max' => 255],
                 'tail' => ['input' => 'text', 'label' => 'Lead-in text', 'max' => 255, 'help' => 'Text before the highlight (e.g. “SAVE UP TO”).'],
-                'highlight' => ['input' => 'text', 'label' => 'Highlight', 'max' => 255, 'help' => 'Coloured emphasis (e.g. “30% OFF” or “Rs 4,999”).'],
+                'highlight' => ['input' => 'text', 'label' => 'Highlight', 'max' => 255, 'help' => 'Coloured emphasis (e.g. “30% OFF” or “Rs 4,999”). For a price, prefer a live one: type [min:coolers] or [max:geysers] using a category slug and the real figure is filled in from the catalogue every time the page loads, so it can never advertise a price you no longer offer.'],
             ],
         ],
         [

@@ -48,14 +48,14 @@
                         <div class="app-container relative flex items-center h-[480px] lg:h-[500px] overflow-hidden">
                             <div class="w-3/5 md:w-1/2 z-10 py-4">
                                 @if ($slide->kicker)
-                                    <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-3 md:mb-4">{{ $slide->kicker }}</p>
+                                    <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-3 md:mb-4">{{ $slide->display('kicker') }}</p>
                                 @endif
                                 {{-- <p>, not <h1> — see the page heading above. Same classes, so
                                      the slide looks exactly as it did. --}}
                                 <p class="text-3xl sm:text-4xl lg:text-display-hero font-light leading-tight tracking-tight mb-6 md:mb-8">
-                                    {{ $slide->line1 }}
-                                    @if ($slide->line2)<br><span class="font-bold">{{ $slide->line2 }}</span>@endif
-                                    @if ($slide->tail || $slide->highlight)<br>{{ $slide->tail }} <span class="font-bold text-primary">{{ $slide->highlight }}</span>@endif
+                                    {{ $slide->display('line1') }}
+                                    @if ($slide->line2)<br><span class="font-bold">{{ $slide->display('line2') }}</span>@endif
+                                    @if ($slide->tail || $slide->highlight)<br>{{ $slide->display('tail') }} <span class="font-bold text-primary">{{ $slide->display('highlight') }}</span>@endif
                                 </p>
                                 @if ($slide->cta_label)
                                     {{-- Hover darkens the yellow itself (primary-fixed-dim) rather than

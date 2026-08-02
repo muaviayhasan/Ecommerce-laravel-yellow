@@ -316,6 +316,70 @@ class Storefront
     }
 
     /**
+     * Lowest / highest live price in a category, including everything below it in
+     * the tree — so "coolers" covers Air Cooler and Water Cooler.
+     */
+    public static function categoryPrice(string $slug, string $side = 'min'): ?float
+    {
+        return self::remember("cat-price:{$side}:{$slug}", function () use ($slug, $side): ?float {
+            $root = Category::query()->where('slug', $slug)->first();
+
+            if (! $root) {
+                return null;
+            }
+
+            // Walk the sub-tree, so a department gets its children's products.
+            $ids = [$root->id];
+            $frontier = [$root->id];
+            while ($frontier) {
+                $frontier = Category::whereIn('parent_id', $frontier)->pluck('id')->all();
+                $ids = array_merge($ids, $frontier);
+            }
+
+            $value = ProductVariant::query()
+                ->where('is_active', true)
+                ->where('retail_price', '>', 0)
+                ->whereHas('product', fn ($p) => $p->webListed()->whereIn('category_id', $ids))
+                ->{$side === 'max' ? 'max' : 'min'}('retail_price');
+
+            return $value !== null ? (float) $value : null;
+        });
+    }
+
+    /**
+     * Expands price tokens in admin-entered banner copy.
+     *
+     *     [min:coolers]  →  Rs 28,999
+     *     [max:geysers]  →  Rs 33,999
+     *
+     * The hero and promo banners previously carried hand-typed prices, which drifted
+     * the moment anybody edited a product: the homepage advertised water coolers
+     * "starting at Rs 74,999" while the most expensive one on the site was Rs 63,999,
+     * and instant geysers "from Rs 15,999" against a cheapest of Rs 17,500. Claiming
+     * a price you don't honour is worse than quoting none, and nobody remembers to
+     * re-check a banner after a price edit. A token cannot drift.
+     *
+     * An unknown category, or one with nothing listed, resolves to an empty string
+     * rather than leaving "[min:foo]" visible to a customer.
+     */
+    public static function expandPriceTokens(?string $text): ?string
+    {
+        if ($text === null || ! str_contains($text, '[')) {
+            return $text;
+        }
+
+        return preg_replace_callback('/\[(min|max):([a-z0-9\-]+)\]/i', function ($m) {
+            $value = self::categoryPrice(strtolower($m[2]), strtolower($m[1]));
+
+            if ($value === null) {
+                return '';
+            }
+
+            return trim(setting('general', 'currency_symbol', 'Rs') . ' ' . number_format($value));
+        }, $text);
+    }
+
+    /**
      * "Rs 850 – Rs 125,000" across everything currently listed, for the
      * LocalBusiness priceRange property. Derived rather than configured — the
      * catalogue already knows it, and a hand-entered range goes stale the first

@@ -31,6 +31,22 @@ class HeroSlide extends Model
         return $this->belongsTo(Media::class, 'image_media_id');
     }
 
+    /**
+     * A copy field with its price tokens resolved — use this for display instead of
+     * reading the attribute directly.
+     *
+     *     highlight = "[min:coolers]"   renders as   "Rs 28,999"
+     *
+     * A method rather than an accessor on purpose: an accessor would rewrite the
+     * value in the admin edit form too, so the token would be replaced by a frozen
+     * price the moment anybody saved the slide — which is exactly the drift this is
+     * meant to prevent.
+     */
+    public function display(string $field): string
+    {
+        return (string) \App\Support\Storefront::expandPriceTokens((string) ($this->{$field} ?? ''));
+    }
+
     /** Resolved image URL: the library media (as a right-sized WebP), else the static path fallback. */
     public function getImageUrlAttribute(): ?string
     {

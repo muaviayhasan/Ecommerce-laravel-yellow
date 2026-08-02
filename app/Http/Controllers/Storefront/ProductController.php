@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Support\RecentlyViewed;
 use App\Support\Storefront;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
     /** Product detail page — real product, gallery, specs, highlights and approved reviews. */
-    public function show(string $slug): View
+    public function show(string $slug): View|RedirectResponse
     {
         $product = Product::query()
             ->webListed()
@@ -26,6 +27,18 @@ class ProductController extends Controller
                 'reviews' => fn ($q) => $q->where('is_approved', true)->with('user:id,name')->latest(),
             ])
             ->firstOrFail();
+
+        /*
+         | Canonical slug. MySQL's default collation is case-insensitive, so
+         | /product/PEL-2-tap-water-dispenser and /product/pel-2-tap-water-dispenser
+         | both resolve to this row — two addressable URLs for one product, which is
+         | duplicate content. Send anything that isn't an exact match to the stored
+         | slug. This is also what makes `catalog:slugs --fix` safe: after a slug is
+         | lowercased, every old mixed-case link redirects instead of 404ing.
+         */
+        if ($slug !== $product->slug) {
+            return redirect()->route('product.show', $product->slug, 301);
+        }
 
         // Track this view on the visitor's browser for the "Recently Viewed" strip.
         RecentlyViewed::add($product->id);
