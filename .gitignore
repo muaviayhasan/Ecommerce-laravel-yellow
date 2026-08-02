@@ -32,3 +32,6 @@ yarn-error.log
 # Third-party sitemap snapshots (xml-sitemaps.com and friends). Never commit or
 # deploy these: a static /sitemap.xml in the web root shadows the dynamic route.
 /sitemap.xml
+
+# Scratch dir for tools/subset-icon-font.py
+/tools/_subset_work

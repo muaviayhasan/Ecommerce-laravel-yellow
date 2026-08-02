@@ -14,16 +14,24 @@
     @include('storefront.partials.seo')
     @stack('meta')
 
-    {{-- Fonts: Work Sans (body) + Material Symbols (icons) are self-hosted from
-         public/fonts/ via @font-face in app.css — no render-blocking third-party
-         CSS. Preloaded so they're fetched in parallel with the stylesheet. --}}
+    {{-- The LCP image preload is pushed in by the page (see @push('head') below) and
+         has to come FIRST. Preload order is fetch order, and on a throttled mobile
+         connection the body font ahead of it was delaying the very element Largest
+         Contentful Paint is measured against. --}}
+    @stack('head')
+
+    {{-- Fonts are self-hosted from public/fonts/ via @font-face in app.css — no
+         render-blocking third-party CSS.
+
+         Only the body font is preloaded. The icon font deliberately is not: it is
+         decorative, every icon is aria-hidden, and preloading put it on the critical
+         path ahead of the LCP image. It is fetched normally when the stylesheet asks
+         for it. --}}
     <link rel="preload" href="/fonts/work-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('schema')
-    @stack('head')
 
     {{-- Google Analytics — only when an ID is set (Admin → Settings → SEO). --}}
     @if ($gaId = setting('seo', 'google_analytics_id'))
