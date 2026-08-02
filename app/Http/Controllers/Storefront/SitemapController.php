@@ -225,7 +225,13 @@ class SitemapController extends Controller
         }
 
         $lines[] = 'Sitemap: ' . url('sitemap.xml');
-        $lines[] = 'Llms: ' . url('llms.txt');
+
+        // llms.txt is advertised as a COMMENT, not a directive. `Sitemap:` is the only
+        // non-group field RFC 9309 defines; there is no registered `Llms:` field, and
+        // emitting one makes Lighthouse report "robots.txt is not valid — unknown
+        // directive". The llms.txt convention has no robots.txt field of its own, and
+        // agents that want the file look for it at /llms.txt anyway.
+        $lines[] = '# llms.txt: ' . url('llms.txt');
 
         return response(implode("\n", $lines) . "\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
