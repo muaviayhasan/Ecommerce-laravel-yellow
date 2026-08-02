@@ -17,7 +17,7 @@
                 class="flex-1 min-w-0 px-5 py-2.5 border-none outline-none text-body-base bg-surface-bright">
             <button type="submit" aria-label="Search"
                 class="bg-primary-container px-5 flex items-center justify-center hover:opacity-90 transition-opacity">
-                <span class="material-symbols-outlined text-[20px]">search</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">search</span>
             </button>
         </form>
     </div>
@@ -27,7 +27,7 @@
         <div class="pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full bg-primary-container/20 blur-2xl" aria-hidden="true"></div>
         <div class="relative">
             <div class="w-11 h-11 rounded-full bg-primary-container text-on-primary-container grid place-items-center mb-4">
-                <span class="material-symbols-outlined">auto_stories</span>
+                <span aria-hidden="true" class="material-symbols-outlined">auto_stories</span>
             </div>
             <h3 class="text-headline-md font-bold">About the blog<span class="text-primary-container">.</span></h3>
             <p class="text-inverse-on-surface/80 text-body-base leading-relaxed mt-2">
@@ -35,7 +35,7 @@
                 coolers, geysers, fans, washing machines and solar for your home.
             </p>
             <a href="{{ route('shop') }}" class="mt-4 inline-flex items-center gap-1.5 text-primary-container font-semibold text-label-sm hover:underline">
-                Browse the store <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                Browse the store <span aria-hidden="true" class="material-symbols-outlined text-[16px]">arrow_forward</span>
             </a>
         </div>
     </div>
@@ -56,7 +56,7 @@
                                 'hover:bg-surface-container text-on-surface' => ! $active,
                             ])>
                             <span class="flex items-center gap-2 min-w-0">
-                                <span class="material-symbols-outlined text-[18px] {{ $active ? '' : 'text-primary group-hover:translate-x-0.5 transition-transform' }}">chevron_right</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[18px] {{ $active ? '' : 'text-primary group-hover:translate-x-0.5 transition-transform' }}">chevron_right</span>
                                 <span class="truncate">{{ $c['name'] }}</span>
                             </span>
                             <span @class([
@@ -87,7 +87,7 @@
                         <div class="min-w-0">
                             <h4 class="text-product-title font-semibold group-hover:text-primary transition-colors line-clamp-2 leading-snug">{{ data_get($rp, 'title') }}</h4>
                             <span class="mt-1.5 flex items-center gap-1 text-on-surface-variant text-[12px]">
-                                <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[14px]">calendar_today</span>
                                 {{ data_get($rp, 'date') }}
                             </span>
                         </div>
@@ -100,13 +100,13 @@
     {{-- Newsletter — compact subscribe card --}}
     <div class="bg-primary-container text-on-primary-container p-6 rounded-xl shadow-sm">
         <div class="flex items-center gap-3 mb-2">
-            <span class="material-symbols-outlined text-[28px]">mark_email_unread</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-[28px]">mark_email_unread</span>
             <h3 class="text-headline-md font-bold leading-tight">Never miss a guide</h3>
         </div>
         <p class="text-body-base mb-4 opacity-90">New buying guides and tips, straight to your inbox.</p>
         @if (session('newsletter_status'))
             <div class="mb-3 flex items-center gap-2 bg-white/70 px-4 py-2.5 rounded-full text-label-sm font-medium">
-                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px]">check_circle</span>
                 {{ session('newsletter_status') }}
             </div>
         @endif
@@ -122,7 +122,7 @@
         </form>
         @error('email', 'newsletter')
             <p class="mt-2 text-label-sm text-error flex items-center gap-1">
-                <span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}
+                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}
             </p>
         @enderror
     </div>

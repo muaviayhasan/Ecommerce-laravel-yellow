@@ -13,7 +13,7 @@
 
             @if (session('quote_status'))
                 <div class="mb-6 flex items-start gap-2 bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-label-sm">
-                    <span class="material-symbols-outlined text-[18px] shrink-0">check_circle</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px] shrink-0">check_circle</span>
                     <span>{{ session('quote_status') }}</span>
                 </div>
             @endif
@@ -66,11 +66,11 @@
                     <label class="block text-product-title font-semibold text-on-surface-variant">Products</label>
                     <div class="relative" @click.away="open = false">
                         <div class="flex h-12 rounded border border-outline-variant bg-surface focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all overflow-hidden">
-                            <span class="grid place-items-center pl-3 text-outline"><span class="material-symbols-outlined text-[20px]">search</span></span>
+                            <span class="grid place-items-center pl-3 text-outline"><span aria-hidden="true" class="material-symbols-outlined text-[20px]">search</span></span>
                             <input type="text" x-model="search" @input.debounce.300ms="searchProducts()" @focus="if (results.length) open = true"
                                 placeholder="Search products by name or SKU…"
                                 class="flex-1 min-w-0 px-3 outline-none bg-transparent text-body-base">
-                            <span x-show="loading" class="grid place-items-center pr-3 text-outline"><span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span></span>
+                            <span x-show="loading" class="grid place-items-center pr-3 text-outline"><span aria-hidden="true" class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span></span>
                         </div>
                         {{-- Results dropdown --}}
                         <div x-show="open && results.length" x-cloak
@@ -82,7 +82,7 @@
                                         <span class="block font-medium truncate" x-text="r.name"></span>
                                         <span class="block text-label-sm text-on-surface-variant" x-text="r.sku"></span>
                                     </span>
-                                    <span class="material-symbols-outlined text-[20px] text-primary shrink-0">add_circle</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary shrink-0">add_circle</span>
                                 </button>
                             </template>
                         </div>
@@ -104,7 +104,7 @@
                                     <input type="hidden" :name="`items[${i}][product_variant_id]`" :value="it.id">
                                     <button type="button" @click="removeItem(i)" aria-label="Remove"
                                         class="w-9 h-9 grid place-items-center rounded text-on-surface-variant hover:text-error hover:bg-surface-container transition-colors">
-                                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[20px]">delete</span>
                                     </button>
                                 </div>
                             </div>
@@ -127,7 +127,7 @@
 
                 <button type="submit"
                     class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:bg-primary-fixed-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-[20px]">request_quote</span> Send request
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">request_quote</span> Send request
                 </button>
             </form>
         </div>

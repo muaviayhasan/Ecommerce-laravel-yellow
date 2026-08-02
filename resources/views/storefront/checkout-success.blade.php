@@ -9,7 +9,7 @@
     <div class="bg-background py-12">
         <div class="app-container max-w-3xl">
             <div class="bg-white rounded-lg border border-outline-variant p-8 lg:p-12 text-center mb-8">
-                <span class="material-symbols-outlined text-secondary" style="font-size:72px; font-variation-settings: 'FILL' 1;">check_circle</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-secondary" style="font-size:72px; font-variation-settings: 'FILL' 1;">check_circle</span>
                 <h1 class="text-headline-lg font-medium mt-4">Thank you for your order!</h1>
                 <p class="text-on-surface-variant mt-2">Your order <span class="font-bold text-on-surface">{{ $order->order_number }}</span> has been placed.</p>
                 <p class="text-on-surface-variant">We'll send updates as it’s processed.</p>

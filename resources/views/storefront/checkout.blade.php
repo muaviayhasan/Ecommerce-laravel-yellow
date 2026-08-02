@@ -18,7 +18,7 @@
         <div class="app-container">
             <nav class="flex items-center gap-2 text-label-sm text-on-surface-variant mb-4" aria-label="Breadcrumb">
                 <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
-                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">chevron_right</span>
                 <span class="font-bold text-on-surface">Checkout</span>
             </nav>
 
@@ -26,20 +26,20 @@
 
             @guest
                 <div class="bg-primary-container/50 text-on-surface p-3.5 rounded-lg flex flex-wrap items-center gap-2 text-body-base mb-5">
-                    <span class="material-symbols-outlined text-[20px]">person</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">person</span>
                     Returning customer? <a href="{{ route('login') }}" class="underline hover:no-underline font-bold">Log in</a> for a faster checkout.
                 </div>
             @endguest
 
             @if (session('status'))
                 <div class="mb-5 p-4 rounded-lg bg-success-container text-on-success-container border border-success/30 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-success">check_circle</span> {{ session('status') }}
+                    <span aria-hidden="true" class="material-symbols-outlined text-success">check_circle</span> {{ session('status') }}
                 </div>
             @endif
 
             @if (session('error'))
                 <div class="mb-5 p-4 rounded-lg bg-error-container/40 text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-error">error</span> {{ session('error') }}
+                    <span aria-hidden="true" class="material-symbols-outlined text-error">error</span> {{ session('error') }}
                 </div>
             @endif
 
@@ -48,7 +48,7 @@
             @if ($errors->any())
                 <div class="mb-5 p-4 rounded-lg bg-error-container/40 text-on-surface">
                     <div class="flex items-center gap-2 font-bold mb-1">
-                        <span class="material-symbols-outlined text-error">error</span> Please fix the following to place your order:
+                        <span aria-hidden="true" class="material-symbols-outlined text-error">error</span> Please fix the following to place your order:
                     </div>
                     <ul class="list-disc list-inside text-label-sm space-y-0.5 ml-1">
                         @foreach ($errors->all() as $message)
@@ -123,7 +123,7 @@
                                         </button>
                                     @endforeach
                                     <button type="button" @click="useNew()" class="w-full p-3 border border-dashed border-outline-variant rounded-lg text-primary font-bold text-label-sm hover:border-primary hover:bg-primary-container/10 transition flex items-center justify-center gap-1.5">
-                                        <span class="material-symbols-outlined text-[18px]">add</span> Deliver to a new address
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">add</span> Deliver to a new address
                                     </button>
                                 </div>
                             @endif
@@ -134,7 +134,7 @@
                             @auth
                                 @if ($addresses->isNotEmpty())
                                     <button type="button" @click="mode = 'saved'" class="text-label-sm text-primary font-bold hover:underline flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[16px]">arrow_back</span> Use a saved address
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">arrow_back</span> Use a saved address
                                     </button>
                                 @endif
                             @endauth
@@ -264,7 +264,7 @@
                             @foreach ($dealGroups as $group)
                                 <div class="rounded-lg bg-primary-container/10 border border-primary-container/40 p-3">
                                     <p class="flex items-center gap-1.5 font-bold text-on-surface text-label-sm mb-2">
-                                        <span class="material-symbols-outlined text-primary text-[16px]">sell</span>{{ $group->name }}
+                                        <span aria-hidden="true" class="material-symbols-outlined text-primary text-[16px]">sell</span>{{ $group->name }}
                                         @if ($group->discount_label)
                                             <span class="ml-auto px-1.5 py-0.5 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold">{{ $group->discount_label }}</span>
                                         @endif
@@ -285,7 +285,7 @@
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="font-bold text-success flex items-center gap-1.5">
-                                            <span class="material-symbols-outlined text-[20px]">sell</span>{{ $coupon->code }}
+                                            <span aria-hidden="true" class="material-symbols-outlined text-[20px]">sell</span>{{ $coupon->code }}
                                         </p>
                                         <p class="text-label-sm text-on-surface-variant truncate">{{ $coupon->description ?: 'Discount applied' }}</p>
                                     </div>
@@ -303,7 +303,7 @@
                                 </div>
                                 @if (session('coupon_error'))
                                     <p class="text-error text-label-sm mt-1.5 flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[16px]">error</span>{{ session('coupon_error') }}
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ session('coupon_error') }}
                                     </p>
                                 @endif
                             @endif

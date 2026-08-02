@@ -9,7 +9,7 @@
         <div class="pointer-events-none absolute -top-24 -right-16 w-80 h-80 rounded-full bg-primary-container/20 blur-3xl" aria-hidden="true"></div>
         <div class="app-container relative py-12 md:py-14 text-center">
             <p class="inline-flex items-center gap-2 border border-primary-container/50 text-primary-container rounded-full px-4 py-1.5 font-bold uppercase tracking-widest text-label-sm mb-4">
-                <span class="material-symbols-outlined text-[16px]">sell</span> Deals &amp; Bundles
+                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">sell</span> Deals &amp; Bundles
             </p>
             <h1 class="text-3xl md:text-headline-lg font-bold">Save more with our deals<span class="text-primary-container">.</span></h1>
             <p class="text-inverse-on-surface/80 mt-3 max-w-2xl mx-auto">Curated bundles across appliances, kitchen and solar — grab them while they last.</p>
@@ -20,18 +20,18 @@
         <div class="app-container">
             @if (session('status'))
                 <div class="mb-6 p-4 rounded-lg bg-secondary-container/40 text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-secondary">check_circle</span> {{ session('status') }}
+                    <span aria-hidden="true" class="material-symbols-outlined text-secondary">check_circle</span> {{ session('status') }}
                 </div>
             @endif
             @if (session('error'))
                 <div class="mb-6 p-4 rounded-lg bg-error-container/40 text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-error">error</span> {{ session('error') }}
+                    <span aria-hidden="true" class="material-symbols-outlined text-error">error</span> {{ session('error') }}
                 </div>
             @endif
 
             @if ($deals->isEmpty())
                 <div class="bg-white rounded-lg border border-outline-variant p-16 text-center">
-                    <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">sell</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-outline-variant" style="font-size:64px;">sell</span>
                     <p class="mt-4 text-xl font-light text-on-surface-variant">No active deals right now.</p>
                     <a href="{{ route('shop') }}" class="inline-block mt-6 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded hover:brightness-95 transition-all">Browse the shop</a>
                 </div>
@@ -62,7 +62,7 @@
                                         @endif
                                     </div>
                                     <span class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
-                                        <span class="material-symbols-outlined text-[20px] text-on-surface">arrow_forward</span>
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-on-surface">arrow_forward</span>
                                     </span>
                                 </div>
                             </div>

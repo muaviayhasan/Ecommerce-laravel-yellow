@@ -24,12 +24,12 @@
                     <div class="flex items-center gap-3 sm:gap-4 shrink-0">
                         <x-storefront.order-status :status="$order->status" />
                         <span class="font-bold whitespace-nowrap">{{ format_money($order->grand_total) }}</span>
-                        <span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
                     </div>
                 </a>
             @empty
                 <div class="p-16 text-center text-on-surface-variant">
-                    <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">receipt_long</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-outline-variant" style="font-size:64px;">receipt_long</span>
                     <p class="mt-3 text-lg font-light">You haven't placed any orders yet.</p>
                     <a href="{{ route('shop') }}" class="inline-block mt-5 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded-full hover:brightness-105 transition">Start shopping</a>
                 </div>

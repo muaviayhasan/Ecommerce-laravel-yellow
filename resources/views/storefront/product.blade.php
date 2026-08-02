@@ -156,9 +156,9 @@
             {{-- Breadcrumbs --}}
             <nav class="flex flex-wrap items-center gap-2 text-label-sm text-on-surface-variant mb-8" aria-label="Breadcrumb">
                 <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
-                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[14px]">chevron_right</span>
                 <a href="{{ route('shop') }}" class="hover:text-primary transition-colors">Shop</a>
-                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span class="text-on-surface line-clamp-1">{{ $product['name'] }}</span>
             </nav>
 
@@ -221,7 +221,7 @@
                                 @endif
                                 <span class="absolute inset-0 grid place-items-center bg-black/25">
                                     <span class="w-8 h-8 rounded-full bg-white/95 shadow grid place-items-center">
-                                        <span class="material-symbols-outlined text-[20px] text-error" style="font-variation-settings:'FILL' 1;">play_arrow</span>
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-error" style="font-variation-settings:'FILL' 1;">play_arrow</span>
                                     </span>
                                 </span>
                             </button>
@@ -240,7 +240,7 @@
                         <div class="flex items-center gap-4 mb-6">
                             <div class="flex text-primary-container">
                                 @for ($s = 1; $s <= 5; $s++)
-                                    <span class="material-symbols-outlined text-[20px]" @if ($s <= $rating) style="font-variation-settings: 'FILL' 1;" @endif>star</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]" @if ($s <= $rating) style="font-variation-settings: 'FILL' 1;" @endif>star</span>
                                 @endfor
                             </div>
                             <span class="text-label-sm text-on-surface-variant">({{ $product['reviews_count'] }} {{ \Illuminate\Support\Str::plural('Customer Review', $product['reviews_count']) }})</span>
@@ -322,7 +322,7 @@
                                 </div>
                                 <button type="submit" :class="!({{ $availExpr }}) ? 'opacity-50 pointer-events-none' : ''"
                                     class="bg-primary-container text-on-primary-container px-10 h-12 font-bold rounded hover:brightness-95 transition-all flex items-center gap-2">
-                                    <span class="material-symbols-outlined">shopping_cart</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined">shopping_cart</span>
                                     <span x-text="({{ $availExpr }}) ? 'Add to Cart' : 'Out of stock'"></span>
                                 </button>
                             </form>
@@ -342,14 +342,14 @@
                             <form method="POST" action="{{ route('wishlist.toggle', $product['slug']) }}">
                                 @csrf
                                 <button type="submit" @class(['flex items-center gap-1 hover:text-primary transition-colors', 'text-primary' => app(\App\Services\WishlistService::class)->has($product['id'])])>
-                                    <span class="material-symbols-outlined text-[18px]" @style(["font-variation-settings: 'FILL' 1" => app(\App\Services\WishlistService::class)->has($product['id'])])>favorite</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]" @style(["font-variation-settings: 'FILL' 1" => app(\App\Services\WishlistService::class)->has($product['id'])])>favorite</span>
                                     {{ app(\App\Services\WishlistService::class)->has($product['id']) ? 'In wishlist' : 'Wishlist' }}
                                 </button>
                             </form>
                             <form method="POST" action="{{ route('compare.toggle', $product['slug']) }}">
                                 @csrf
                                 <button type="submit" @class(['flex items-center gap-1 hover:text-primary transition-colors', 'text-primary' => app(\App\Services\CompareService::class)->has($product['id'])])>
-                                    <span class="material-symbols-outlined text-[18px]">sync</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]">sync</span>
                                     {{ app(\App\Services\CompareService::class)->has($product['id']) ? 'In compare' : 'Compare' }}
                                 </button>
                             </form>
@@ -372,7 +372,7 @@
                                     },
                                 }" @keydown.escape.window="open = false">
                                 <button type="button" @click="toggle()" class="flex items-center gap-1 hover:text-primary transition-colors">
-                                    <span class="material-symbols-outlined text-[18px]">share</span> Share
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]">share</span> Share
                                 </button>
 
                                 <div x-show="open" x-cloak @click.outside="open = false" x-transition
@@ -395,12 +395,12 @@
                                     </a>
                                     <a :href="'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(text + ' ' + url)" @click="open = false"
                                         class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-container transition-colors">
-                                        <span class="material-symbols-outlined text-[20px] text-on-surface-variant mx-0.5">mail</span>
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-on-surface-variant mx-0.5">mail</span>
                                         <span class="text-sm">Email</span>
                                     </a>
                                     <button type="button" @click="copy()"
                                         class="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-container transition-colors">
-                                        <span class="material-symbols-outlined text-[20px] mx-0.5" :class="copied ? 'text-primary' : 'text-on-surface-variant'" x-text="copied ? 'check_circle' : 'link'"></span>
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[20px] mx-0.5" :class="copied ? 'text-primary' : 'text-on-surface-variant'" x-text="copied ? 'check_circle' : 'link'"></span>
                                         <span class="text-sm" x-text="copied ? 'Link copied!' : 'Copy link'"></span>
                                     </button>
                                 </div>
@@ -449,7 +449,7 @@
                     @endif
                     @if (! empty($product['warranty']))
                         <div class="mt-10 max-w-3xl mx-auto p-4 bg-surface rounded-lg border border-outline-variant flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary">verified_user</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-primary">verified_user</span>
                             <span class="text-on-surface-variant">{{ $product['warranty'] }}</span>
                         </div>
                     @endif
@@ -500,7 +500,7 @@
                                     <div>
                                         <div class="text-on-surface-variant">overall</div>
                                         <div class="flex text-primary-container">
-                                            @for ($s = 1; $s <= 5; $s++)<span class="material-symbols-outlined" @if ($s <= round($product['avg_rating'])) style="font-variation-settings: 'FILL' 1;" @endif>star</span>@endfor
+                                            @for ($s = 1; $s <= 5; $s++)<span aria-hidden="true" class="material-symbols-outlined" @if ($s <= round($product['avg_rating'])) style="font-variation-settings: 'FILL' 1;" @endif>star</span>@endfor
                                         </div>
                                     </div>
                                 </div>
@@ -522,7 +522,7 @@
                                                 <span class="text-label-sm text-on-surface-variant">{{ $review->created_at?->format('d M Y') }}</span>
                                             </div>
                                             <div class="flex text-primary-container mb-2">
-                                                @for ($s = 1; $s <= 5; $s++)<span class="material-symbols-outlined text-[16px]" @if ($s <= $review->rating) style="font-variation-settings: 'FILL' 1;" @endif>star</span>@endfor
+                                                @for ($s = 1; $s <= 5; $s++)<span aria-hidden="true" class="material-symbols-outlined text-[16px]" @if ($s <= $review->rating) style="font-variation-settings: 'FILL' 1;" @endif>star</span>@endfor
                                             </div>
                                             @if ($review->title)<p class="font-semibold">{{ $review->title }}</p>@endif
                                             <p class="text-on-surface-variant">{{ $review->body }}</p>
@@ -542,7 +542,7 @@
 
                             @if (session('review_status'))
                                 <div class="mb-6 p-4 rounded bg-secondary-container/40 text-on-surface flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-secondary">check_circle</span> {{ session('review_status') }}
+                                    <span aria-hidden="true" class="material-symbols-outlined text-secondary">check_circle</span> {{ session('review_status') }}
                                 </div>
                             @elseif ($userReview && ! $userReview->is_approved)
                                 <div class="mb-6 p-4 rounded bg-primary-container/20 border border-primary-container text-label-sm">
@@ -561,7 +561,7 @@
                                             @for ($s = 1; $s <= 5; $s++)
                                                 <button type="button" @click="rating = {{ $s }}" aria-label="Rate {{ $s }}"
                                                     class="cursor-pointer" :class="rating >= {{ $s }} ? 'text-primary-container' : 'text-outline'">
-                                                    <span class="material-symbols-outlined" :style="rating >= {{ $s }} ? `font-variation-settings: 'FILL' 1` : ''">star</span>
+                                                    <span aria-hidden="true" class="material-symbols-outlined" :style="rating >= {{ $s }} ? `font-variation-settings: 'FILL' 1` : ''">star</span>
                                                 </button>
                                             @endfor
                                         </div>

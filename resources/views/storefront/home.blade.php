@@ -28,6 +28,14 @@
         }"
         x-init="start()" @mouseenter="stop()" @mouseleave="start()" role="region" aria-label="Promotions" aria-roledescription="carousel">
 
+        {{-- The page's one real H1. Each carousel slide used to carry its own, giving
+             the homepage five competing H1s, none of which named the business or the
+             city — they are rotating promotional slogans, not the document's heading.
+             The slogans are now <p> (styled identically, so nothing changes visually)
+             and this states what the page is. Visually hidden because the hero's own
+             artwork is the visual headline; it is real text, not a keyword dump. --}}
+        <h1 class="sr-only">{{ config('app.name') }} — home appliances and electronics in Lahore: air coolers, geysers, fans, washing machines, kitchen and gas appliances, solar and batteries</h1>
+
         {{-- Track --}}
         <div class="overflow-hidden">
             <div class="flex transition-transform duration-700 ease-in-out"
@@ -42,11 +50,13 @@
                                 @if ($slide->kicker)
                                     <p class="text-primary font-bold uppercase tracking-widest text-label-sm mb-3 md:mb-4">{{ $slide->kicker }}</p>
                                 @endif
-                                <h1 class="text-3xl sm:text-4xl lg:text-display-hero font-light leading-tight tracking-tight mb-6 md:mb-8">
+                                {{-- <p>, not <h1> — see the page heading above. Same classes, so
+                                     the slide looks exactly as it did. --}}
+                                <p class="text-3xl sm:text-4xl lg:text-display-hero font-light leading-tight tracking-tight mb-6 md:mb-8">
                                     {{ $slide->line1 }}
                                     @if ($slide->line2)<br><span class="font-bold">{{ $slide->line2 }}</span>@endif
                                     @if ($slide->tail || $slide->highlight)<br>{{ $slide->tail }} <span class="font-bold text-primary">{{ $slide->highlight }}</span>@endif
-                                </h1>
+                                </p>
                                 @if ($slide->cta_label)
                                     {{-- Hover darkens the yellow itself (primary-fixed-dim) rather than
                                          fading the whole pill, so the label stays at full contrast. --}}
@@ -83,11 +93,11 @@
         {{-- Prev / Next (appear on hover, desktop) --}}
         <button type="button" @click="prev()" aria-label="Previous slide"
             class="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 items-center justify-center rounded-full bg-white/70 backdrop-blur shadow opacity-0 group-hover:opacity-100 hover:bg-primary-container transition-all">
-            <span class="material-symbols-outlined">chevron_left</span>
+            <span aria-hidden="true" class="material-symbols-outlined">chevron_left</span>
         </button>
         <button type="button" @click="next()" aria-label="Next slide"
             class="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 items-center justify-center rounded-full bg-white/70 backdrop-blur shadow opacity-0 group-hover:opacity-100 hover:bg-primary-container transition-all">
-            <span class="material-symbols-outlined">chevron_right</span>
+            <span aria-hidden="true" class="material-symbols-outlined">chevron_right</span>
         </button>
 
     </section>
@@ -110,8 +120,8 @@
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-headline-md font-bold pb-3 border-b-2 border-primary-container">Hot Deals</h2>
                 <div class="flex items-center gap-2" x-show="pages > 1" x-cloak>
-                    <button type="button" @click="prev()" aria-label="Previous deals" class="w-9 h-9 grid place-items-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_left</span></button>
-                    <button type="button" @click="next()" aria-label="More deals" class="w-9 h-9 grid place-items-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_right</span></button>
+                    <button type="button" @click="prev()" aria-label="Previous deals" class="w-9 h-9 grid place-items-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span aria-hidden="true" class="material-symbols-outlined text-[20px]">chevron_left</span></button>
+                    <button type="button" @click="next()" aria-label="More deals" class="w-9 h-9 grid place-items-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span aria-hidden="true" class="material-symbols-outlined text-[20px]">chevron_right</span></button>
                 </div>
             </div>
             <div class="overflow-hidden">
@@ -131,7 +141,7 @@
                                             <span class="text-label-sm font-bold text-secondary">{{ $deal['discount_label'] }}</span>
                                         @endif
                                         <span class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform ml-auto">
-                                            <span class="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
+                                            <span aria-hidden="true" class="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
                                         </span>
                                     </div>
                                 </div>
@@ -174,7 +184,7 @@
                                 <span class="text-headline-md font-bold text-on-surface leading-none">{{ $promo->amount }}<sup class="text-[0.55em] align-super">%</sup></span>
                             @endif
                             <span class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform">
-                                <span class="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[18px] text-on-surface">chevron_right</span>
                             </span>
                         </div>
                     </div>
@@ -191,7 +201,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 rounded-lg border border-outline-variant divide-y lg:divide-y-0 lg:divide-x divide-outline-variant">
                 @foreach ($infoBarItems as $info)
                     <div class="flex items-center justify-center gap-4 px-6 py-6">
-                        <span class="material-symbols-outlined text-primary-container text-4xl">{{ $info->icon }}</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-primary-container text-4xl">{{ $info->icon }}</span>
                         <div>
                             <p class="text-body-base font-bold">{{ $info->title }}</p>
                             <p class="text-label-sm text-on-surface-variant">{{ $info->subtitle }}</p>
@@ -321,11 +331,19 @@
 
     {{-- Bestsellers — 4x2 grid of small cards + one large featured card --}}
     @php
-        $bsThumbs = [
-            'https://picsum.photos/seed/bs-thumb-1/80/80',
-            'https://picsum.photos/seed/bs-thumb-2/80/80',
-            'https://picsum.photos/seed/bs-thumb-3/80/80',
-        ];
+        /*
+         | The feature card's thumbnail strip. These were three picsum.photos URLs —
+         | random stock photography left over from the theme, served to real customers
+         | next to a real product. They now come from that product's own gallery, and
+         | the strip simply doesn't render when it has fewer than two images rather
+         | than falling back to something unrelated.
+         */
+        $bsThumbs = collect($bestsellerFeature['gallery'] ?? [])
+            ->filter()
+            ->unique()
+            ->take(3)
+            ->values()
+            ->all();
     @endphp
     <section class="py-12 bg-surface-container-low">
         <div class="app-container">
@@ -358,7 +376,7 @@
                                     width="80" height="80" decoding="async" class="w-full h-full object-contain">
                             @else
                                 <span class="w-full h-full rounded-lg bg-surface-container-low border border-outline-variant/40 grid place-items-center">
-                                    <span class="material-symbols-outlined text-outline">category</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined text-outline">category</span>
                                 </span>
                             @endif
                         </a>

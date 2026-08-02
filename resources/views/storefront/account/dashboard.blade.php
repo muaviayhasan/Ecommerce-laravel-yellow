@@ -15,17 +15,17 @@
         {{-- Quick stats --}}
         <div class="grid grid-cols-3 gap-3 sm:gap-4">
             <a href="{{ route('account.orders') }}" class="bg-white rounded-lg border border-outline-variant p-4 sm:p-5 hover:border-primary hover:shadow-sm transition-all">
-                <span class="material-symbols-outlined text-primary text-[26px]">receipt_long</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[26px]">receipt_long</span>
                 <p class="text-2xl font-bold mt-1">{{ $orderCount }}</p>
                 <p class="text-label-sm text-on-surface-variant">Orders</p>
             </a>
             <a href="{{ route('wishlist') }}" class="bg-white rounded-lg border border-outline-variant p-4 sm:p-5 hover:border-primary hover:shadow-sm transition-all">
-                <span class="material-symbols-outlined text-primary text-[26px]">favorite</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[26px]">favorite</span>
                 <p class="text-2xl font-bold mt-1">{{ $wishlistCount }}</p>
                 <p class="text-label-sm text-on-surface-variant">Wishlist</p>
             </a>
             <a href="{{ route('account.addresses') }}" class="bg-white rounded-lg border border-outline-variant p-4 sm:p-5 hover:border-primary hover:shadow-sm transition-all">
-                <span class="material-symbols-outlined text-primary text-[26px]">location_on</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[26px]">location_on</span>
                 <p class="text-2xl font-bold mt-1">{{ auth()->user()->addresses()->count() }}</p>
                 <p class="text-label-sm text-on-surface-variant">Addresses</p>
             </a>
@@ -48,12 +48,12 @@
                     <div class="flex items-center gap-3 shrink-0">
                         <x-storefront.order-status :status="$order->status" />
                         <span class="font-bold whitespace-nowrap">{{ format_money($order->grand_total) }}</span>
-                        <span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
                     </div>
                 </a>
             @empty
                 <div class="p-10 text-center text-on-surface-variant">
-                    <span class="material-symbols-outlined text-outline-variant" style="font-size:56px;">receipt_long</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-outline-variant" style="font-size:56px;">receipt_long</span>
                     <p class="mt-2">You haven't placed any orders yet.</p>
                     <a href="{{ route('shop') }}" class="inline-block mt-4 bg-primary-container text-on-primary-container px-6 py-2.5 font-bold rounded-full hover:brightness-105 transition">Start shopping</a>
                 </div>

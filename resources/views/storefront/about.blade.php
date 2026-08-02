@@ -18,7 +18,7 @@
     <section class="bg-surface-container-low border-b border-outline-variant/40">
         <div class="app-container py-16 lg:py-24 text-center max-w-3xl">
             <span class="inline-flex items-center gap-2 text-label-sm font-semibold text-primary bg-primary-container/30 px-3 py-1 rounded-full mb-5">
-                <span class="material-symbols-outlined text-[16px]">storefront</span> About {{ $store }}
+                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">storefront</span> About {{ $store }}
             </span>
             <h1 class="text-headline-lg lg:text-5xl font-bold mb-4 leading-tight">Quality you can rely on, service you can trust</h1>
             <p class="text-lg text-on-surface-variant">
@@ -27,7 +27,7 @@
             </p>
             <div class="flex flex-wrap items-center justify-center gap-3 mt-8">
                 <a href="{{ route('shop') }}" class="inline-flex items-center gap-2 bg-primary-container text-on-surface font-bold px-7 py-3 rounded-full hover:brightness-105 active:scale-[0.98] transition-all">
-                    <span class="material-symbols-outlined text-[20px]">shopping_bag</span> Start shopping
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">shopping_bag</span> Start shopping
                 </a>
                 <a href="{{ route('contact') }}" class="inline-flex items-center gap-2 border border-outline text-on-surface font-semibold px-7 py-3 rounded-full hover:bg-surface-container transition-all">
                     Get in touch
@@ -86,7 +86,7 @@
                 @foreach ($values as $value)
                     <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6 text-center">
                         <div class="w-12 h-12 mx-auto grid place-items-center rounded-full bg-primary-container/40 text-primary mb-4">
-                            <span class="material-symbols-outlined">{{ $value['icon'] }}</span>
+                            <span aria-hidden="true" class="material-symbols-outlined">{{ $value['icon'] }}</span>
                         </div>
                         <h3 class="font-bold mb-1.5">{{ $value['title'] }}</h3>
                         <p class="text-label-sm text-on-surface-variant leading-relaxed">{{ $value['text'] }}</p>
@@ -105,10 +105,10 @@
             </p>
             <div class="flex flex-wrap items-center justify-center gap-3">
                 <a href="{{ route('shop') }}" class="inline-flex items-center gap-2 bg-primary-container text-on-surface font-bold px-7 py-3 rounded-full hover:brightness-105 active:scale-[0.98] transition-all">
-                    <span class="material-symbols-outlined text-[20px]">shopping_bag</span> Shop now
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">shopping_bag</span> Shop now
                 </a>
                 <a href="{{ route('quote.request') }}" class="inline-flex items-center gap-2 border border-outline text-on-surface font-semibold px-7 py-3 rounded-full hover:bg-surface-container transition-all">
-                    <span class="material-symbols-outlined text-[20px]">request_quote</span> Request a quote
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">request_quote</span> Request a quote
                 </a>
             </div>
         </div>

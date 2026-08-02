@@ -8,7 +8,7 @@
     <button type="button" @click="open = !open" :aria-expanded="open.toString()"
         class="w-full flex items-center justify-between font-bold text-body-base py-3">
         <span>{{ $title }}</span>
-        <span class="material-symbols-outlined text-[20px] text-on-surface-variant transition-transform duration-300"
+        <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-on-surface-variant transition-transform duration-300"
             :class="{ 'rotate-180': open }">expand_more</span>
     </button>
     <div class="grid transition-[grid-template-rows] duration-300 ease-in-out"

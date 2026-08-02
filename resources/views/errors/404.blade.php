@@ -79,7 +79,7 @@
                                     <a href="{{ route('shop') }}"
                                         class="flex justify-between items-center px-4 py-3 text-body-base hover:text-primary hover:bg-surface-container-low transition-colors group">
                                         <span class="flex items-center gap-2 min-w-0">
-                                            <span class="material-symbols-outlined text-[18px] text-outline group-hover:text-primary shrink-0">chevron_right</span>
+                                            <span aria-hidden="true" class="material-symbols-outlined text-[18px] text-outline group-hover:text-primary shrink-0">chevron_right</span>
                                             <span class="truncate">{{ $name }}</span>
                                         </span>
                                         <span class="text-label-sm text-on-surface-variant shrink-0">({{ $count }})</span>

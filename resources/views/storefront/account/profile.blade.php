@@ -23,7 +23,7 @@
                     </div>
                     <div>
                         <label class="inline-flex items-center gap-1.5 border border-primary text-primary px-4 py-2 rounded-full font-bold text-label-sm hover:bg-primary-container/20 transition cursor-pointer">
-                            <span class="material-symbols-outlined text-[18px]">photo_camera</span> Upload photo
+                            <span aria-hidden="true" class="material-symbols-outlined text-[18px]">photo_camera</span> Upload photo
                             <input type="file" name="avatar" accept="image/*" class="hidden"
                                 @change="const f = $event.target.files[0]; if (f) preview = URL.createObjectURL(f)">
                         </label>
@@ -50,11 +50,11 @@
                         @if ($user->hasVerifiedEmail())
                             <span class="inline-flex items-center gap-1 text-info text-label-sm font-semibold"
                                 @if ($user->email_verified_at) title="Verified on {{ $user->email_verified_at->format('d M Y') }}" @endif>
-                                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1;">verified</span> Verified
+                                <span aria-hidden="true" class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1;">verified</span> Verified
                             </span>
                         @elseif (setting('emails', 'email_verification', true))
                             <span class="inline-flex items-center gap-1 text-warning text-label-sm font-semibold">
-                                <span class="material-symbols-outlined text-[16px]">gpp_maybe</span> Not verified
+                                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">gpp_maybe</span> Not verified
                             </span>
                         @endif
                     </div>
@@ -90,7 +90,7 @@
                 </div>
                 <button type="button" x-show="!show" @click="show = true"
                     class="shrink-0 inline-flex items-center gap-1.5 border border-primary text-primary px-4 py-2 rounded-full font-bold text-label-sm hover:bg-primary-container/20 transition">
-                    <span class="material-symbols-outlined text-[18px]">lock_reset</span> {{ $user->password ? 'Change password' : 'Set password' }}
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]">lock_reset</span> {{ $user->password ? 'Change password' : 'Set password' }}
                 </button>
             </div>
             <form method="POST" action="{{ route('account.password.update') }}" class="p-5 space-y-4" x-show="show" x-transition x-cloak>
@@ -103,7 +103,7 @@
                                 class="w-full rounded-lg border border-outline-variant px-3 py-2.5 pr-11 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('current_password') border-error @enderror">
                             <button type="button" @click="reveal = !reveal" tabindex="-1" :title="reveal ? 'Hide password' : 'Show password'"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
                             </button>
                         </div>
                         @error('current_password')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
@@ -117,7 +117,7 @@
                                 class="w-full rounded-lg border border-outline-variant px-3 py-2.5 pr-11 focus:border-primary focus:ring-1 focus:ring-primary outline-none @error('password') border-error @enderror">
                             <button type="button" @click="reveal = !reveal" tabindex="-1" :title="reveal ? 'Hide password' : 'Show password'"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
                             </button>
                         </div>
                         @error('password')<p class="text-error text-label-sm mt-1">{{ $message }}</p>@enderror
@@ -129,7 +129,7 @@
                                 class="w-full rounded-lg border border-outline-variant px-3 py-2.5 pr-11 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                             <button type="button" @click="reveal = !reveal" tabindex="-1" :title="reveal ? 'Hide password' : 'Show password'"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[20px]" x-text="reveal ? 'visibility_off' : 'visibility'"></span>
                             </button>
                         </div>
                     </div>

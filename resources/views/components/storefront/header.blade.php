@@ -10,11 +10,13 @@
         ->orderBy('name')
         ->get();
 
-    // Departments for the inline yellow bar: a root's children when it has any,
-    // otherwise the root itself — so a single "Electronics" root still surfaces
-    // Coolers / Geysers / Fans / … as top-level links. Adapts to any tree shape.
+    // Departments for the inline yellow bar: the children of each root, so a single
+    // "Electronics" root still surfaces Coolers / Geysers / Fans / … as top-level
+    // links. Children only — the roots themselves are already rendered by the loop
+    // above this one, and a childless root (Batteries) previously fell through to
+    // here and appeared in the bar twice.
     $navDepartments = $rootCategories
-        ->flatMap(fn ($root) => $root->children->isNotEmpty() ? $root->children : collect([$root]))
+        ->flatMap(fn ($root) => $root->children)
         ->take(8);
 
     // Material Symbol per category slug for the Browse dropdown / mobile menu.
@@ -44,29 +46,29 @@
             <span class="hidden lg:block">Welcome to {{ config('app.name') }} — Home Appliances &amp; Electronics Store</span>
             <nav class="flex items-center gap-5" aria-label="Utility">
                 <a class="hidden md:flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('quote.request') }}">
-                    <span class="material-symbols-outlined text-[16px]">request_quote</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">request_quote</span>
                     <span>Get Quotation</span>
                 </a>
                 <a class="hidden md:flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('about') }}">
-                    <span class="material-symbols-outlined text-[16px]">info</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">info</span>
                     <span>About Us</span>
                 </a>
                 <a class="hidden md:flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('contact') }}">
-                    <span class="material-symbols-outlined text-[16px]">mail</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">mail</span>
                     <span>Contact Us</span>
                 </a>
                 <a class="hidden md:flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('blog') }}">
-                    <span class="material-symbols-outlined text-[16px]">article</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">article</span>
                     <span>Blog</span>
                 </a>
                 <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('track.order') }}">
-                    <span class="material-symbols-outlined text-[16px]">local_shipping</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">local_shipping</span>
                     <span class="hidden md:inline">Track Order</span>
                 </a>
                 @auth
                     @if (auth()->user()->isStaff())
                         <a class="flex items-center gap-1 text-primary font-medium hover:opacity-80 transition-opacity" href="{{ route('admin.dashboard') }}" title="Go to admin panel">
-                            <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
                             <span class="hidden md:inline">Admin</span>
                         </a>
                     @endif
@@ -74,17 +76,17 @@
                         @if (auth()->user()->avatar_url)
                             <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}" class="w-6 h-6 rounded-full object-cover border-2 border-outline">
                         @else
-                            <span class="material-symbols-outlined text-[16px]">person</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-[16px]">person</span>
                         @endif
                         <span class="hidden md:inline">My Account</span>
                     </a>
                     <button type="button" @click="logoutConfirm = true" class="flex items-center gap-1 hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined text-[16px]">logout</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">logout</span>
                         <span class="hidden md:inline">Logout</span>
                     </button>
                 @else
                     <a class="flex items-center gap-1 hover:text-primary transition-colors" href="{{ route('login') }}">
-                        <span class="material-symbols-outlined text-[16px]">person</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">person</span>
                         <span class="hidden md:inline">Login</span>
                     </a>
                 @endauth
@@ -97,7 +99,7 @@
         <div class="app-container flex items-center justify-between gap-8 py-5">
             <div class="flex items-center gap-3 min-w-0">
                 <button type="button" class="md:hidden shrink-0" aria-label="Open menu" @click="mobileMenu = true">
-                    <span class="material-symbols-outlined">menu</span>
+                    <span aria-hidden="true" class="material-symbols-outlined">menu</span>
                 </button>
                 <a class="flex items-baseline min-w-0 font-bold text-on-surface" href="{{ route('home') }}">
                     @if ($logo = logo_url())
@@ -160,7 +162,7 @@
                     </div>
                     <button type="submit" aria-label="Search"
                         class="bg-primary-container px-6 flex items-center justify-center hover:opacity-90 transition-all">
-                        <span class="material-symbols-outlined">search</span>
+                        <span aria-hidden="true" class="material-symbols-outlined">search</span>
                     </button>
                 </div>
             </form>
@@ -169,18 +171,18 @@
             <div class="flex items-center gap-5 sm:gap-6 shrink-0">
                 <div class="hidden lg:flex items-center gap-4">
                     <a class="hover:text-primary transition-colors" href="{{ route('compare') }}" aria-label="Compare">
-                        <span class="material-symbols-outlined">sync</span>
+                        <span aria-hidden="true" class="material-symbols-outlined">sync</span>
                     </a>
                     <a class="relative hover:text-primary transition-colors" href="{{ route('wishlist') }}"
                         aria-label="Wishlist">
-                        <span class="material-symbols-outlined">favorite</span>
+                        <span aria-hidden="true" class="material-symbols-outlined">favorite</span>
                         <span class="absolute -top-2 -right-2 bg-primary-container text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">{{ $wishlistCount }}</span>
                     </a>
                 </div>
                 {{-- Cart: desktop/tablet only — on mobile the bottom nav carries the cart --}}
                 <a class="hidden md:flex items-center gap-3 group" href="{{ route('cart') }}" aria-label="Cart">
                     <div class="relative">
-                        <span class="material-symbols-outlined text-3xl">shopping_cart</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-3xl">shopping_cart</span>
                         <span class="absolute -top-2 -right-2 bg-primary-container text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">{{ $cartCount }}</span>
                     </div>
                     <div class="hidden sm:block">
@@ -194,7 +196,7 @@
                     x-data="{ n: 0 }" x-init="window.addEventListener('support:unread', e => n = e.detail || 0)"
                     @click="window.dispatchEvent(new CustomEvent('support:open'))"
                     class="md:hidden relative flex items-center text-on-surface hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined text-[28px]">chat_bubble</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[28px]">chat_bubble</span>
                     <span x-show="n" x-cloak
                         class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center"
                         x-text="n"></span>
@@ -205,13 +207,13 @@
                     @auth
                         <button type="button" @click="logoutConfirm = true" aria-label="Log out"
                             class="flex items-center gap-1.5 text-on-surface hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined text-[28px]">logout</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-[28px]">logout</span>
                             <span class="text-sm font-semibold">Logout</span>
                         </button>
                     @else
                         <a href="{{ route('login') }}" aria-label="Login"
                             class="flex items-center gap-1.5 text-on-surface hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined text-[28px]">person</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-[28px]">person</span>
                             <span class="text-sm font-semibold">Login</span>
                         </a>
                     @endauth
@@ -266,7 +268,7 @@
             <div class="flex items-center justify-between p-4 border-b border-outline-variant">
                 <span class="text-headline-md font-bold">Menu</span>
                 <button type="button" aria-label="Close menu" @click="mobileMenu = false">
-                    <span class="material-symbols-outlined">close</span>
+                    <span aria-hidden="true" class="material-symbols-outlined">close</span>
                 </button>
             </div>
             <form action="{{ route('shop') }}" method="GET" role="search" class="p-4 border-b border-outline-variant">
@@ -274,7 +276,7 @@
                     <input name="q" type="search" placeholder="Search for Products"
                         class="flex-1 px-4 py-2 outline-none text-body-base bg-surface-bright" aria-label="Search">
                     <button type="submit" class="bg-primary-container px-4" aria-label="Search">
-                        <span class="material-symbols-outlined">search</span>
+                        <span aria-hidden="true" class="material-symbols-outlined">search</span>
                     </button>
                 </div>
             </form>
@@ -283,14 +285,14 @@
                 @foreach ($rootCategories as $root)
                     <li>
                         <a href="{{ route('shop', ['category' => $root->slug]) }}" class="flex items-center gap-3 px-4 py-3 rounded hover:bg-surface-container font-bold">
-                            <span class="material-symbols-outlined text-[20px] text-primary">{{ $iconFor($root->slug) }}</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">{{ $iconFor($root->slug) }}</span>
                             {{ $root->name }}
                         </a>
                     </li>
                     @foreach ($root->children as $child)
                         <li>
                             <a href="{{ route('shop', ['category' => $child->slug]) }}" class="flex items-center gap-3 pl-11 pr-4 py-2.5 rounded hover:bg-surface-container text-on-surface-variant">
-                                <span class="material-symbols-outlined text-[18px] text-outline">{{ $iconFor($child->slug) }}</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[18px] text-outline">{{ $iconFor($child->slug) }}</span>
                                 {{ $child->name }}
                             </a>
                         </li>
@@ -300,32 +302,32 @@
             {{-- Info / action links --}}
             <ul class="p-2 border-t border-outline-variant">
                 @if ($hasDeals)
-                    <li><a href="{{ route('deals') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container font-bold"><span class="material-symbols-outlined text-[20px] text-primary">sell</span> Deals</a></li>
+                    <li><a href="{{ route('deals') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container font-bold"><span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">sell</span> Deals</a></li>
                 @endif
-                <li><a href="{{ route('quote.request') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">request_quote</span> Get Quotation</a></li>
-                <li><a href="{{ route('about') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">info</span> About Us</a></li>
-                <li><a href="{{ route('contact') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">mail</span> Contact Us</a></li>
-                <li><a href="{{ route('blog') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">article</span> Blog</a></li>
-                <li><a href="{{ route('track.order') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span class="material-symbols-outlined text-[20px] text-primary">local_shipping</span> Track Order</a></li>
+                <li><a href="{{ route('quote.request') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">request_quote</span> Get Quotation</a></li>
+                <li><a href="{{ route('about') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">info</span> About Us</a></li>
+                <li><a href="{{ route('contact') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">mail</span> Contact Us</a></li>
+                <li><a href="{{ route('blog') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">article</span> Blog</a></li>
+                <li><a href="{{ route('track.order') }}" class="flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container"><span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">local_shipping</span> Track Order</a></li>
                 <li>
                     <button type="button" @click="mobileMenu = false; window.dispatchEvent(new CustomEvent('support:open'))"
                         class="w-full flex items-center gap-3 px-4 py-2.5 rounded hover:bg-surface-container text-left">
-                        <span class="material-symbols-outlined text-[20px] text-primary">support_agent</span> Chat with support
+                        <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">support_agent</span> Chat with support
                     </button>
                 </li>
             </ul>
             <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
                 @auth
                     @if (auth()->user()->isStaff())
-                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-primary font-medium"><span class="material-symbols-outlined">admin_panel_settings</span> Admin panel</a>
+                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-primary font-medium"><span aria-hidden="true" class="material-symbols-outlined">admin_panel_settings</span> Admin panel</a>
                     @endif
-                    <a href="{{ route('account') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">person</span> My Account</a>
+                    <a href="{{ route('account') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span aria-hidden="true" class="material-symbols-outlined">person</span> My Account</a>
                 @else
-                    <a href="{{ route('login') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">person</span> Login</a>
+                    <a href="{{ route('login') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span aria-hidden="true" class="material-symbols-outlined">person</span> Login</a>
                 @endauth
-                <a href="{{ route('wishlist') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span class="material-symbols-outlined">favorite</span> Wishlist ({{ $wishlistCount }})</a>
+                <a href="{{ route('wishlist') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span aria-hidden="true" class="material-symbols-outlined">favorite</span> Wishlist ({{ $wishlistCount }})</a>
                 @auth
-                    <button type="button" @click="mobileMenu = false; logoutConfirm = true" class="flex items-center gap-2 px-4 py-2 hover:text-primary w-full text-left"><span class="material-symbols-outlined">logout</span> Logout</button>
+                    <button type="button" @click="mobileMenu = false; logoutConfirm = true" class="flex items-center gap-2 px-4 py-2 hover:text-primary w-full text-left"><span aria-hidden="true" class="material-symbols-outlined">logout</span> Logout</button>
                 @endauth
             </div>
         </div>
@@ -345,7 +347,7 @@
                     x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
                     <div class="w-14 h-14 mx-auto rounded-full bg-error-container grid place-items-center mb-4">
-                        <span class="material-symbols-outlined text-error text-[28px]">logout</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-error text-[28px]">logout</span>
                     </div>
                     <h3 class="text-lg font-bold text-on-surface mb-1">Log out?</h3>
                     <p class="text-body-base text-on-surface-variant mb-6">Do you want to log out of your account?</p>

@@ -98,6 +98,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Open Graph Locale
+    |--------------------------------------------------------------------------
+    |
+    | og:locale must be language_TERRITORY (en_PK, en_US, ur_PK). Laravel's own
+    | locale is just "en", which Facebook and WhatsApp ignore, so the territory
+    | is set here. Change it if the storefront's primary market changes.
+    |
+    */
+
+    'og_locale' => env('OG_LOCALE', 'en_PK'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

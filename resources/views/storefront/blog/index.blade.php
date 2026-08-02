@@ -17,13 +17,13 @@
         {{-- Faint appliance icon strip along the bottom --}}
         <div class="pointer-events-none absolute inset-x-0 bottom-3 hidden lg:flex items-end justify-between px-16 opacity-[0.07]" aria-hidden="true">
             @foreach (['ac_unit', 'mode_fan', 'local_laundry_service', 'water_heater', 'solar_power', 'kitchen', 'microwave', 'blender'] as $heroIcon)
-                <span class="material-symbols-outlined" style="font-size:44px;">{{ $heroIcon }}</span>
+                <span aria-hidden="true" class="material-symbols-outlined" style="font-size:44px;">{{ $heroIcon }}</span>
             @endforeach
         </div>
 
         <div class="app-container relative py-12 md:py-16 text-center">
             <p class="inline-flex items-center gap-2 border border-primary-container/50 text-primary-container rounded-full px-4 py-1.5 font-bold uppercase tracking-widest text-label-sm mb-4">
-                <span class="material-symbols-outlined text-[16px]">auto_stories</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">auto_stories</span>
                 {{ config('app.name') }} Insights
             </p>
             <h1 class="text-3xl md:text-headline-lg font-bold">The Appliance Blog<span class="text-primary-container">.</span></h1>
@@ -66,7 +66,7 @@
                         <span class="text-on-surface-variant">· {{ $posts->total() }} {{ Str::plural('post', $posts->total()) }}</span>
                     </span>
                     <a href="{{ route('blog') }}" class="ml-auto inline-flex items-center gap-1 text-label-sm font-semibold text-primary hover:underline">
-                        <span class="material-symbols-outlined text-[16px]">close</span> Clear filter
+                        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">close</span> Clear filter
                     </a>
                 </div>
             @endif
@@ -78,7 +78,7 @@
                         <x-storefront.blog-post-card :post="$post" />
                     @empty
                         <div class="bg-white rounded-xl border border-outline-variant p-16 text-center">
-                            <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">{{ $activeFilter ? 'search_off' : 'article' }}</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-outline-variant" style="font-size:64px;">{{ $activeFilter ? 'search_off' : 'article' }}</span>
                             @if ($activeFilter)
                                 <p class="mt-4 text-xl font-light text-on-surface-variant">No posts found for “{{ $activeFilter['label'] }}”.</p>
                                 <a href="{{ route('blog') }}" class="inline-block mt-4 text-primary font-semibold hover:underline">← Back to all posts</a>
@@ -93,7 +93,7 @@
                         <div class="flex items-center gap-2 mt-2">
                             @if (! $posts->onFirstPage())
                                 <a href="{{ $posts->previousPageUrl() }}" aria-label="Previous page" class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:bg-surface-container transition-colors">
-                                    <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]">chevron_left</span>
                                 </a>
                             @endif
                             @foreach ($posts->getUrlRange(max(1, $posts->currentPage() - 2), min($posts->lastPage(), $posts->currentPage() + 2)) as $page => $url)
@@ -105,7 +105,7 @@
                             @endforeach
                             @if ($posts->hasMorePages())
                                 <a href="{{ $posts->nextPageUrl() }}" aria-label="Next page" class="w-10 h-10 flex items-center justify-center rounded border border-outline-variant hover:bg-surface-container transition-colors">
-                                    <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]">chevron_right</span>
                                 </a>
                             @endif
                         </div>

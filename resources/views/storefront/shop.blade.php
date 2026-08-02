@@ -30,20 +30,62 @@
     @section('canonical', route('shop', ['category' => $seoCat->slug]))
 @endif
 
+@php
+    // Trail used by both the visible breadcrumb and the schema below. It follows the
+    // active category up through its parent, so a three-level taxonomy
+    // (Electronics › Coolers › Air Cooler) is legible to readers and crawlers alike.
+    $crumbs = [['name' => 'Home', 'url' => route('home')], ['name' => 'Shop', 'url' => route('shop')]];
+    if ($seoCat) {
+        if ($parentCat = $seoCat->parent) {
+            $crumbs[] = ['name' => $parentCat->name, 'url' => route('shop', ['category' => $parentCat->slug])];
+        }
+        $crumbs[] = ['name' => $seoCat->name, 'url' => route('shop', ['category' => $seoCat->slug])];
+    }
+
+    // Built here rather than inline in @json(...): Blade scans markup for directives
+    // before PHP runs, so a literal '@context' / '@type' key written out there is
+    // mistaken for one and the view fails to compile.
+    $crumbSchema = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => collect($crumbs)->values()->map(fn ($c, $i) => [
+            '@type' => 'ListItem',
+            'position' => $i + 1,
+            'name' => $c['name'],
+            'item' => $c['url'],
+        ])->all(),
+    ];
+@endphp
+
+{{-- Pushed from the top level, not from inside @section('content'): the layout emits
+     <head> before the content section runs, so a push from in there never lands. --}}
+@push('schema')
+    <script type="application/ld+json">@json($crumbSchema)</script>
+@endpush
+
 @section('content')
     <div class="bg-white py-8">
         <div class="app-container" x-data="{ filtersOpen: false }">
-            {{-- Breadcrumbs --}}
-            <nav class="text-label-sm text-on-surface-variant mb-6 flex items-center gap-2" aria-label="Breadcrumb">
-                <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
-                <span>&rsaquo;</span>
-                <span class="text-on-surface">Shop</span>
+            {{-- Breadcrumbs. The trail stopped at "Shop" regardless of what you were
+                 browsing, so a three-level taxonomy (Electronics › Coolers › Air Cooler)
+                 was invisible to both readers and crawlers. Now it follows the active
+                 category up through its parent, and emits BreadcrumbList to match. --}}
+            <nav class="text-label-sm text-on-surface-variant mb-6 flex flex-wrap items-center gap-2" aria-label="Breadcrumb">
+                @foreach ($crumbs as $i => $crumb)
+                    @if ($i > 0)<span aria-hidden="true">&rsaquo;</span>@endif
+                    @if ($loop->last)
+                        <span class="text-on-surface" aria-current="page">{{ $crumb['name'] }}</span>
+                    @else
+                        <a href="{{ $crumb['url'] }}" class="hover:text-primary transition-colors">{{ $crumb['name'] }}</a>
+                    @endif
+                @endforeach
             </nav>
+
 
             {{-- Mobile: open the filters modal --}}
             <button type="button" @click="filtersOpen = true"
                 class="lg:hidden mb-4 w-full flex items-center justify-center gap-2 bg-surface-container-low border border-outline rounded-full py-3 font-bold hover:bg-surface-container transition-colors">
-                <span class="material-symbols-outlined text-[20px]">tune</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">tune</span>
                 Categories &amp; Filters
             </button>
 
@@ -81,12 +123,12 @@
                             <button type="button" @click="view = 'grid'" aria-label="Grid view"
                                 class="p-1.5 rounded hover:text-on-surface transition-colors"
                                 :class="view === 'grid' ? 'text-on-surface' : 'text-on-surface-variant'">
-                                <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">grid_view</span>
                             </button>
                             <button type="button" @click="view = 'list'" aria-label="List view"
                                 class="p-1.5 rounded hover:text-on-surface transition-colors"
                                 :class="view === 'list' ? 'text-on-surface' : 'text-on-surface-variant'">
-                                <span class="material-symbols-outlined text-[20px]">view_list</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">view_list</span>
                             </button>
                         </div>
                         <form method="GET" action="{{ route('shop') }}" class="flex items-center gap-4">
@@ -124,7 +166,7 @@
                     {{-- Empty state --}}
                     @if ($products->isEmpty())
                         <div class="text-center py-20 border border-outline-variant border-t-0">
-                            <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">search_off</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-outline-variant" style="font-size:64px;">search_off</span>
                             <p class="mt-4 text-xl font-light text-on-surface-variant">No products match your filters.</p>
                             <a href="{{ route('shop') }}" class="inline-block mt-4 text-primary font-bold hover:underline">Clear all filters</a>
                         </div>
@@ -135,7 +177,7 @@
                         <div id="shop-loadmore" class="lg:hidden flex flex-col items-center gap-3 py-8">
                             <button type="button" data-loadmore-btn
                                 class="inline-flex items-center gap-2 bg-primary-container text-on-primary-container font-bold px-8 py-3 rounded-full shadow-sm hover:brightness-95 active:scale-95 transition-all disabled:opacity-60 disabled:active:scale-100">
-                                <span class="material-symbols-outlined text-[20px]" data-loadmore-icon>expand_more</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[20px]" data-loadmore-icon>expand_more</span>
                                 <span data-loadmore-label>Load more products</span>
                             </button>
                             <p class="text-label-sm text-outline">
@@ -148,7 +190,7 @@
                     @if ($products->hasPages())
                         <nav class="hidden lg:flex justify-center items-center gap-2 mt-10" aria-label="Pagination">
                             @if (! $products->onFirstPage())
-                                <a href="{{ $products->previousPageUrl() }}" aria-label="Previous page" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_left</span></a>
+                                <a href="{{ $products->previousPageUrl() }}" aria-label="Previous page" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span aria-hidden="true" class="material-symbols-outlined text-[20px]">chevron_left</span></a>
                             @endif
                             @foreach ($products->getUrlRange(max(1, $products->currentPage() - 2), min($products->lastPage(), $products->currentPage() + 2)) as $page => $url)
                                 @if ($page == $products->currentPage())
@@ -158,7 +200,7 @@
                                 @endif
                             @endforeach
                             @if ($products->hasMorePages())
-                                <a href="{{ $products->nextPageUrl() }}" aria-label="Next page" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_right</span></a>
+                                <a href="{{ $products->nextPageUrl() }}" aria-label="Next page" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary-container transition-colors"><span aria-hidden="true" class="material-symbols-outlined text-[20px]">chevron_right</span></a>
                             @endif
                         </nav>
                     @endif
@@ -191,8 +233,8 @@
                     x-transition:enter="transition duration-200 ease-out" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
                     x-transition:leave="transition duration-200 ease-in" x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full">
                     <div class="flex items-center justify-between px-4 py-4 border-b border-outline-variant shrink-0">
-                        <h2 class="font-bold text-lg flex items-center gap-2"><span class="material-symbols-outlined">tune</span> Categories &amp; Filters</h2>
-                        <button type="button" @click="filtersOpen = false" aria-label="Close" class="w-9 h-9 grid place-items-center rounded-full hover:bg-surface-container"><span class="material-symbols-outlined">close</span></button>
+                        <h2 class="font-bold text-lg flex items-center gap-2"><span aria-hidden="true" class="material-symbols-outlined">tune</span> Categories &amp; Filters</h2>
+                        <button type="button" @click="filtersOpen = false" aria-label="Close" class="w-9 h-9 grid place-items-center rounded-full hover:bg-surface-container"><span aria-hidden="true" class="material-symbols-outlined">close</span></button>
                     </div>
                     <form method="GET" action="{{ route('shop') }}" class="flex-1 flex flex-col min-h-0">
                         <div class="flex-1 overflow-y-auto px-4 py-2">

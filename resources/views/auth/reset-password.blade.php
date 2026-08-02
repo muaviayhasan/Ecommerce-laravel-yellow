@@ -24,7 +24,7 @@
                         autocomplete="email"
                         class="w-full h-12 px-4 rounded border bg-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-body-base @error('email') border-error ring-1 ring-error @else border-outline-variant @enderror">
                     @error('email')
-                        <p class="text-error text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                        <p class="text-error text-label-sm flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -38,11 +38,11 @@
                             class="w-full h-12 px-4 pr-12 rounded border bg-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-body-base @error('password') border-error ring-1 ring-error @else border-outline-variant @enderror">
                         <button type="button" @click="show = !show" :aria-label="show ? 'Hide password' : 'Show password'"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary focus:outline-none">
-                            <span class="material-symbols-outlined" x-text="show ? 'visibility_off' : 'visibility'">visibility</span>
+                            <span aria-hidden="true" class="material-symbols-outlined" x-text="show ? 'visibility_off' : 'visibility'">visibility</span>
                         </button>
                     </div>
                     @error('password')
-                        <p class="text-error text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                        <p class="text-error text-label-sm flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -57,7 +57,7 @@
 
                 <button type="submit"
                     class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:bg-primary-fixed-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-[20px]">lock_reset</span> Reset password
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">lock_reset</span> Reset password
                 </button>
             </form>
         </div>

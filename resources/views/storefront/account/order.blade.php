@@ -9,7 +9,7 @@
         {{-- Header --}}
         <div class="bg-white rounded-lg border border-outline-variant p-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-                <a href="{{ route('account.orders') }}" class="text-label-sm text-primary font-bold hover:underline flex items-center gap-1 mb-1"><span class="material-symbols-outlined text-[16px]">arrow_back</span> Back to orders</a>
+                <a href="{{ route('account.orders') }}" class="text-label-sm text-primary font-bold hover:underline flex items-center gap-1 mb-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">arrow_back</span> Back to orders</a>
                 <h1 class="text-xl font-bold">Order #{{ $order->order_number }}</h1>
                 <p class="text-label-sm text-on-surface-variant">Placed {{ ($order->placed_at ?? $order->created_at)->format('d M Y, h:i A') }}</p>
             </div>
@@ -19,7 +19,7 @@
                     @csrf
                     <button type="submit"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary-container text-on-surface font-bold text-label-sm hover:brightness-105 active:scale-[0.98] transition-all">
-                        <span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span> Reorder
+                        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span> Reorder
                     </button>
                 </form>
             </div>

@@ -62,6 +62,6 @@
 @if (! empty($filters['category']) || ! empty($filters['brand']) || ! empty($filters['min']) || ! empty($filters['max']))
     <a href="{{ route('shop', array_filter(['q' => $filters['q'] ?? null, 'sort' => $filters['sort'] ?? null])) }}"
         class="inline-flex items-center gap-1 mt-1 text-secondary text-label-sm font-medium hover:text-primary">
-        <span class="material-symbols-outlined text-[16px]">close</span> Clear all filters
+        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">close</span> Clear all filters
     </a>
 @endif

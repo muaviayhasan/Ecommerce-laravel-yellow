@@ -35,7 +35,7 @@
                 <div class="relative">
                     <a href="{{ route('cart') }}" aria-label="Cart" @if ($cartOn) aria-current="page" @endif
                         class="absolute left-1/2 -translate-x-1/2 -top-5 w-14 h-14 rounded-full bg-primary-container text-on-primary-container grid place-items-center ring-4 ring-surface-container-lowest active:scale-90 transition-all duration-300 {{ $cartOn ? 'scale-105 shadow-xl shadow-primary/45' : 'shadow-lg shadow-primary/25' }}">
-                        <span class="material-symbols-outlined text-[26px]" style="{{ $cartOn ? "font-variation-settings:'FILL' 1" : '' }}">shopping_cart</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-[26px]" style="{{ $cartOn ? "font-variation-settings:'FILL' 1" : '' }}">shopping_cart</span>
                         @if ($cartCount)
                             <span class="nav-badge absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center ring-2 ring-surface-container-lowest">{{ $cartCount }}</span>
                         @endif
@@ -53,7 +53,7 @@
                         @if (! empty($item['avatar']))
                             <img src="{{ $item['avatar'] }}" alt="" @class(['w-6 h-6 rounded-full object-cover transition-all', 'ring-2 ring-primary' => $on, 'ring-1 ring-outline-variant' => ! $on])>
                         @else
-                            <span class="material-symbols-outlined transition-all {{ $on ? 'text-primary text-[24px]' : 'text-on-surface-variant text-[22px]' }}" style="{{ $on ? "font-variation-settings:'FILL' 1" : '' }}">{{ $item['icon'] }}</span>
+                            <span aria-hidden="true" class="material-symbols-outlined transition-all {{ $on ? 'text-primary text-[24px]' : 'text-on-surface-variant text-[22px]' }}" style="{{ $on ? "font-variation-settings:'FILL' 1" : '' }}">{{ $item['icon'] }}</span>
                         @endif
                         @if (! empty($item['badge']))
                             <span class="nav-badge absolute top-0 right-2 min-w-4 h-4 px-1 rounded-full bg-error text-white text-[9px] font-bold grid place-items-center ring-2 ring-surface-container-lowest">{{ $item['badge'] }}</span>

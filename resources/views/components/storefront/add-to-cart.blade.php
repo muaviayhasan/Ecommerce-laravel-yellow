@@ -9,7 +9,7 @@
          separate font glyph being present in the subset. --}}
     <span aria-label="{{ $name }} — out of stock" title="Out of stock" aria-disabled="true"
         style="position:relative; cursor:not-allowed; opacity:0.55;" {{ $attributes }}>
-        <span class="material-symbols-outlined align-middle {{ $iconClass }}">shopping_cart</span>
+        <span aria-hidden="true" class="material-symbols-outlined align-middle {{ $iconClass }}">shopping_cart</span>
         <span aria-hidden="true"
             style="position:absolute; left:50%; top:50%; width:90%; height:2px; background:currentColor; border-radius:2px; transform:translate(-50%,-50%) rotate(-45deg);"></span>
     </span>
@@ -18,11 +18,11 @@
         @csrf
         <input type="hidden" name="variant_id" value="{{ $variantId }}">
         <button type="submit" aria-label="Add {{ $name }} to cart" {{ $attributes }}>
-            <span class="material-symbols-outlined align-middle {{ $iconClass }}">{{ $icon }}</span>
+            <span aria-hidden="true" class="material-symbols-outlined align-middle {{ $iconClass }}">{{ $icon }}</span>
         </button>
     </form>
 @else
     <a href="{{ $url }}" aria-label="View {{ $name }}" {{ $attributes }}>
-        <span class="material-symbols-outlined align-middle {{ $iconClass }}">{{ $icon }}</span>
+        <span aria-hidden="true" class="material-symbols-outlined align-middle {{ $iconClass }}">{{ $icon }}</span>
     </a>
 @endif

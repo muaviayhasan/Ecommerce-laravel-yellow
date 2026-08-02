@@ -7,7 +7,7 @@
 @section('content')
     <section class="bg-surface-container-low border-b border-outline-variant/40">
         <div class="app-container py-12 lg:py-16 text-center max-w-2xl">
-            <span class="material-symbols-outlined text-5xl text-primary mb-2">local_shipping</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-5xl text-primary mb-2">local_shipping</span>
             <h1 class="text-headline-lg font-bold mb-2">Track your order</h1>
             <p class="text-body-base text-on-surface-variant">Enter your order number and the email you used at checkout to see the latest status.</p>
         </div>
@@ -16,7 +16,7 @@
     <div class="app-container py-10 lg:py-14 max-w-3xl">
         @if (session('error'))
             <div class="mb-6 flex items-start gap-2 bg-error-container text-on-error-container px-4 py-3 rounded-lg text-label-sm">
-                <span class="material-symbols-outlined text-[18px] shrink-0">error</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px] shrink-0">error</span>
                 <span>{{ session('error') }}</span>
             </div>
         @endif
@@ -43,14 +43,14 @@
             </div>
             <button type="submit"
                 class="mt-5 w-full sm:w-auto px-8 h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:brightness-105 active:scale-[0.98] transition-all inline-flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-[20px]">search</span> Track order
+                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">search</span> Track order
             </button>
         </form>
 
         {{-- Results --}}
         @if ($searched && ! $order)
             <div class="mt-8 text-center bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-10">
-                <span class="material-symbols-outlined text-5xl text-outline mb-2">search_off</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-5xl text-outline mb-2">search_off</span>
                 <h2 class="text-xl font-bold mb-1">We couldn’t find that order</h2>
                 <p class="text-body-base text-on-surface-variant max-w-md mx-auto">
                     Please double-check the order number and the email you used. Still stuck?
@@ -134,14 +134,14 @@
                     <input type="hidden" name="email" value="{{ $filters['email'] ?? '' }}">
                     <button type="submit"
                         class="inline-flex items-center justify-center gap-2 bg-primary-container text-on-surface font-bold px-7 py-3 rounded-full hover:brightness-105 active:scale-[0.98] transition-all">
-                        <span class="material-symbols-outlined text-[20px]">shopping_cart_checkout</span> Reorder these items
+                        <span aria-hidden="true" class="material-symbols-outlined text-[20px]">shopping_cart_checkout</span> Reorder these items
                     </button>
                     <span class="text-label-sm text-on-surface-variant">Adds the still-available items to your cart at current prices.</span>
                 </form>
 
                 @auth
                     <a href="{{ route('account.orders.show', $order) }}" class="inline-flex items-center gap-1 text-label-sm font-semibold text-primary hover:underline">
-                        View full order details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        View full order details <span aria-hidden="true" class="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </a>
                 @endauth
             </div>

@@ -37,7 +37,7 @@
                             @csrf @method('DELETE')
                             <button type="submit" aria-label="Remove {{ $p->name }} from compare"
                                 class="w-5 h-5 grid place-items-center rounded-full bg-white/90 text-on-surface shadow-sm ring-1 ring-black/5 hover:bg-error hover:text-white transition backdrop-blur-sm">
-                                <span class="material-symbols-outlined text-[15px] leading-none">close</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[15px] leading-none">close</span>
                             </button>
                         </form>
                     </div>
@@ -45,7 +45,7 @@
 
                 @for ($i = $compareCount; $i < $compareMax; $i++)
                     <div class="shrink-0 w-14 h-14 rounded-lg border-2 border-dashed border-inverse-on-surface/25 grid place-items-center">
-                        <span class="material-symbols-outlined text-inverse-on-surface/25 text-[20px]">add</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-inverse-on-surface/25 text-[20px]">add</span>
                     </div>
                 @endfor
             </div>
@@ -67,13 +67,13 @@
                     @csrf @method('DELETE')
                     <button type="submit" aria-label="Clear all" title="Clear all"
                         class="w-9 h-9 grid place-items-center rounded-full text-inverse-on-surface/70 hover:bg-white/10 hover:text-white transition">
-                        <span class="material-symbols-outlined text-[20px]">delete_sweep</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-[20px]">delete_sweep</span>
                     </button>
                 </form>
 
                 <button type="button" @click="show = false; $store.compareBar.visible = false" aria-label="Hide compare bar"
                     class="w-9 h-9 grid place-items-center rounded-full text-inverse-on-surface/70 hover:bg-white/10 hover:text-white transition">
-                    <span class="material-symbols-outlined text-[20px]">close</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
                 </button>
             </div>
         </div>

@@ -18,7 +18,7 @@
             @if ($hasOverlay)
                 <span class="absolute inset-0 flex items-center justify-center {{ $format === 'audio' ? 'bg-black/30' : '' }}">
                     <span class="w-16 h-16 rounded-full flex items-center justify-center shadow-lg {{ $format === 'video' ? 'bg-primary-container text-on-primary-container' : 'bg-white text-primary' }} group-hover:scale-110 transition-transform">
-                        <span class="material-symbols-outlined text-[36px]" style="font-variation-settings: 'FILL' 1;">{{ $format === 'audio' ? 'play_arrow' : 'play_circle' }}</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-[36px]" style="font-variation-settings: 'FILL' 1;">{{ $format === 'audio' ? 'play_arrow' : 'play_circle' }}</span>
                     </span>
                 </span>
             @endif
@@ -30,10 +30,10 @@
 
     <div class="{{ $isText ? '' : 'p-8' }}">
         <div class="flex flex-wrap items-center gap-4 text-on-surface-variant text-label-sm mb-4">
-            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> {{ data_get($post, 'date') }}</span>
-            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">folder</span> {{ data_get($post, 'category') }}</span>
+            <span class="flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[14px]">calendar_today</span> {{ data_get($post, 'date') }}</span>
+            <span class="flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[14px]">folder</span> {{ data_get($post, 'category') }}</span>
             @if (data_get($post, 'reading_time'))
-                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> {{ $post['reading_time'] }} min read</span>
+                <span class="flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[14px]">schedule</span> {{ $post['reading_time'] }} min read</span>
             @endif
         </div>
         <h2 class="text-headline-md font-bold mb-4">

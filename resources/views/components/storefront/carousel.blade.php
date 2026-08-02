@@ -18,10 +18,10 @@
     <x-storefront.section-title :title="$title">
         <div class="flex gap-2 pb-2 text-on-surface-variant">
             <button type="button" @click="prev()" aria-label="Previous" class="hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">chevron_left</span>
+                <span aria-hidden="true" class="material-symbols-outlined">chevron_left</span>
             </button>
             <button type="button" @click="next()" aria-label="Next" class="hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">chevron_right</span>
+                <span aria-hidden="true" class="material-symbols-outlined">chevron_right</span>
             </button>
         </div>
     </x-storefront.section-title>

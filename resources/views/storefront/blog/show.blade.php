@@ -40,9 +40,9 @@
         <div class="app-container">
             <nav class="flex flex-wrap items-center gap-2 text-label-sm text-on-surface-variant" aria-label="Breadcrumb">
                 <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
-                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[14px]">chevron_right</span>
                 <a href="{{ route('blog') }}" class="hover:text-primary transition-colors">Blog</a>
-                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span class="text-primary font-medium line-clamp-1">{{ $post['title'] }}</span>
             </nav>
         </div>
@@ -59,15 +59,15 @@
 
                     <h1 class="text-headline-lg font-bold mb-4">{{ $post['title'] }}</h1>
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-label-sm text-on-surface-variant mb-8">
-                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">person</span> {{ $post['author'] }}</span>
+                        <span class="flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">person</span> {{ $post['author'] }}</span>
                         <span class="text-outline-variant">|</span>
-                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_today</span> {{ $post['date'] }}</span>
+                        <span class="flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">calendar_today</span> {{ $post['date'] }}</span>
                         <span class="text-outline-variant">|</span>
-                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> {{ $post['reading_time'] }} min read</span>
+                        <span class="flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">schedule</span> {{ $post['reading_time'] }} min read</span>
                         @if (! empty($postCategories))
                             <span class="text-outline-variant">|</span>
                             <span class="flex flex-wrap items-center gap-1">
-                                <span class="material-symbols-outlined text-[16px]">folder</span>
+                                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">folder</span>
                                 @foreach ($postCategories as $c)
                                     <a href="{{ route('blog', ['category' => $c['slug']]) }}" class="font-medium hover:text-primary transition-colors">{{ $c['name'] }}</a>{{ ! $loop->last ? ',' : '' }}
                                 @endforeach
@@ -87,7 +87,7 @@
                     {{-- Tags --}}
                     @if (! empty($postTags))
                         <div class="mt-10 pt-6 border-t border-outline-variant flex flex-wrap items-center gap-2">
-                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">sell</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-[18px] text-on-surface-variant">sell</span>
                             <span class="text-label-sm font-bold text-on-surface-variant mr-1">Tags:</span>
                             @foreach ($postTags as $t)
                                 <a href="{{ route('blog', ['tag' => $t['slug']]) }}"
@@ -115,7 +115,7 @@
                     <div class="mt-12 py-8 border-y border-outline-variant flex justify-between gap-4">
                         @if ($prev)
                             <a href="{{ $prev['url'] }}" class="flex flex-col gap-1 group text-left max-w-[45%]">
-                                <span class="text-label-sm text-outline uppercase tracking-wider flex items-center gap-1 group-hover:text-primary transition-colors"><span class="material-symbols-outlined text-[14px]">arrow_back</span> Previous</span>
+                                <span class="text-label-sm text-outline uppercase tracking-wider flex items-center gap-1 group-hover:text-primary transition-colors"><span aria-hidden="true" class="material-symbols-outlined text-[14px]">arrow_back</span> Previous</span>
                                 <span class="text-product-title text-on-surface group-hover:text-primary transition-colors line-clamp-1">{{ $prev['title'] }}</span>
                             </a>
                         @else
@@ -123,7 +123,7 @@
                         @endif
                         @if ($next)
                             <a href="{{ $next['url'] }}" class="flex flex-col gap-1 group text-right max-w-[45%] ml-auto">
-                                <span class="text-label-sm text-outline uppercase tracking-wider flex items-center justify-end gap-1 group-hover:text-primary transition-colors">Next <span class="material-symbols-outlined text-[14px]">arrow_forward</span></span>
+                                <span class="text-label-sm text-outline uppercase tracking-wider flex items-center justify-end gap-1 group-hover:text-primary transition-colors">Next <span aria-hidden="true" class="material-symbols-outlined text-[14px]">arrow_forward</span></span>
                                 <span class="text-product-title text-on-surface group-hover:text-primary transition-colors line-clamp-1">{{ $next['title'] }}</span>
                             </a>
                         @endif
@@ -180,7 +180,7 @@
 
                         @if (session('comment_status'))
                             <div class="mb-6 flex items-center gap-2 bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-body-base">
-                                <span class="material-symbols-outlined">check_circle</span> {{ session('comment_status') }}
+                                <span aria-hidden="true" class="material-symbols-outlined">check_circle</span> {{ session('comment_status') }}
                             </div>
                         @endif
 

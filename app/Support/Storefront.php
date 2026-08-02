@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Category;
 use App\Models\Deal;
+use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
@@ -51,6 +52,9 @@ class Storefront
             'compare' => $compare,
             'in_stock' => self::variantSellable($variant, (bool) $product->is_stock_tracked),
             'image' => $product->media->first()?->thumbUrl(400) ?? $variant?->image?->thumbUrl(400) ?? self::placeholder(),
+            // The product's own photos, for cards that show a thumbnail strip. Media is
+            // already eager-loaded, so this costs nothing extra.
+            'gallery' => $product->media->map(fn (Media $m) => $m->thumbUrl(160))->values()->all(),
             'url' => route('product.show', $product->slug),
             'slug' => $product->slug,
         ];

@@ -14,7 +14,7 @@
 
             @if (session('status'))
                 <div class="mb-6 flex items-start gap-2 bg-secondary-container text-on-secondary-container px-4 py-3 rounded text-label-sm">
-                    <span class="material-symbols-outlined text-[18px] shrink-0">mark_email_read</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px] shrink-0">mark_email_read</span>
                     <span>{{ session('status') }}</span>
                 </div>
             @endif
@@ -29,13 +29,13 @@
                         autocomplete="email" placeholder="Enter your email"
                         class="w-full h-12 px-4 rounded border bg-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-body-base @error('email') border-error ring-1 ring-error @else border-outline-variant @enderror">
                     @error('email')
-                        <p class="text-error text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                        <p class="text-error text-label-sm flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                     @enderror
                 </div>
 
                 <button type="submit"
                     class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:bg-primary-fixed-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-[20px]">send</span> Email reset link
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">send</span> Email reset link
                 </button>
 
                 <div class="pt-6 border-t border-outline-variant/40 text-center">

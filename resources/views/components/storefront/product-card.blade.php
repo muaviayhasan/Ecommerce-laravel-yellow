@@ -50,17 +50,17 @@
             @if ($slug)
                 <form method="POST" action="{{ route('wishlist.toggle', $slug) }}">@csrf
                     <button type="submit" class="flex items-center gap-1.5 hover:text-primary transition-colors" aria-label="Add to wishlist">
-                        <span class="material-symbols-outlined text-[18px]">favorite</span> Wishlist
+                        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">favorite</span> Wishlist
                     </button>
                 </form>
                 <form method="POST" action="{{ route('compare.toggle', $slug) }}">@csrf
                     <button type="submit" class="flex items-center gap-1.5 hover:text-primary transition-colors" aria-label="Add to compare">
-                        <span class="material-symbols-outlined text-[18px]">sync</span> Compare
+                        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">sync</span> Compare
                     </button>
                 </form>
             @else
-                <a href="{{ route('wishlist') }}" class="flex items-center gap-1.5 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">favorite</span> Wishlist</a>
-                <a href="{{ route('compare') }}" class="flex items-center gap-1.5 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[18px]">sync</span> Compare</a>
+                <a href="{{ route('wishlist') }}" class="flex items-center gap-1.5 hover:text-primary transition-colors"><span aria-hidden="true" class="material-symbols-outlined text-[18px]">favorite</span> Wishlist</a>
+                <a href="{{ route('compare') }}" class="flex items-center gap-1.5 hover:text-primary transition-colors"><span aria-hidden="true" class="material-symbols-outlined text-[18px]">sync</span> Compare</a>
             @endif
         </div>
     </div>

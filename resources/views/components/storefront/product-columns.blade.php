@@ -55,7 +55,7 @@
                 </a>
                 @if ($spotlight['discount_label'])
                     <span class="mt-3 self-start inline-flex items-center gap-1.5 bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-label-sm font-bold">
-                        <span class="material-symbols-outlined text-[16px]">sell</span> {{ $spotlight['discount_label'] }}
+                        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">sell</span> {{ $spotlight['discount_label'] }}
                     </span>
                 @endif
             </div>

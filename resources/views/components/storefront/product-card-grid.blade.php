@@ -18,7 +18,7 @@
         <img src="{{ $image }}" alt="{{ $name }}" loading="lazy"
             class="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300">
         <span class="absolute top-2 right-2 p-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:text-primary">
-            <span class="material-symbols-outlined text-[18px] align-middle">favorite</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-[18px] align-middle">favorite</span>
         </span>
     </a>
     <div class="text-[11px] text-on-surface-variant font-bold uppercase mb-1 truncate">{{ $category }}</div>

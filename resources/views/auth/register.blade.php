@@ -23,7 +23,7 @@
                             placeholder="Enter your full name"
                             class="w-full h-12 px-4 bg-white border rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all text-body-base @error('name') border-error ring-1 ring-error @else border-outline-variant @enderror">
                         @error('name')
-                            <p class="text-error text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                            <p class="text-error text-label-sm flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -34,7 +34,7 @@
                             placeholder="name@example.com"
                             class="w-full h-12 px-4 bg-white border rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all text-body-base @error('email') border-error ring-1 ring-error @else border-outline-variant @enderror">
                         @error('email')
-                            <p class="text-error text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                            <p class="text-error text-label-sm flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -47,11 +47,11 @@
                                 class="w-full h-12 px-4 pr-12 bg-white border rounded focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all text-body-base @error('password') border-error ring-1 ring-error @else border-outline-variant @enderror">
                             <button type="button" @click="show = !show" :aria-label="show ? 'Hide password' : 'Show password'"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined" x-text="show ? 'visibility_off' : 'visibility'">visibility</span>
+                                <span aria-hidden="true" class="material-symbols-outlined" x-text="show ? 'visibility_off' : 'visibility'">visibility</span>
                             </button>
                         </div>
                         @error('password')
-                            <p class="text-error text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                            <p class="text-error text-label-sm flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -63,14 +63,14 @@
                             <span>I agree to the <a href="#" class="text-primary hover:underline font-medium">Terms and Conditions</a> and <a href="#" class="text-primary hover:underline font-medium">Privacy Policy</a>.</span>
                         </label>
                         @error('terms')
-                            <p class="text-error text-label-sm flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                            <p class="text-error text-label-sm flex items-center gap-1 mt-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                         @enderror
                     </div>
 
                     {{-- Submit --}}
                     <button type="submit"
                         class="w-full h-12 bg-primary-container text-on-primary-container font-bold rounded-lg hover:brightness-95 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-[20px]">person_add</span> Register
+                        <span aria-hidden="true" class="material-symbols-outlined text-[20px]">person_add</span> Register
                     </button>
 
                     @php

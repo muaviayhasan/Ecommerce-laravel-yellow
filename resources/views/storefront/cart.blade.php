@@ -8,7 +8,7 @@
         <div class="app-container">
             <nav class="flex items-center gap-2 text-label-sm text-on-surface-variant mb-8" aria-label="Breadcrumb">
                 <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Home</a>
-                <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[14px]">chevron_right</span>
                 <span class="text-on-surface">Shopping Cart</span>
             </nav>
 
@@ -16,18 +16,18 @@
 
             @if (session('status'))
                 <div class="mb-6 p-4 rounded-lg bg-secondary-container/40 text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-secondary">check_circle</span> {{ session('status') }}
+                    <span aria-hidden="true" class="material-symbols-outlined text-secondary">check_circle</span> {{ session('status') }}
                 </div>
             @endif
             @if (session('error'))
                 <div class="mb-6 p-4 rounded-lg bg-error-container/40 text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-error">error</span> {{ session('error') }}
+                    <span aria-hidden="true" class="material-symbols-outlined text-error">error</span> {{ session('error') }}
                 </div>
             @endif
 
             @if ($items->isEmpty() && $dealGroups->isEmpty())
                 <div class="bg-white rounded-lg border border-outline-variant p-16 text-center">
-                    <span class="material-symbols-outlined text-outline-variant" style="font-size:72px;">shopping_cart</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-outline-variant" style="font-size:72px;">shopping_cart</span>
                     <p class="mt-4 text-xl font-light text-on-surface-variant">Your cart is empty.</p>
                     <a href="{{ route('shop') }}" class="inline-block mt-6 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded hover:brightness-95 transition-all">Start shopping</a>
                 </div>
@@ -41,7 +41,7 @@
                         <div class="bg-white rounded-lg border border-primary-container/60 overflow-hidden">
                             <div class="flex items-center justify-between gap-3 px-4 py-3 bg-primary-container/10 border-b border-primary-container/40">
                                 <div class="flex items-center gap-2 min-w-0">
-                                    <span class="material-symbols-outlined text-primary text-[20px]">sell</span>
+                                    <span aria-hidden="true" class="material-symbols-outlined text-primary text-[20px]">sell</span>
                                     <a href="{{ $group->url }}" class="font-bold text-on-surface truncate hover:text-primary transition-colors">{{ $group->name }}</a>
                                     @if ($group->discount_label)
                                         <span class="shrink-0 px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container text-[11px] font-bold">{{ $group->discount_label }}</span>
@@ -50,7 +50,7 @@
                                 <form method="POST" action="{{ route('cart.remove-deal', $group->deal_id) }}" class="shrink-0">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-label-sm font-bold text-on-surface-variant hover:text-error transition-colors flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[16px]">delete</span> Remove deal
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">delete</span> Remove deal
                                     </button>
                                 </form>
                             </div>
@@ -99,12 +99,12 @@
                                             </div>
                                             <form method="POST" action="{{ route('cart.remove', $item->variant_id) }}" class="shrink-0 -mt-1 -mr-1">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" aria-label="Remove {{ $item->name }}" class="p-1.5 rounded-full text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors"><span class="material-symbols-outlined text-[20px]">close</span></button>
+                                                <button type="submit" aria-label="Remove {{ $item->name }}" class="p-1.5 rounded-full text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors"><span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span></button>
                                             </form>
                                         </div>
 
                                         @if (! $allowOversell && $item->qty > $item->stock)
-                                            <p class="text-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">warning</span> Only {{ rtrim(rtrim(number_format($item->stock, 3), '0'), '.') }} in stock</p>
+                                            <p class="text-label-sm text-error mt-1 flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[15px]">warning</span> Only {{ rtrim(rtrim(number_format($item->stock, 3), '0'), '.') }} in stock</p>
                                         @endif
 
                                         <div class="flex items-center justify-between gap-3 mt-3">
@@ -116,12 +116,12 @@
                                                 <div class="inline-flex items-center rounded-full border border-outline-variant select-none">
                                                     <button type="button" @click="step(-1)" :disabled="qty <= 1" aria-label="Decrease quantity"
                                                         class="w-9 h-9 grid place-items-center rounded-full text-on-surface disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container transition-colors">
-                                                        <span class="material-symbols-outlined text-[18px]">remove</span>
+                                                        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">remove</span>
                                                     </button>
                                                     <span class="w-9 text-center font-bold tabular-nums" x-text="qty"></span>
                                                     <button type="button" @click="step(1)" :disabled="qty >= max" aria-label="Increase quantity"
                                                         class="w-9 h-9 grid place-items-center rounded-full text-on-surface disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-container transition-colors">
-                                                        <span class="material-symbols-outlined text-[18px]">add</span>
+                                                        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">add</span>
                                                     </button>
                                                 </div>
                                                 <input type="hidden" name="quantity" :value="qty">
@@ -136,7 +136,7 @@
 
                     {{-- Footer — always visible while the cart has anything. --}}
                     <div class="bg-white rounded-lg border border-outline-variant p-4 flex justify-between items-center">
-                        <a href="{{ route('shop') }}" class="text-primary font-bold hover:underline flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">arrow_back</span> Continue shopping</a>
+                        <a href="{{ route('shop') }}" class="text-primary font-bold hover:underline flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[18px]">arrow_back</span> Continue shopping</a>
                         <form method="POST" action="{{ route('cart.clear') }}">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-on-surface-variant font-bold hover:text-error transition-colors text-label-sm">Clear cart</button>
@@ -157,7 +157,7 @@
                         </div>
                         <div class="flex justify-between text-lg font-black mb-6"><span>Total</span><span>Rs {{ number_format($cartTotal) }}</span></div>
                         <a href="{{ route('checkout') }}" class="w-full bg-primary-container text-on-primary-container py-3 rounded font-bold flex items-center justify-center gap-2 hover:brightness-95 transition-all">
-                            Proceed to Checkout <span class="material-symbols-outlined">arrow_forward</span>
+                            Proceed to Checkout <span aria-hidden="true" class="material-symbols-outlined">arrow_forward</span>
                         </a>
                     </div>
                 </div>

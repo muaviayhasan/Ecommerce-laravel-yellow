@@ -15,14 +15,14 @@
                 </div>
                 <button type="button" @click="openCreate()"
                     class="inline-flex items-center gap-1.5 bg-primary-container text-on-primary-container px-4 py-2.5 rounded-full font-bold text-label-sm hover:brightness-105 transition shrink-0">
-                    <span class="material-symbols-outlined text-[18px]">add</span> Add address
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]">add</span> Add address
                 </button>
             </div>
 
             {{-- List --}}
             @if ($addresses->isEmpty())
                 <div class="bg-white rounded-lg border border-outline-variant p-16 text-center text-on-surface-variant">
-                    <span class="material-symbols-outlined text-outline-variant" style="font-size:64px;">location_off</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-outline-variant" style="font-size:64px;">location_off</span>
                     <p class="mt-3 text-lg font-light">You have no saved addresses.</p>
                     <button type="button" @click="openCreate()" class="inline-block mt-5 bg-primary-container text-on-primary-container px-8 py-3 font-bold rounded-full hover:brightness-105 transition">Add your first address</button>
                 </div>
@@ -44,12 +44,12 @@
 
                             <div class="flex items-center gap-2 mt-4 pt-3 border-t border-outline-variant/60">
                                 <button type="button" @click='openEdit(@json($payload))' class="text-label-sm font-bold text-primary hover:underline flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[16px]">edit</span> Edit
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">edit</span> Edit
                                 </button>
                                 <form method="POST" action="{{ route('account.addresses.destroy', $a) }}" @submit.prevent="if (confirm('Remove this address?')) $el.submit()" class="ms-auto">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-label-sm font-bold text-error hover:underline flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[16px]">delete</span> Delete
+                                        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">delete</span> Delete
                                     </button>
                                 </form>
                             </div>
@@ -66,7 +66,7 @@
                     class="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
                     <div class="shrink-0 bg-white border-b border-outline-variant px-5 py-4 flex items-center justify-between">
                         <h2 class="font-bold text-lg" x-text="form.id ? 'Edit address' : 'Add address'"></h2>
-                        <button type="button" @click="close()" class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined">close</span></button>
+                        <button type="button" @click="close()" class="text-on-surface-variant hover:text-on-surface"><span aria-hidden="true" class="material-symbols-outlined">close</span></button>
                     </div>
 
                     <form method="POST" :action="form.id ? `{{ url('account/addresses') }}/${form.id}` : '{{ route('account.addresses.store') }}'" class="flex flex-col min-h-0 flex-1">
@@ -105,7 +105,7 @@
                                 <input type="text" name="line2" x-model="form.line2" autocomplete="address-line2" placeholder="Apartment, suite, landmark (optional)" class="w-full rounded-lg border border-outline-variant px-3 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                             </div>
                             <button type="button" x-show="!(showApt || form.line2)" @click="showApt = true" class="mt-1.5 text-label-sm font-bold text-primary hover:underline flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[16px]">add</span> Add apartment / landmark
+                                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">add</span> Add apartment / landmark
                             </button>
                         </div>
 
@@ -118,7 +118,7 @@
                         {{-- Optional details (collapsed by default) --}}
                         <div>
                             <button type="button" x-show="!(showMore || form.state || form.zip)" @click="showMore = true" class="text-label-sm font-bold text-primary hover:underline flex items-center gap-1">
-                                <span class="material-symbols-outlined text-[16px]">add</span> Add postal code / province
+                                <span aria-hidden="true" class="material-symbols-outlined text-[16px]">add</span> Add postal code / province
                             </button>
                             <div x-show="showMore || form.state || form.zip" x-transition class="grid sm:grid-cols-2 gap-4">
                                 <div>

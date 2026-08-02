@@ -26,13 +26,13 @@
             <div class="lg:col-span-2 space-y-4">
                 @if ($address)
                     <div class="flex gap-4 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-5">
-                        <span class="material-symbols-outlined text-primary shrink-0">location_on</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-primary shrink-0">location_on</span>
                         <div>
                             <div class="font-semibold mb-0.5">Visit us</div>
                             <p class="text-label-sm text-on-surface-variant whitespace-pre-line">{{ $address }}</p>
                             <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($address) }}" target="_blank" rel="noopener"
                                 class="inline-flex items-center gap-1 text-label-sm font-semibold text-primary hover:underline mt-2">
-                                Get directions <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+                                Get directions <span aria-hidden="true" class="material-symbols-outlined text-[16px]">open_in_new</span>
                             </a>
                         </div>
                     </div>
@@ -40,7 +40,7 @@
 
                 @if ($phone)
                     <a href="tel:{{ preg_replace('/[^+0-9]/', '', $phone) }}" class="flex gap-4 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-5 hover:border-primary/50 transition-colors">
-                        <span class="material-symbols-outlined text-primary shrink-0">call</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-primary shrink-0">call</span>
                         <div>
                             <div class="font-semibold mb-0.5">Call us</div>
                             <p class="text-label-sm text-on-surface-variant">{{ $phone }}</p>
@@ -50,7 +50,7 @@
 
                 @if ($whatsapp)
                     <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $whatsapp) }}" target="_blank" rel="noopener" class="flex gap-4 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-5 hover:border-primary/50 transition-colors">
-                        <span class="material-symbols-outlined text-primary shrink-0">chat</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-primary shrink-0">chat</span>
                         <div>
                             <div class="font-semibold mb-0.5">WhatsApp</div>
                             <p class="text-label-sm text-on-surface-variant">Chat with us instantly</p>
@@ -60,7 +60,7 @@
 
                 @if ($email)
                     <a href="mailto:{{ $email }}" class="flex gap-4 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-5 hover:border-primary/50 transition-colors">
-                        <span class="material-symbols-outlined text-primary shrink-0">mail</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-primary shrink-0">mail</span>
                         <div>
                             <div class="font-semibold mb-0.5">Email us</div>
                             <p class="text-label-sm text-on-surface-variant break-all">{{ $email }}</p>
@@ -70,7 +70,7 @@
 
                 @if ($hours)
                     <div class="flex gap-4 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-5">
-                        <span class="material-symbols-outlined text-primary shrink-0">schedule</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-primary shrink-0">schedule</span>
                         <div>
                             <div class="font-semibold mb-0.5">Business hours</div>
                             <p class="text-label-sm text-on-surface-variant">{{ $hours }}</p>
@@ -83,7 +83,7 @@
             <div class="lg:col-span-3">
                 @if (session('contact_status'))
                     <div class="mb-6 flex items-start gap-2 bg-secondary-container text-on-secondary-container px-4 py-3 rounded-lg text-label-sm">
-                        <span class="material-symbols-outlined text-[18px] shrink-0">check_circle</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-[18px] shrink-0">check_circle</span>
                         <span>{{ session('contact_status') }}</span>
                     </div>
                 @endif
@@ -138,7 +138,7 @@
 
                     <button type="submit"
                         class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-[20px]">send</span> Send message
+                        <span aria-hidden="true" class="material-symbols-outlined text-[20px]">send</span> Send message
                     </button>
                 </form>
             </div>

@@ -58,7 +58,7 @@
                 @endif
             </a>
             <a href="{{ $telHref }}" class="flex items-center gap-4 mb-6 group">
-                <span class="material-symbols-outlined text-primary-container text-5xl">headset_mic</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary-container text-5xl">headset_mic</span>
                 <div>
                     <p class="text-label-sm text-on-surface-variant">Got Questions? Call us 24/7!</p>
                     <p class="text-headline-md font-bold text-on-surface group-hover:text-primary transition-colors">{{ $storePhone }}</p>
@@ -82,7 +82,7 @@
                         <a href="{{ $social['url'] }}" aria-label="{{ $social['label'] }}" title="{{ $social['label'] }}"
                             @if (\Illuminate\Support\Str::startsWith($social['url'], 'http')) target="_blank" rel="noopener noreferrer" @endif
                             class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center hover:bg-primary-container transition-colors">
-                            <span class="material-symbols-outlined text-xl">{{ $social['icon'] }}</span>
+                            <span aria-hidden="true" class="material-symbols-outlined text-xl">{{ $social['icon'] }}</span>
                         </a>
                     @endforeach
                 </div>

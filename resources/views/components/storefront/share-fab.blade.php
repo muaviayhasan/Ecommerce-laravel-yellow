@@ -48,12 +48,12 @@
         </a>
         <a :href="'mailto:?subject=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(text + ' ' + url)" @click="open = false"
             class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-container transition-colors">
-            <span class="material-symbols-outlined text-[20px] text-on-surface-variant mx-0.5">mail</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-on-surface-variant mx-0.5">mail</span>
             <span class="text-sm">Email</span>
         </a>
         <button type="button" @click="copy()"
             class="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-container transition-colors">
-            <span class="material-symbols-outlined text-[20px] mx-0.5" :class="copied ? 'text-primary' : 'text-on-surface-variant'" x-text="copied ? 'check_circle' : 'link'"></span>
+            <span aria-hidden="true" class="material-symbols-outlined text-[20px] mx-0.5" :class="copied ? 'text-primary' : 'text-on-surface-variant'" x-text="copied ? 'check_circle' : 'link'"></span>
             <span class="text-sm" x-text="copied ? 'Link copied!' : 'Copy link'"></span>
         </button>
     </div>
@@ -62,6 +62,6 @@
          the chat-bubble column below it; w/h only give it a comfortable tap area. --}}
     <button type="button" @click="toggle()" title="Share" aria-label="Share this page"
         class="w-12 h-12 grid place-items-center text-on-surface hover:text-primary active:scale-90 transition-all">
-        <span class="material-symbols-outlined text-[25px]" style="font-variation-settings: 'FILL' 1;">shortcut</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[25px]" style="font-variation-settings: 'FILL' 1;">shortcut</span>
     </button>
 </div>

@@ -15,13 +15,13 @@
             {{-- Failed / throttled login banner --}}
             @error('auth')
                 <div class="mb-6 flex items-start gap-2 bg-error-container text-on-error-container px-4 py-3 rounded text-label-sm">
-                    <span class="material-symbols-outlined text-[18px] shrink-0">error</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px] shrink-0">error</span>
                     <span>{{ $message }}</span>
                 </div>
             @enderror
             @if (session('error'))
                 <div class="mb-6 flex items-start gap-2 bg-error-container text-on-error-container px-4 py-3 rounded text-label-sm">
-                    <span class="material-symbols-outlined text-[18px] shrink-0">error</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px] shrink-0">error</span>
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
@@ -39,7 +39,7 @@
                         placeholder="Enter your email or phone"
                         class="w-full h-12 px-4 rounded border bg-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-body-base @error('identifier') border-error ring-1 ring-error @else border-outline-variant @enderror">
                     @error('identifier')
-                        <p class="text-error text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                        <p class="text-error text-label-sm flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -54,11 +54,11 @@
                             class="w-full h-12 px-4 pr-12 rounded border bg-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-body-base @error('password') border-error ring-1 ring-error @else border-outline-variant @enderror">
                         <button type="button" @click="show = !show" :aria-label="show ? 'Hide password' : 'Show password'"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary focus:outline-none">
-                            <span class="material-symbols-outlined" x-text="show ? 'visibility_off' : 'visibility'">visibility</span>
+                            <span aria-hidden="true" class="material-symbols-outlined" x-text="show ? 'visibility_off' : 'visibility'">visibility</span>
                         </button>
                     </div>
                     @error('password')
-                        <p class="text-error text-label-sm flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
+                        <p class="text-error text-label-sm flex items-center gap-1"><span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -75,7 +75,7 @@
                 {{-- Submit --}}
                 <button type="submit"
                     class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:bg-primary-fixed-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-[20px]">login</span> Login
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">login</span> Login
                 </button>
 
                 {{-- Social sign-in (enabled from admin Settings → Social login) --}}

@@ -14,7 +14,18 @@
     $canonical = $plain($__env->yieldContent('canonical', url()->current()));
 
     $ogType = trim($__env->yieldContent('og_type', 'website'));
+    /*
+     | Falls back to the site logo when no social image is configured. Without a
+     | fallback every shared link — WhatsApp, Facebook, X — rendered as a bare text
+     | card, and twitter:card silently stayed on "summary" because it keys off this
+     | value being present. A logo is a weaker preview than a product shot, but it
+     | is enormously better than nothing, and it means sharing works out of the box
+     | instead of only after somebody remembers to set Settings → SEO → OG image.
+     */
     $ogImage = $plain($__env->yieldContent('og_image', (string) setting('seo', 'og_image', '')));
+    if ($ogImage === '') {
+        $ogImage = (string) (logo_url() ?? '');
+    }
     if ($ogImage !== '' && ! Str::startsWith($ogImage, ['http://', 'https://'])) {
         $ogImage = url($ogImage);
     }
@@ -132,7 +143,9 @@
 @if ($desc)<meta property="og:description" content="{{ $desc }}">@endif
 <meta property="og:url" content="{{ $canonical }}">
 @if ($ogImage)<meta property="og:image" content="{{ $ogImage }}">@endif
-<meta property="og:locale" content="{{ str_replace('-', '_', app()->getLocale()) }}">
+{{-- Open Graph wants language_TERRITORY. app()->getLocale() is just "en", which is
+     not a valid og:locale and gets ignored — so the territory comes from config. --}}
+<meta property="og:locale" content="{{ config('app.og_locale', 'en_PK') }}">
 
 {{-- Twitter --}}
 <meta name="twitter:card" content="{{ $ogImage ? 'summary_large_image' : 'summary' }}">
