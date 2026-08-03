@@ -191,13 +191,32 @@ class SitemapController extends Controller
             return response("User-agent: *\nDisallow: /\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
         }
 
-        // Private areas, and anything that only makes sense with a session behind it.
-        //
-        // Filtered/searched/sorted views of /shop are deliberately NOT here. They carry
-        // `noindex, follow` in the page head instead (see shop.blade.php) — a crawler
-        // has to be able to fetch a page to see that directive, and blocking it here
-        // would leave any already-indexed ones stuck in the index with no way to drop.
-        $disallow = ['/admin', '/account', '/cart', '/checkout', '/wishlist', '/compare', '/login', '/register', '/support'];
+        /*
+         | Only /admin is blocked here, and that is deliberate.
+         |
+         | Disallow and noindex do not stack — they cancel. A crawler that obeys a
+         | Disallow never fetches the page, so it never reads the noindex, and a URL
+         | that was indexed before the rule existed (or that anyone links to) can sit
+         | in the index indefinitely with no way to remove it. Google's own guidance
+         | is explicit: to drop a page you must let it be crawled.
+         |
+         | /account, /cart, /checkout, /wishlist, /compare, /login and /register were
+         | listed here AND carry `noindex, follow` in their own head, which is the
+         | combination that guarantees neither works. They are removed so the noindex
+         | can actually be read and honoured. They are a handful of cheap URLs on a
+         | small site, so the crawl budget this costs is not worth the ambiguity.
+         |
+         | /support went too: the only routes under it are /admin/support/*, already
+         | covered by /admin, so the rule matched nothing on the storefront.
+         |
+         | /admin stays. It is not an SEO problem to solve — there is no indexed admin
+         | URL to retire — and there is no reason to invite crawling of that surface.
+         | It answers 302 to a login for anyone unauthenticated in any case.
+         |
+         | Filtered/searched/sorted views of /shop are absent for the same reason as
+         | the pages above: they carry noindex in the head (see shop.blade.php).
+         */
+        $disallow = ['/admin'];
 
         /*
          | AI crawlers are named and ALLOWED — a decision, not an oversight. Being read
