@@ -56,7 +56,15 @@
     $indexable = (bool) setting('seo', 'indexable', true);
     $robots = $indexable ? trim($__env->yieldContent('robots', 'index, follow')) : 'noindex, nofollow';
 
-    $keywords = (string) setting('seo', 'meta_keywords', '');
+    /*
+     | No $keywords here on purpose. <meta name="keywords"> has not been a Google
+     | signal since 2009, and this site emitted one identical string on every page —
+     | which at best says nothing and at worst reads as keyword stuffing.
+     |
+     | The setting itself is kept: Admin → Settings → SEO still stores it, and the
+     | column is still on products. It is simply never rendered. Nothing queries it
+     | (site search matches product.name only), so nothing else changes.
+     */
     $twitter = (string) setting('seo', 'twitter_handle', '');
     $verify = (string) setting('seo', 'google_site_verification', '');
 
@@ -153,7 +161,6 @@
 @endphp
 <title>{{ $title }}</title>
 @if ($desc)<meta name="description" content="{{ $desc }}">@endif
-@if ($keywords)<meta name="keywords" content="{{ $keywords }}">@endif
 <meta name="robots" content="{{ $robots }}">
 <link rel="canonical" href="{{ $canonical }}">
 @if ($verify)<meta name="google-site-verification" content="{{ $verify }}">@endif
