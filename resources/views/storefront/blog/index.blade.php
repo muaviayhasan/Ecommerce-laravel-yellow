@@ -1,7 +1,11 @@
 @extends('layouts.storefront')
 
-@section('title', ($activeFilter ? $activeFilter['label'] . ' — ' : '') . 'Blog — ' . config('app.name'))
-@section('meta_description', 'Buying guides, honest reviews and maintenance tips for home appliances — coolers, geysers, fans, washing machines, kitchen and solar — from ' . config('app.name') . '.')
+{{-- Category views keep their own prefixed title; the bare /blog index gets the
+     descriptive one, which is 57 chars and would break 60 with a brand suffix. --}}
+@section('title', $activeFilter
+    ? $activeFilter['label'] . ' — Kingway Blog'
+    : 'Appliance Buying Guides & Prices in Lahore — Kingway Blog')
+@section('meta_description', 'Buying guides, honest reviews and maintenance tips for coolers, geysers, fans, washing machines and solar — written for Lahore homes and Pakistani prices.')
 @if (! empty($activeCategory))
     @section('canonical', route('blog', ['category' => $activeCategory]))
 @endif

@@ -5,7 +5,12 @@
      Google indexes each category page instead of folding them into /shop. --}}
 @php
     $seoCat = $activeCategory ?? null;
-    $shopTitle = ($seoCat ? ($seoCat->meta_title ?: $seoCat->name . ' — Best Prices in Pakistan') : 'Shop All Home Appliances & Electronics') . ' — ' . config('app.name');
+    // The brand suffix applies to category pages only. The bare /shop title is set
+    // verbatim and is already 53 characters; appending the store name would push it
+    // past the ~60 Google displays.
+    $shopTitle = $seoCat
+        ? ($seoCat->meta_title ?: $seoCat->name . ' — Best Prices in Pakistan') . ' — ' . config('app.name')
+        : 'Shop Home Appliances & Electronics Online in Pakistan';
     $shopDesc = $seoCat
         ? ($seoCat->meta_description ?: 'Shop ' . $seoCat->name . ' at ' . config('app.name') . ' — genuine brands, updated prices and delivery across Lahore & all Pakistan.')
         // Kept under ~155 characters — Google truncates the snippet past roughly there.

@@ -1,7 +1,8 @@
 @extends('layouts.storefront')
 @section('robots', 'noindex, follow')
 
-@section('title', 'Register — ' . config('app.name'))
+@section('title', 'Create an Account — Kingway Store')
+@section('meta_description', 'Create a Kingway Store account to track orders, save a wishlist and check out faster on future appliance purchases.')
 @section('hideNewsletter', '1')
 
 @section('content')

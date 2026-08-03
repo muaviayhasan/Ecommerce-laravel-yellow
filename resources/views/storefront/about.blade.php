@@ -1,7 +1,7 @@
 @extends('layouts.storefront')
 
-@section('title', 'About Us — ' . config('app.name'))
-@section('meta_description', 'Learn about ' . setting('general', 'app_name', config('app.name')) . ' — who we are, what we stand for, and why customers trust us.')
+@section('title', 'About Kingway Store — Home Appliance Dealer in Lahore')
+@section('meta_description', 'Who we are: a Lahore appliance and electronics dealer stocking genuine branded coolers, geysers, fans, washing machines and solar. Warranty backed, COD.')
 
 @php
     $store = setting('general', 'app_name', config('app.name'));

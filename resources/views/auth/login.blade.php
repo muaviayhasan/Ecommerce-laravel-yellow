@@ -1,7 +1,10 @@
 @extends('layouts.storefront')
 @section('robots', 'noindex, follow')
 
-@section('title', 'Login — ' . config('app.name'))
+@section('title', 'Log In to Your Account — Kingway Store')
+{{-- noindex above, but still worth a real description: without one this page
+     inherits the sitewide default and previews as an appliance advert. --}}
+@section('meta_description', 'Sign in to view your orders, saved wishlist and quotation requests at Kingway Store.')
 @section('hideNewsletter', '1')
 
 @section('content')

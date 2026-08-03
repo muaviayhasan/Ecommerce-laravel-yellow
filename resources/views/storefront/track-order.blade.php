@@ -1,8 +1,8 @@
 @extends('layouts.storefront')
 
 @section('robots', 'noindex, follow')
-@section('title', 'Track Your Order — ' . config('app.name'))
-@section('meta_description', 'Check the status of your order with your order number and email.')
+@section('title', 'Track Your Order — Kingway Store')
+@section('meta_description', 'Enter your order number to check the delivery status of your Kingway Store appliance order.')
 
 @section('content')
     <section class="bg-surface-container-low border-b border-outline-variant/40">

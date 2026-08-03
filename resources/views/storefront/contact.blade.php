@@ -1,7 +1,7 @@
 @extends('layouts.storefront')
 
-@section('title', 'Contact Us — ' . config('app.name'))
-@section('meta_description', 'Get in touch with ' . setting('general', 'app_name', config('app.name')) . ' — call, email, WhatsApp or send us a message.')
+@section('title', 'Contact Kingway Store — Appliance Shop in Lahore')
+@section('meta_description', 'Call, WhatsApp or visit our Lahore store. Open Mon-Sun, 8am-11pm. Questions about products, orders or bulk pricing — we are happy to help.')
 
 @php
     $address = setting('store', 'address');

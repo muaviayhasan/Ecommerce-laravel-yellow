@@ -1,7 +1,7 @@
 @extends('layouts.storefront')
 
-@section('title', 'Request a quote — ' . config('app.name'))
-@section('meta_description', 'Tell us what you need and we’ll prepare a custom quotation for you.')
+@section('title', 'Request a Quote — Bulk Appliance Pricing in Lahore')
+@section('meta_description', 'Need pricing on a bulk or multi-item order? Add the products you want, tell us your requirement, and our team replies with a custom quotation.')
 
 @section('content')
     <div class="bg-surface-container-low py-16 px-4 min-h-[60vh]">
