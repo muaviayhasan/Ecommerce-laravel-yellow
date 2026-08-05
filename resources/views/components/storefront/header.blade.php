@@ -20,13 +20,18 @@
         ->take(8);
 
     // Material Symbol per category slug for the Browse dropdown / mobile menu.
+    // These names reach the page through $iconFor(), which the font subsetter
+    // cannot see — every icon this map can emit must be declared here or it
+    // ships as literal text ("AC_UNIT") in the drawer:
+    // icon-font: devices ac_unit air water_drop water_heater bolt electric_bolt local_fire_department mode_fan kitchen local_laundry_service cooking solar_power category
     $categoryIcons = [
         'electronics' => 'devices', 'coolers' => 'ac_unit', 'air-cooler' => 'air',
         'water-cooler' => 'water_drop', 'geysers' => 'water_heater', 'instant-geysers' => 'bolt',
         'electric-geysers' => 'electric_bolt', 'gas-geysers' => 'local_fire_department',
         'fans' => 'mode_fan', 'ac-fans' => 'mode_fan', 'dc-fans' => 'mode_fan',
         'home-appliances' => 'kitchen', 'washing-machine' => 'local_laundry_service',
-        'water-dispenser' => 'water_drop', 'stoves' => 'stove', 'solar-plates' => 'solar_power',
+        'water-dispenser' => 'water_drop', 'solar-plates' => 'solar_power',
+        'stoves' => 'cooking', // "stove" itself is not in this font build
     ];
     $iconFor = fn ($slug) => $categoryIcons[$slug] ?? 'category';
 
@@ -195,8 +200,8 @@
                 <button type="button" aria-label="Chat with support"
                     x-data="{ n: 0 }" x-init="window.addEventListener('support:unread', e => n = e.detail || 0)"
                     @click="window.dispatchEvent(new CustomEvent('support:open'))"
-                    class="md:hidden relative flex items-center text-on-surface hover:text-primary transition-colors">
-                    <span aria-hidden="true" class="material-symbols-outlined text-[28px]">chat_bubble</span>
+                    class="md:hidden relative w-10 h-10 rounded-full bg-primary-container text-on-primary-container shadow-md grid place-items-center active:scale-95 transition-all">
+                    <span aria-hidden="true" class="material-symbols-outlined text-[22px]">support_agent</span>
                     <span x-show="n" x-cloak
                         class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white text-[10px] font-bold grid place-items-center"
                         x-text="n"></span>

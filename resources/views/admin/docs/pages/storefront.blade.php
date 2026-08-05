@@ -42,7 +42,7 @@
         </p>
     </x-docs.section>
 
-    <x-docs.section id="loop" title="The full loop" icon="loop">
+    <x-docs.section id="loop" title="The full loop" icon="autorenew">
         <p>
             The storefront closes the golden thread from the <a href="{{ route('admin.docs.show', 'overview') }}">overview</a>:
             a customer browses the <strong>catalog</strong>, fills a <strong>cart</strong>, and checks out — which

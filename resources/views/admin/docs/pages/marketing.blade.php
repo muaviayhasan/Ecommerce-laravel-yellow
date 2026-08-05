@@ -25,7 +25,7 @@
         <x-docs.pill tone="perm">campaigns.view · create · edit · delete · send</x-docs.pill>
     </x-docs.section>
 
-    <x-docs.section id="abandoned" title="Abandoned-cart recovery" icon="restore">
+    <x-docs.section id="abandoned" title="Abandoned-cart recovery" icon="history">
         <p>
             When a guest enters their email at checkout but doesn't complete, the cart is snapshotted. A recovery
             email (gated by the <em>abandoned cart</em> email toggle) sends a one-click link that rehydrates the

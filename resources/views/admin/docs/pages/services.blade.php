@@ -68,7 +68,7 @@
                 The session-based cart. Resolves stored variant ids against the live catalog on every read, so
                 stale or unsellable items drop out automatically.
             </x-docs.card>
-            <x-docs.card title="AbandonedCartService" icon="restore">
+            <x-docs.card title="AbandonedCartService" icon="history">
                 Snapshots carts that stall at checkout and drives the recovery email + one-click restore link.
             </x-docs.card>
             <x-docs.card title="WishlistService / CompareService" icon="favorite">

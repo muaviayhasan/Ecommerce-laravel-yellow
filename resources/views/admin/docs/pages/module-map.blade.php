@@ -62,7 +62,7 @@
                     <li><strong>Inventory adjustment</strong> — a counted gain</li>
                 </ul>
             </x-docs.card>
-            <x-docs.card title="Decreases stock (&minus;)" icon="remove_circle">
+            <x-docs.card title="Decreases stock (&minus;)" icon="do_not_disturb_on">
                 <ul class="!my-0">
                     <li><strong>Sale</strong> — web, POS or vendor order placed</li>
                     <li><strong>Production consume</strong> — components used up</li>

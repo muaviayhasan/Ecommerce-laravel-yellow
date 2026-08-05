@@ -23,7 +23,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <x-admin.stat-card title="Total posts" tone="primary" icon="article" :value="number_format($stats['total'])" />
         <x-admin.stat-card title="Published" tone="secondary" icon="public" :value="number_format($stats['published'])" />
-        <x-admin.stat-card title="Drafts" tone="tertiary" icon="draft" :value="number_format($stats['drafts'])" />
+        <x-admin.stat-card title="Drafts" tone="tertiary" icon="edit_note" :value="number_format($stats['drafts'])" />
     </div>
 
     <x-admin.panel class="!p-0 overflow-hidden">

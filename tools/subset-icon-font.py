@@ -50,13 +50,40 @@ FONT = ROOT / "public" / "fonts" / "material-symbols-outlined.woff2"
 MANIFEST = ROOT / "public" / "fonts" / "material-symbols-icons.txt"
 SOURCE = ROOT / "tools" / "material-symbols-outlined.full.woff2"
 
+# Literal ligature text inside an icon element: >shopping_cart<
 ICON_RE = re.compile(r"material-symbols-outlined[^>]*>\s*([a-z_]+)\s*<")
+# Icons chosen at runtime by Alpine, e.g. x-text="show ? 'visibility_off' : 'visibility'".
+# Every quoted token in the attribute is collected; strings that are not icon
+# names get filtered out later against the font's real glyph list.
+XTEXT_RE = re.compile(r"material-symbols-outlined[^>]*x-text=\"([^\"]+)\"")
+QUOTED_RE = re.compile(r"'([a-z_]{2,})'")
+# Icons passed as blade component props: <x-admin.stat-card icon="shopping_basket">
+ATTR_RE = re.compile(r"\bicon=\"([a-z_]+)\"")
+# Icons in PHP arrays — sidebar nav (config/navigation.php), docs manifest,
+# settings/report groups in controllers: 'icon' => 'dashboard'
+PHP_RE = re.compile(r"'icon'\s*=>\s*'([a-z_]+)'")
+# Icons no scanner can see (values of a PHP map, picked by slug at runtime) are
+# declared next to their definition:  icon-font: devices ac_unit mode_fan ...
+DECL_RE = re.compile(r"icon-font:\s*([a-z_][a-z_ ]*)")
+
+# tests/Feature/IconFontSubsetTest.php runs the same patterns over the same
+# directories — keep them in sync.
 
 
 def icons_used():
     found = set()
     for path in VIEWS.rglob("*.blade.php"):
-        found.update(ICON_RE.findall(path.read_text(encoding="utf-8", errors="ignore")))
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        found.update(ICON_RE.findall(text))
+        found.update(ATTR_RE.findall(text))
+        found.update(PHP_RE.findall(text))
+        for attr in XTEXT_RE.findall(text):
+            found.update(QUOTED_RE.findall(attr))
+        for decl in DECL_RE.findall(text):
+            found.update(decl.split())
+    for root in (ROOT / "config", ROOT / "app"):
+        for path in root.rglob("*.php"):
+            found.update(PHP_RE.findall(path.read_text(encoding="utf-8", errors="ignore")))
     return found
 
 
