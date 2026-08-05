@@ -15,6 +15,7 @@
     };
 
     $t = $trend === null ? null : (float) $trend;
+    // icon-font: remove trending_up trending_down
     [$trendColor, $trendIcon] = match (true) {
         $t === null => ['text-outline', 'remove'],
         $t > 0 => ['text-secondary', 'trending_up'],

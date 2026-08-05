@@ -38,6 +38,7 @@
                 $tone = $tones[$kpi['tone']];
                 $sparkMax = max(1, max($kpi['spark']));
                 $tr = $kpi['trend'];
+                // icon-font: trending_up trending_down horizontal_rule
                 [$trColor, $trIcon] = $tr > 0 ? ['text-secondary bg-secondary/10', 'trending_up'] : ($tr < 0 ? ['text-error bg-error/10', 'trending_down'] : ['text-on-surface-variant bg-on-surface-variant/10', 'horizontal_rule']);
             @endphp
             <div class="{{ $card }} p-6 flex flex-col justify-between">

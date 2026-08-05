@@ -270,6 +270,7 @@
                         <div class="mt-5">
                             <label class="block text-sm font-medium text-on-surface-variant mb-2">Payment</label>
                             <div class="grid grid-cols-3 gap-2">
+                                {{-- icon-font: payments credit_card qr_code_2 --}}
                                 @foreach (['cash' => 'payments', 'card' => 'credit_card', 'qr' => 'qr_code_2'] as $m => $icon)
                                     <button type="button" data-nav data-pay @click="paymentMethod = '{{ $m }}'"
                                         :class="paymentMethod === '{{ $m }}' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant hover:border-primary/50'"

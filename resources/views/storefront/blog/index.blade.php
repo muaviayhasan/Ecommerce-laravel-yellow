@@ -19,7 +19,8 @@
         <div class="pointer-events-none absolute -top-28 -right-20 w-96 h-96 rounded-full bg-primary-container/20 blur-3xl" aria-hidden="true"></div>
         <div class="pointer-events-none absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-primary-container/10 blur-3xl" aria-hidden="true"></div>
 
-        {{-- Faint appliance icon strip along the bottom --}}
+        {{-- Faint appliance icon strip along the bottom.
+             icon-font: ac_unit mode_fan local_laundry_service water_heater solar_power kitchen microwave blender --}}
         <div class="pointer-events-none absolute inset-x-0 bottom-3 hidden lg:flex items-end justify-between px-16 opacity-[0.07]" aria-hidden="true">
             @foreach (['ac_unit', 'mode_fan', 'local_laundry_service', 'water_heater', 'solar_power', 'kitchen', 'microwave', 'blender'] as $heroIcon)
                 <span aria-hidden="true" class="material-symbols-outlined" style="font-size:44px;">{{ $heroIcon }}</span>

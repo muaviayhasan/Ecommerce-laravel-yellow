@@ -11,6 +11,7 @@
     $active = $current === $column;
     $nextDir = $active && $currentDir === 'asc' ? 'desc' : 'asc';
     $url = request()->fullUrlWithQuery(['sort' => $column, 'dir' => $nextDir, 'page' => 1]);
+    // icon-font: unfold_more arrow_upward arrow_downward
     $icon = ! $active ? 'unfold_more' : ($currentDir === 'asc' ? 'arrow_upward' : 'arrow_downward');
 @endphp
 <a href="{{ $url }}"

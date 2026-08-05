@@ -57,6 +57,8 @@ ICON_RE = re.compile(r"material-symbols-outlined[^>]*>\s*([a-z0-9_]+)\s*<")
 # Every quoted token in the attribute is collected; strings that are not icon
 # names get filtered out later against the font's real glyph list.
 XTEXT_RE = re.compile(r"material-symbols-outlined[^>]*x-text=\"([^\"]+)\"")
+# ... and by Blade, e.g. {{ $ok ? 'check_circle' : 'error' }} inside an icon element.
+ECHO_RE = re.compile(r"material-symbols-outlined[^>]*>\s*\{\{([^}]+)\}\}")
 QUOTED_RE = re.compile(r"'([a-z0-9_]{2,})'")
 # Icons passed as blade component props: <x-admin.stat-card icon="shopping_basket">
 ATTR_RE = re.compile(r"\bicon=\"([a-z0-9_]+)\"")
@@ -80,6 +82,8 @@ def icons_used():
         found.update(PHP_RE.findall(text))
         for attr in XTEXT_RE.findall(text):
             found.update(QUOTED_RE.findall(attr))
+        for echo in ECHO_RE.findall(text):
+            found.update(QUOTED_RE.findall(echo))
         for decl in DECL_RE.findall(text):
             found.update(decl.split())
     for root in (ROOT / "config", ROOT / "app"):

@@ -21,6 +21,7 @@ auto_stories
 autorenew
 badge
 bar_chart
+blender
 block
 bolt
 bookmark_add
@@ -50,6 +51,7 @@ contacts
 content_copy
 conveyor_belt
 cooking
+credit_card
 dark_mode
 dashboard
 dashboard_customize
@@ -89,6 +91,7 @@ help
 history
 history_toggle_off
 home
+horizontal_rule
 hourglass_top
 hub
 image
@@ -120,6 +123,7 @@ mark_email_unread
 menu
 menu_book
 menu_open
+microwave
 mode_fan
 monitor_heart
 monitoring
@@ -139,6 +143,7 @@ photo_camera
 photo_library
 pin_drop
 play_arrow
+play_circle
 playlist_add
 point_of_sale
 precision_manufacturing
@@ -147,11 +152,13 @@ print
 priority_high
 progress_activity
 public
+qr_code_2
 receipt
 receipt_long
 redeem
 remove
 remove_shopping_cart
+replay
 reply
 request_quote
 reviews
@@ -191,6 +198,7 @@ today
 toggle_off
 toggle_on
 travel_explore
+trending_down
 trending_up
 tune
 undo

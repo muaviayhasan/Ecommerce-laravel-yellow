@@ -32,7 +32,7 @@ class IconFontSubsetTest extends TestCase
      * all (e.g. x-text="p.kind === 'deal' ? 'sell' : 'image'" yields 'deal';
      * a sort-column map yields 'icon' => 'icon').
      */
-    private const NOT_ICONS = ['asc', 'deal', 'icon', 'sending', 'sent'];
+    private const NOT_ICONS = ['asc', 'audio', 'deal', 'icon', 'return_rate', 'sending', 'sent'];
 
     public function test_every_icon_used_in_a_view_is_present_in_the_subsetted_font(): void
     {
@@ -77,6 +77,13 @@ class IconFontSubsetTest extends TestCase
 
             // 4. Icons chosen at runtime by Alpine: x-text="show ? 'a' : 'b'"
             preg_match_all('~material-symbols-outlined[^>]*x-text="([^"]+)"~', $content, $matches);
+            foreach ($matches[1] as $expr) {
+                preg_match_all("~'([a-z0-9_]{2,})'~", $expr, $quoted);
+                $found = array_merge($found, $quoted[1]);
+            }
+
+            // 4b. ... and by Blade: {{ $ok ? 'check_circle' : 'error' }}
+            preg_match_all('~material-symbols-outlined[^>]*>\s*\{\{([^}]+)\}\}~', $content, $matches);
             foreach ($matches[1] as $expr) {
                 preg_match_all("~'([a-z0-9_]{2,})'~", $expr, $quoted);
                 $found = array_merge($found, $quoted[1]);

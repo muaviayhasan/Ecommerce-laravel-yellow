@@ -5,6 +5,7 @@
 ])
 
 @php
+    // icon-font: info lightbulb warning key
     $tones = [
         'info' => ['bg-primary-container/15 border-primary/30', 'text-primary', 'info'],
         'tip' => ['bg-secondary/10 border-secondary/30', 'text-secondary', 'lightbulb'],
