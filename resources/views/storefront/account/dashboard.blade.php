@@ -25,7 +25,7 @@
                 <p class="text-label-sm text-on-surface-variant">Wishlist</p>
             </a>
             <a href="{{ route('account.addresses') }}" class="bg-white rounded-lg border border-outline-variant p-4 sm:p-5 hover:border-primary hover:shadow-sm transition-all">
-                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[26px]">location_on</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[26px]">pin_drop</span>
                 <p class="text-2xl font-bold mt-1">{{ auth()->user()->addresses()->count() }}</p>
                 <p class="text-label-sm text-on-surface-variant">Addresses</p>
             </a>

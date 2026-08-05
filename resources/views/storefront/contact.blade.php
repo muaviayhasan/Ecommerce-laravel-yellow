@@ -27,7 +27,7 @@
             <div class="lg:col-span-2 space-y-4">
                 @if ($address)
                     <div class="flex gap-4 bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-5">
-                        <span aria-hidden="true" class="material-symbols-outlined text-primary shrink-0">location_on</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-primary shrink-0">pin_drop</span>
                         <div>
                             <div class="font-semibold mb-0.5">Visit us</div>
                             <p class="text-label-sm text-on-surface-variant whitespace-pre-line">{{ $address }}</p>

@@ -50,21 +50,22 @@ FONT = ROOT / "public" / "fonts" / "material-symbols-outlined.woff2"
 MANIFEST = ROOT / "public" / "fonts" / "material-symbols-icons.txt"
 SOURCE = ROOT / "tools" / "material-symbols-outlined.full.woff2"
 
+# Icon names may carry digits (inventory_2, forward_10) — always [a-z0-9_].
 # Literal ligature text inside an icon element: >shopping_cart<
-ICON_RE = re.compile(r"material-symbols-outlined[^>]*>\s*([a-z_]+)\s*<")
+ICON_RE = re.compile(r"material-symbols-outlined[^>]*>\s*([a-z0-9_]+)\s*<")
 # Icons chosen at runtime by Alpine, e.g. x-text="show ? 'visibility_off' : 'visibility'".
 # Every quoted token in the attribute is collected; strings that are not icon
 # names get filtered out later against the font's real glyph list.
 XTEXT_RE = re.compile(r"material-symbols-outlined[^>]*x-text=\"([^\"]+)\"")
-QUOTED_RE = re.compile(r"'([a-z_]{2,})'")
+QUOTED_RE = re.compile(r"'([a-z0-9_]{2,})'")
 # Icons passed as blade component props: <x-admin.stat-card icon="shopping_basket">
-ATTR_RE = re.compile(r"\bicon=\"([a-z_]+)\"")
+ATTR_RE = re.compile(r"\bicon=\"([a-z0-9_]+)\"")
 # Icons in PHP arrays — sidebar nav (config/navigation.php), docs manifest,
 # settings/report groups in controllers: 'icon' => 'dashboard'
-PHP_RE = re.compile(r"'icon'\s*=>\s*'([a-z_]+)'")
+PHP_RE = re.compile(r"'icon'\s*=>\s*'([a-z0-9_]+)'")
 # Icons no scanner can see (values of a PHP map, picked by slug at runtime) are
 # declared next to their definition:  icon-font: devices ac_unit mode_fan ...
-DECL_RE = re.compile(r"icon-font:\s*([a-z_][a-z_ ]*)")
+DECL_RE = re.compile(r"icon-font:\s*([a-z_][a-z0-9_ ]*)")
 
 # tests/Feature/IconFontSubsetTest.php runs the same patterns over the same
 # directories — keep them in sync.

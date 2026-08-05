@@ -194,7 +194,12 @@
     </section>
     @endif
 
-    {{-- Info bar — items managed in Admin → Ecommerce → Info Bar. --}}
+    {{-- Info bar — items managed in Admin → Ecommerce → Info Bar. The icon
+         names live in the database, where the font subsetter cannot see them,
+         so the seeded set and the form's suggested examples are declared here.
+         An admin entering any other name must add it below and re-run
+         tools/subset-icon-font.py, or it renders as its own name in text:
+         icon-font: local_shipping thumb_up cached account_balance_wallet sell --}}
     @if ($infoBarItems->isNotEmpty())
     <section class="pb-12 bg-white">
         <div class="app-container">

@@ -62,6 +62,6 @@
          the chat-bubble column below it; w/h only give it a comfortable tap area. --}}
     <button type="button" @click="toggle()" title="Share" aria-label="Share this page"
         class="w-12 h-12 grid place-items-center text-on-surface hover:text-primary active:scale-90 transition-all">
-        <span aria-hidden="true" class="material-symbols-outlined text-[25px]" style="font-variation-settings: 'FILL' 1;">shortcut</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[25px]" style="font-variation-settings: 'FILL' 1;">forward</span>
     </button>
 </div>

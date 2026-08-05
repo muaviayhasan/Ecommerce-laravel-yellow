@@ -143,7 +143,7 @@
                     </div>
                     <div class="md:col-span-2">
                         <button type="button" @click="suggestSimple()" class="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[16px]">auto_fix_high</span> Suggest retail &amp; wholesale from cost (<span x-text="markup"></span>% markup)
+                            <span class="material-symbols-outlined text-[16px]">auto_awesome</span> Suggest retail &amp; wholesale from cost (<span x-text="markup"></span>% markup)
                         </button>
                     </div>
                 </div>
@@ -204,7 +204,7 @@
                         </button>
                         <button type="button" x-show="variants.length" @click="suggestVariants()" :title="`Set each variant's price to cost + ${markup}% markup`"
                             class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[18px]">auto_fix_high</span> Suggest from cost
+                            <span class="material-symbols-outlined text-[18px]">auto_awesome</span> Suggest from cost
                         </button>
                     </div>
                     <p class="text-xs text-on-surface-variant -mt-2">Each variant's price = <span class="font-medium">base price + its options' adjustments</span>. Every price stays editable in the table below.</p>

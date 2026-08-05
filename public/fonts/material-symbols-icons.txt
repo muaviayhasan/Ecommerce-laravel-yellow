@@ -26,6 +26,7 @@ bolt
 bookmark_add
 branding_watermark
 bug_report
+cached
 calculate
 calendar_today
 call
@@ -76,6 +77,7 @@ favorite
 folder
 folder_open
 forum
+forward
 forward_to_inbox
 foundation
 gpp_maybe
@@ -92,6 +94,7 @@ hub
 image
 info
 inventory
+inventory_2
 key
 kitchen
 label
@@ -134,6 +137,7 @@ person
 person_add
 photo_camera
 photo_library
+pin_drop
 play_arrow
 playlist_add
 point_of_sale

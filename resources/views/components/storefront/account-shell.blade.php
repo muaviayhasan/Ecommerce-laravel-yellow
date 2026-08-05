@@ -4,7 +4,7 @@
         'dashboard' => ['label' => 'Dashboard', 'icon' => 'dashboard', 'route' => 'account'],
         'profile' => ['label' => 'Profile', 'icon' => 'manage_accounts', 'route' => 'account.profile'],
         'orders' => ['label' => 'My Orders', 'icon' => 'receipt_long', 'route' => 'account.orders'],
-        'addresses' => ['label' => 'Addresses', 'icon' => 'location_on', 'route' => 'account.addresses'],
+        'addresses' => ['label' => 'Addresses', 'icon' => 'pin_drop', 'route' => 'account.addresses'],
     ];
     $user = auth()->user();
 @endphp
