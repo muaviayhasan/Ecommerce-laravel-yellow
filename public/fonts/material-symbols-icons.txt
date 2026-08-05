@@ -141,6 +141,7 @@ person
 person_add
 photo_camera
 photo_library
+picture_as_pdf
 pin_drop
 play_arrow
 play_circle
@@ -204,6 +205,7 @@ tune
 undo
 unfold_more
 unsubscribe
+upload
 verified
 verified_user
 view_carousel

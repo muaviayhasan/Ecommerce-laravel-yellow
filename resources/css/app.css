@@ -37,7 +37,7 @@
     font-display: block;
     /* ?v= busts the year-long immutable cache (.htaccess) when the subset is
        rebuilt — bump it whenever tools/subset-icon-font.py changes the file. */
-    src: url('/fonts/material-symbols-outlined.woff2?v=4') format('woff2');
+    src: url('/fonts/material-symbols-outlined.woff2?v=5') format('woff2');
 }
 
 @layer base {

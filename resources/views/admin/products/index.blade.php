@@ -12,10 +12,28 @@
             </div>
             <h2 class="text-2xl font-bold text-on-surface">Products</h2>
         </div>
-        <a href="{{ route('admin.products.create') }}"
-            class="px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
-            <span class="material-symbols-outlined text-[20px]">add</span> Add product
-        </a>
+        <div class="flex items-center gap-3 flex-wrap">
+            @can('products.export')
+                <a href="{{ route('admin.products.export', array_merge(request()->query(), ['format' => 'xlsx'])) }}"
+                    class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg flex items-center gap-2 hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">download</span> Excel
+                </a>
+                <a href="{{ route('admin.products.export', array_merge(request()->query(), ['format' => 'pdf'])) }}"
+                    class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg flex items-center gap-2 hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span> PDF
+                </a>
+            @endcan
+            @can('products.import')
+                <a href="{{ route('admin.products.import') }}"
+                    class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg flex items-center gap-2 hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">upload</span> Import
+                </a>
+            @endcan
+            <a href="{{ route('admin.products.create') }}"
+                class="px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">add</span> Add product
+            </a>
+        </div>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">

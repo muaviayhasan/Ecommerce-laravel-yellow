@@ -19,9 +19,9 @@ class RolePermissionSeeder extends Seeder
     public static array $groups = [
         'dashboard' => ['view'],
         // Catalog
-        'products' => ['view', 'create', 'edit', 'delete'],
+        'products' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
         'variants' => ['edit'],
-        'categories' => ['view', 'create', 'edit', 'delete'],
+        'categories' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
         'brands' => ['view', 'create', 'edit', 'delete'],
         'hero-slides' => ['view', 'create', 'edit', 'delete'],
         'promo-cards' => ['view', 'create', 'edit', 'delete'],
@@ -36,7 +36,7 @@ class RolePermissionSeeder extends Seeder
         'production' => ['view', 'create', 'edit', 'delete', 'complete'],
         'stock' => ['view', 'adjust', 'transfer'],
         // Sales
-        'customers' => ['view', 'create', 'edit', 'delete'],
+        'customers' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
         'quotations' => ['view', 'create', 'edit', 'delete', 'convert'],
         'pos' => ['access', 'sell', 'refund'],
         'orders' => ['view', 'create', 'edit', 'refund', 'fulfil'],
@@ -60,7 +60,7 @@ class RolePermissionSeeder extends Seeder
         'audit' => ['view'],
         'error-logs' => ['view', 'resolve', 'delete'],
         'settings' => ['view', 'edit'],
-        'users' => ['view', 'create', 'edit', 'delete'],
+        'users' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
         'roles' => ['view', 'create', 'edit', 'delete'],
         // Help
         'documentation' => ['view'],

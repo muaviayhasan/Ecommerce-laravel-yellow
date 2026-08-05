@@ -12,16 +12,20 @@ use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Unit;
+use App\Services\ProductWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProductController extends Controller implements HasMiddleware
 {
+    public function __construct(private readonly ProductWriter $writer)
+    {
+    }
+
     public static function middleware(): array
     {
         return [
@@ -44,8 +48,8 @@ class ProductController extends Controller implements HasMiddleware
         $copy = \Illuminate\Support\Facades\DB::transaction(function () use ($product) {
             $new = $product->replicate(['slug', 'sku']);
             $new->name = $product->name . ' (Copy)';
-            $new->slug = $this->uniqueSlug($product->slug . '-copy');
-            $new->sku = $this->uniqueSku($product->sku . '-COPY');
+            $new->slug = $this->writer->uniqueSlug($product->slug . '-copy');
+            $new->sku = $this->writer->uniqueSku($product->sku . '-COPY');
             $new->is_web_listed = false;   // live-on-store off
             $new->published_at = null;     // draft
             $new->is_featured = false;
@@ -65,7 +69,7 @@ class ProductController extends Controller implements HasMiddleware
             foreach ($product->variants as $variant) {
                 $nv = $variant->replicate(['sku']);
                 $nv->product_id = $new->id;
-                $nv->sku = $this->uniqueSku($variant->sku . '-COPY');
+                $nv->sku = $this->writer->uniqueSku($variant->sku . '-COPY');
                 $nv->stock_quantity = 0;      // stock never duplicates — receive it via purchases
                 $nv->reserved_quantity = 0;
                 $nv->save();
@@ -77,28 +81,6 @@ class ProductController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.products.edit', $copy)
             ->with('status', "Duplicated as “{$copy->name}” — hidden from the store and unpublished. Review it, then publish when ready.");
-    }
-
-    /** First free slug for a duplicate (soft-deleted rows still hold theirs). */
-    private function uniqueSlug(string $base): string
-    {
-        $slug = $base;
-        for ($i = 2; Product::withTrashed()->where('slug', $slug)->exists(); $i++) {
-            $slug = "{$base}-{$i}";
-        }
-
-        return $slug;
-    }
-
-    /** First free SKU across products and variants (both are unique columns). */
-    private function uniqueSku(string $base): string
-    {
-        $sku = $base;
-        for ($i = 2; Product::withTrashed()->where('sku', $sku)->exists() || ProductVariant::where('sku', $sku)->exists(); $i++) {
-            $sku = "{$base}{$i}";
-        }
-
-        return $sku;
     }
 
     public function index(Request $request): View
@@ -205,8 +187,8 @@ class ProductController extends Controller implements HasMiddleware
         [$attributes, $simple, $variants, $defaultIndex, $images] = $this->extract($request);
 
         $product = Product::create($attributes);
-        $this->syncVariants($product, $attributes['variant_mode'], $simple, $variants, $defaultIndex);
-        $this->syncMedia($product, $images);
+        $this->writer->syncVariants($product, $attributes['variant_mode'], $simple, $variants, $defaultIndex);
+        $this->writer->syncMedia($product, $images);
 
         return redirect()
             ->route('admin.products.index')
@@ -229,8 +211,8 @@ class ProductController extends Controller implements HasMiddleware
         [$attributes, $simple, $variants, $defaultIndex, $images] = $this->extract($request);
 
         $product->update($attributes);
-        $this->syncVariants($product, $attributes['variant_mode'], $simple, $variants, $defaultIndex);
-        $this->syncMedia($product, $images);
+        $this->writer->syncVariants($product, $attributes['variant_mode'], $simple, $variants, $defaultIndex);
+        $this->writer->syncMedia($product, $images);
 
         return redirect()
             ->route('admin.products.index')
@@ -263,134 +245,6 @@ class ProductController extends Controller implements HasMiddleware
         unset($data['variant'], $data['variants'], $data['images'], $data['specs'], $data['variant_default']);
 
         return [$data, $simple, $variants, $defaultIndex, $images];
-    }
-
-    private function syncVariants(Product $product, string $mode, array $simple, array $variants, int $defaultIndex): void
-    {
-        if ($mode === Product::VARIANT_VARIABLE && ! empty($variants)) {
-            $this->syncVariableVariants($product, $variants, $defaultIndex);
-        } else {
-            $this->syncSimpleVariant($product, $simple);
-        }
-    }
-
-    /** Single default variant — collapse any extras and drop variation attributes. */
-    private function syncSimpleVariant(Product $product, array $v): void
-    {
-        $variant = $product->variants()->where('is_default', true)->first()
-            ?? $product->variants()->oldest('id')->first()
-            ?? new ProductVariant(['is_default' => true]);
-
-        $variant->fill([
-            'product_id' => $product->id,
-            'sku' => $variant->sku ?: $product->sku . '-D',
-            'cost' => $v['cost'] ?? 0,
-            'retail_price' => $v['retail_price'] ?? 0,
-            'wholesale_price' => $v['wholesale_price'] ?? null,
-            'compare_at_price' => $v['compare_at_price'] ?? null,
-            'stock_quantity' => $v['stock_quantity'] ?? 0,
-            'low_stock_threshold' => $v['low_stock_threshold'] ?? 0,
-            'barcode' => $v['barcode'] ?? null,
-            'is_default' => true,
-            'is_active' => true,
-        ])->save();
-        $variant->attributeValues()->detach();
-
-        $product->variants()->whereKeyNot($variant->id)->get()->each(function (ProductVariant $extra) {
-            $extra->attributeValues()->detach();
-            $extra->delete();
-        });
-        $product->attributes()->detach();
-    }
-
-    /** Multiple variants from the attribute matrix — upsert submitted rows, drop the rest. */
-    private function syncVariableVariants(Product $product, array $rows, int $defaultIndex): void
-    {
-        $rows = array_values($rows);
-        $keep = [];
-        $usedSkus = [];
-
-        foreach ($rows as $i => $row) {
-            $valueIds = collect($row['value_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
-
-            $variant = (! empty($row['id']) ? $product->variants()->find($row['id']) : null)
-                ?? new ProductVariant(['product_id' => $product->id]);
-
-            $base = filled($row['sku'] ?? null) ? $row['sku'] : $this->variantSkuBase($product, $valueIds);
-            $sku = $this->uniqueVariantSku($base, $usedSkus, $variant->id);
-            $usedSkus[] = $sku;
-
-            $variant->fill([
-                'product_id' => $product->id,
-                'sku' => $sku,
-                'cost' => $row['cost'] ?? 0,
-                'retail_price' => $row['retail_price'] ?? 0,
-                'wholesale_price' => $row['wholesale_price'] ?? null,
-                'compare_at_price' => $row['compare_at_price'] ?? null,
-                'stock_quantity' => $row['stock_quantity'] ?? 0,
-                'low_stock_threshold' => $row['low_stock_threshold'] ?? 0,
-                'image_media_id' => filled($row['image_media_id'] ?? null) ? (int) $row['image_media_id'] : null,
-                'is_default' => $i === $defaultIndex,
-                'is_active' => (bool) ($row['is_active'] ?? true),
-            ])->save();
-            $variant->attributeValues()->sync($valueIds);
-            $keep[] = $variant->id;
-        }
-
-        // Removed combinations — FK is nullOnDelete, so order history stays intact.
-        $product->variants()->whereNotIn('id', $keep)->get()->each(function (ProductVariant $gone) {
-            $gone->attributeValues()->detach();
-            $gone->delete();
-        });
-
-        // Guarantee exactly one default.
-        if (! $product->variants()->where('is_default', true)->exists()) {
-            $product->variants()->oldest('id')->first()?->update(['is_default' => true]);
-        }
-
-        // Link the product to the variation attributes that were actually used.
-        $attributeIds = AttributeValue::whereIn('id', collect($rows)->pluck('value_ids')->flatten()->map(fn ($id) => (int) $id)->unique())
-            ->pluck('attribute_id')->unique()->values()->all();
-        $product->attributes()->sync($attributeIds);
-    }
-
-    private function variantSkuBase(Product $product, array $valueIds): string
-    {
-        $codes = AttributeValue::whereIn('id', $valueIds)->orderBy('id')
-            ->pluck('value')
-            ->map(fn ($v) => Str::upper(Str::slug((string) $v)))
-            ->implode('-');
-
-        return trim(($product->sku ?: 'VAR') . ($codes !== '' ? '-' . $codes : ''), '-');
-    }
-
-    /** Unique among the rows in this submission and the variants table (ignoring the row being saved). */
-    private function uniqueVariantSku(string $base, array $used, ?int $ignoreId): string
-    {
-        $base = $base !== '' ? $base : 'VAR';
-        $sku = $base;
-        $i = 2;
-
-        $taken = fn (string $candidate) => in_array($candidate, $used, true)
-            || ProductVariant::where('sku', $candidate)->when($ignoreId, fn ($q) => $q->whereKeyNot($ignoreId))->exists();
-
-        while ($taken($sku)) {
-            $sku = "{$base}-{$i}";
-            $i++;
-        }
-
-        return $sku;
-    }
-
-    /** Sync the product_media pivot — order preserved, first image flagged primary. */
-    private function syncMedia(Product $product, array $imageIds): void
-    {
-        $sync = [];
-        foreach (array_values($imageIds) as $i => $id) {
-            $sync[$id] = ['sort_order' => $i, 'is_primary' => $i === 0];
-        }
-
-        $product->media()->sync($sync);
     }
 
     // Form data ----------------------------------------------------------------

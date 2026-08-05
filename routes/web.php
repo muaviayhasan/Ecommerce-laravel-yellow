@@ -11,8 +11,10 @@ use App\Http\Controllers\Admin\BomController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CategoryImportExportController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\CustomerImportExportController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentationController;
 use App\Http\Controllers\Admin\ErrorLogController;
@@ -26,6 +28,7 @@ use App\Http\Controllers\Admin\PosController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\PromoCardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductImportExportController;
 use App\Http\Controllers\Admin\ProductionController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\QuotationController;
@@ -36,6 +39,7 @@ use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\SupportController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserImportExportController;
 use App\Http\Controllers\Admin\VendorSaleController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AdminAuthController;
@@ -229,6 +233,16 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('deals/search-variants', [\App\Http\Controllers\Admin\DealController::class, 'searchVariants'])->name('deals.search-variants');
     Route::resource('deals', \App\Http\Controllers\Admin\DealController::class)->except('show');
 
+    // Import/export — declared before the resources so 'export'/'import' aren't captured as model params.
+    Route::get('products/export', [ProductImportExportController::class, 'export'])->name('products.export');
+    Route::get('products/import', [ProductImportExportController::class, 'importForm'])->name('products.import');
+    Route::post('products/import', [ProductImportExportController::class, 'import'])->name('products.import.store');
+    Route::get('products/import/template', [ProductImportExportController::class, 'template'])->name('products.import.template');
+    Route::get('categories/export', [CategoryImportExportController::class, 'export'])->name('categories.export');
+    Route::get('categories/import', [CategoryImportExportController::class, 'importForm'])->name('categories.import');
+    Route::post('categories/import', [CategoryImportExportController::class, 'import'])->name('categories.import.store');
+    Route::get('categories/import/template', [CategoryImportExportController::class, 'template'])->name('categories.import.template');
+
     Route::post('products/{product}/duplicate', [AdminProductController::class, 'duplicate'])->name('products.duplicate');
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class)->except('show');
@@ -253,6 +267,16 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('abandoned-carts/{abandonedCart}', [AbandonedCartController::class, 'destroy'])->name('abandoned-carts.destroy');
 
     // People & access
+    // Import/export first — same reason as the catalog block above.
+    Route::get('customers/export', [CustomerImportExportController::class, 'export'])->name('customers.export');
+    Route::get('customers/import', [CustomerImportExportController::class, 'importForm'])->name('customers.import');
+    Route::post('customers/import', [CustomerImportExportController::class, 'import'])->name('customers.import.store');
+    Route::get('customers/import/template', [CustomerImportExportController::class, 'template'])->name('customers.import.template');
+    Route::get('users/export', [UserImportExportController::class, 'export'])->name('users.export');
+    Route::get('users/import', [UserImportExportController::class, 'importForm'])->name('users.import');
+    Route::post('users/import', [UserImportExportController::class, 'import'])->name('users.import.store');
+    Route::get('users/import/template', [UserImportExportController::class, 'template'])->name('users.import.template');
+
     Route::resource('customers', CustomerController::class)->except('show');
     Route::resource('users', UserController::class)->except('show');
     Route::resource('roles', RoleController::class)->except('show');

@@ -12,10 +12,28 @@
             </div>
             <h2 class="text-2xl font-bold text-on-surface">Customers</h2>
         </div>
-        <a href="{{ route('admin.customers.create') }}"
-            class="bg-primary text-on-primary px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-sm shadow-primary/20">
-            <span class="material-symbols-outlined">add</span> Add customer
-        </a>
+        <div class="flex items-center gap-3 flex-wrap">
+            @can('customers.export')
+                <a href="{{ route('admin.customers.export', array_merge(request()->query(), ['format' => 'xlsx'])) }}"
+                    class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg flex items-center gap-2 hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">download</span> Excel
+                </a>
+                <a href="{{ route('admin.customers.export', array_merge(request()->query(), ['format' => 'pdf'])) }}"
+                    class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg flex items-center gap-2 hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span> PDF
+                </a>
+            @endcan
+            @can('customers.import')
+                <a href="{{ route('admin.customers.import') }}"
+                    class="px-4 py-2.5 border border-outline text-on-surface font-semibold text-sm rounded-lg flex items-center gap-2 hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">upload</span> Import
+                </a>
+            @endcan
+            <a href="{{ route('admin.customers.create') }}"
+                class="bg-primary text-on-primary px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-sm shadow-primary/20">
+                <span class="material-symbols-outlined">add</span> Add customer
+            </a>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
