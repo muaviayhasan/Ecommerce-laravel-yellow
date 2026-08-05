@@ -75,6 +75,13 @@
 
 @section('content')
     <div class="bg-white py-8">
+        @php
+            // Shared by the desktop sidebar and the mobile filters modal: whether any
+            // narrowing filter is active, and the URL that drops them all (keeping
+            // the search term and sort, which are not "filters" to the shopper).
+            $hasActiveFilters = ! empty($filters['category']) || ! empty($filters['brand']) || ! empty($filters['min']) || ! empty($filters['max']);
+            $clearFiltersUrl = route('shop', array_filter(['q' => $filters['q'] ?? null, 'sort' => $filters['sort'] ?? null]));
+        @endphp
         <div class="app-container" x-data="{ filtersOpen: false }">
             {{-- Breadcrumbs. The trail stopped at "Shop" regardless of what you were
                  browsing, so a three-level taxonomy (Electronics › Coolers › Air Cooler)
@@ -96,6 +103,13 @@
                 {{-- ===================== Sidebar (desktop only) ===================== --}}
                 <aside class="hidden lg:block w-64 shrink-0">
                     <form method="GET" action="{{ route('shop') }}">
+                        @if ($hasActiveFilters)
+                            <div class="flex justify-end mb-2">
+                                <a href="{{ $clearFiltersUrl }}" class="inline-flex items-center gap-1 text-secondary text-label-sm font-medium hover:text-primary">
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">close</span> Clear all filters
+                                </a>
+                            </div>
+                        @endif
                         @include('storefront.partials.shop-filters')
                         <button type="submit" class="mt-4 w-full bg-primary-container text-on-primary-container font-bold py-2.5 rounded-full hover:brightness-105 active:scale-95 transition">Apply Filters</button>
                     </form>
@@ -124,14 +138,14 @@
 
                     {{-- Control bar — every tool for this list in one row; on mobile the
                          filters live here too instead of a separate full-width band. --}}
-                    <div class="bg-surface-container-low p-2 flex flex-wrap gap-3 justify-between items-center mb-6 rounded">
-                        <div class="flex items-center gap-2">
+                    <div class="bg-surface-container-low p-2 flex items-center justify-between gap-2 mb-6 rounded">
+                        <div class="flex items-center gap-1.5 min-w-0">
                             <button type="button" @click="filtersOpen = true"
-                                class="lg:hidden flex items-center gap-1.5 bg-white border border-outline rounded-full pl-3 pr-4 py-1.5 text-sm font-bold active:scale-95 transition-all">
+                                class="lg:hidden shrink-0 flex items-center gap-1.5 bg-white border border-outline rounded-full pl-3 pr-4 py-1.5 text-sm font-bold active:scale-95 transition-all">
                                 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">tune</span>
                                 Filters
                             </button>
-                            <div class="flex items-center gap-1 ml-1">
+                            <div class="flex items-center shrink-0">
                                 <button type="button" @click="view = 'grid'" aria-label="Grid view"
                                     class="p-1.5 rounded hover:text-on-surface transition-colors"
                                     :class="view === 'grid' ? 'text-on-surface' : 'text-on-surface-variant'">
@@ -144,13 +158,14 @@
                                 </button>
                             </div>
                         </div>
-                        <form method="GET" action="{{ route('shop') }}" class="flex items-center gap-4">
+                        <form method="GET" action="{{ route('shop') }}" class="flex items-center min-w-0">
                             @foreach (['q', 'min', 'max'] as $k)
                                 @if (! empty($filters[$k]))<input type="hidden" name="{{ $k }}" value="{{ $filters[$k] }}">@endif
                             @endforeach
                             @foreach (($filters['category'] ?? []) as $c)<input type="hidden" name="category[]" value="{{ $c }}">@endforeach
                             @foreach (($filters['brand'] ?? []) as $b)<input type="hidden" name="brand[]" value="{{ $b }}">@endforeach
-                            <select name="sort" data-no-select2 onchange="this.form.submit()" class="border-none bg-transparent text-body-base outline-none cursor-pointer">
+                            <select name="sort" data-no-select2 onchange="this.form.submit()"
+                                class="w-full min-w-0 border-none bg-transparent text-sm sm:text-body-base outline-none cursor-pointer">
                                 @foreach ($sorts as $val => $label)
                                     <option value="{{ $val }}" @selected(($filters['sort'] ?? 'newness') === $val)>{{ $label }}</option>
                                 @endforeach
@@ -253,8 +268,12 @@
                         <div class="flex-1 overflow-y-auto px-4 py-2">
                             @include('storefront.partials.shop-filters')
                         </div>
-                        <div class="px-4 py-3 border-t border-outline-variant shrink-0">
-                            <button type="submit" class="w-full bg-primary-container text-on-primary-container font-bold py-3 rounded-full hover:brightness-105 transition">View results</button>
+                        <div class="px-4 py-3 border-t border-outline-variant shrink-0 flex items-center gap-3">
+                            @if ($hasActiveFilters)
+                                <a href="{{ $clearFiltersUrl }}"
+                                    class="shrink-0 border border-outline text-on-surface font-bold py-3 px-5 rounded-full active:scale-95 transition-all">Clear all</a>
+                            @endif
+                            <button type="submit" class="flex-1 bg-primary-container text-on-primary-container font-bold py-3 rounded-full hover:brightness-105 active:scale-[0.98] transition">View results</button>
                         </div>
                     </form>
                 </div>

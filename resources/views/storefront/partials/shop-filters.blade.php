@@ -23,7 +23,9 @@
                 <label class="flex items-center gap-2.5 cursor-pointer hover:text-on-surface transition-colors">
                     <input type="checkbox" name="category[]" value="{{ $cat->slug }}" @checked(in_array($cat->slug, $filters['category'] ?? [], true))
                         class="w-4 h-4 rounded border-outline text-primary-container focus:ring-primary-container">
-                    <span class="flex-1 {{ in_array($cat->slug, $filters['category'] ?? [], true) ? 'font-semibold text-on-surface' : '' }}">{{ $cat->name }} <span class="font-normal text-outline">({{ $cat->products_count }})</span></span>
+                    {{-- A parent's products live mostly in its children — count the whole branch, and never show a bare (0). --}}
+                    @php $branchCount = $cat->products_count + $cat->children->sum('products_count'); @endphp
+                    <span class="flex-1 {{ in_array($cat->slug, $filters['category'] ?? [], true) ? 'font-semibold text-on-surface' : '' }}">{{ $cat->name }}@if ($branchCount > 0) <span class="font-normal text-outline">({{ $branchCount }})</span>@endif</span>
                 </label>
                 @if ($cat->children->isNotEmpty())
                     <ul class="pl-6 mt-2 space-y-2">
@@ -32,7 +34,7 @@
                                 <label class="flex items-center gap-2.5 cursor-pointer hover:text-on-surface transition-colors">
                                     <input type="checkbox" name="category[]" value="{{ $child->slug }}" @checked(in_array($child->slug, $filters['category'] ?? [], true))
                                         class="w-4 h-4 rounded border-outline text-primary-container focus:ring-primary-container">
-                                    <span class="{{ in_array($child->slug, $filters['category'] ?? [], true) ? 'font-semibold text-on-surface' : '' }}">{{ $child->name }}</span>
+                                    <span class="{{ in_array($child->slug, $filters['category'] ?? [], true) ? 'font-semibold text-on-surface' : '' }}">{{ $child->name }}@if ($child->products_count > 0) <span class="font-normal text-outline">({{ $child->products_count }})</span>@endif</span>
                                 </label>
                             </li>
                         @endforeach
@@ -59,9 +61,6 @@
     </x-storefront.filter-section>
 @endif
 
-@if (! empty($filters['category']) || ! empty($filters['brand']) || ! empty($filters['min']) || ! empty($filters['max']))
-    <a href="{{ route('shop', array_filter(['q' => $filters['q'] ?? null, 'sort' => $filters['sort'] ?? null])) }}"
-        class="inline-flex items-center gap-1 mt-1 text-secondary text-label-sm font-medium hover:text-primary">
-        <span aria-hidden="true" class="material-symbols-outlined text-[16px]">close</span> Clear all filters
-    </a>
-@endif
+{{-- "Clear all" lives with the actions, not buried under the last accordion:
+     the desktop sidebar shows it above these fields, the mobile modal in its
+     sticky footer beside "View results" (see shop.blade.php). --}}

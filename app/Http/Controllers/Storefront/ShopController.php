@@ -100,7 +100,8 @@ class ShopController extends Controller
             'recommended' => Storefront::cards(Storefront::query()->latest('published_at')->take(8)->get()),
             'latest' => Storefront::cards(Storefront::query()->latest('published_at')->take(3)->get()),
             'categories' => Category::query()->where('is_active', true)->whereNull('parent_id')
-                ->with(['children' => fn ($c) => $c->where('is_active', true)->orderBy('name')])
+                ->with(['children' => fn ($c) => $c->where('is_active', true)->orderBy('name')
+                    ->withCount(['products' => fn ($q) => $q->webListed()])])
                 ->withCount(['products' => fn ($q) => $q->webListed()])
                 ->orderBy('name')->get(),
             'brands' => Brand::query()->where('is_active', true)
