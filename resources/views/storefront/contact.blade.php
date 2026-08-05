@@ -2,6 +2,7 @@
 
 @section('title', 'Contact Kingway Store — Appliance Shop in Lahore')
 @section('meta_description', 'Call, WhatsApp or visit our Lahore store. Open Mon-Sun, 8am-11pm. Questions about products, orders or bulk pricing — we are happy to help.')
+@section('og_image', asset('images/meta/og-contact.png'))
 
 @php
     $address = setting('store', 'address');

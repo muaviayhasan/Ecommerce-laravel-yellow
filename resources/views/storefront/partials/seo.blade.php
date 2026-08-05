@@ -37,16 +37,15 @@
 
     $ogType = trim($__env->yieldContent('og_type', 'website'));
     /*
-     | Falls back to the site logo when no social image is configured. Without a
-     | fallback every shared link — WhatsApp, Facebook, X — rendered as a bare text
-     | card, and twitter:card silently stayed on "summary" because it keys off this
-     | value being present. A logo is a weaker preview than a product shot, but it
-     | is enormously better than nothing, and it means sharing works out of the box
-     | instead of only after somebody remembers to set Settings → SEO → OG image.
+     | Pages with a natural image of their own @section it (product shot, category
+     | banner, blog cover). Everything else falls through to Settings → SEO →
+     | "Default share image", and when that is blank, to the bundled storefront
+     | banner — which ships with the code, so sharing renders a real image card on
+     | every page out of the box instead of only after someone fills the setting.
      */
     $ogImage = $plain($__env->yieldContent('og_image', (string) setting('seo', 'og_image', '')));
     if ($ogImage === '') {
-        $ogImage = (string) (logo_url() ?? '');
+        $ogImage = asset('images/meta/og-default.png');
     }
     if ($ogImage !== '' && ! Str::startsWith($ogImage, ['http://', 'https://'])) {
         $ogImage = url($ogImage);
@@ -138,7 +137,9 @@
             '@id' => url('/') . '#organization',
             'name' => $siteName,
             'url' => url('/'),
-            'logo' => $ogImage ?: null,
+            // The actual logo, not the share banner — Google shows Organization.logo
+            // as the brand mark in knowledge panels.
+            'logo' => ($logoPath = logo_url()) ? url($logoPath) : ($ogImage ?: null),
             'sameAs' => $sameAs ?: null,
         ]),
         [

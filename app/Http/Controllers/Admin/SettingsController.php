@@ -524,7 +524,7 @@ class SettingsController extends Controller implements HasMiddleware
                         'title' => 'Social sharing',
                         'description' => 'Open Graph / Twitter cards shown when a page link is shared.',
                         'fields' => [
-                            'og_image' => ['input' => 'text', 'label' => 'Default share image', 'max' => 500, 'rules' => ['nullable', 'string', 'max:500'], 'help' => 'Absolute URL or /storage path. 1200×630 works best.'],
+                            'og_image' => ['input' => 'text', 'label' => 'Default share image', 'max' => 500, 'rules' => ['nullable', 'string', 'max:500'], 'help' => 'Absolute URL or /storage path. 1200×630 works best. Leave blank to use the bundled storefront banner (/images/meta/og-default.png).'],
                             'twitter_handle' => ['input' => 'text', 'label' => 'Twitter / X handle', 'max' => 50, 'rules' => ['nullable', 'string', 'max:50'], 'help' => 'e.g. @yourstore'],
                             'facebook_url' => ['input' => 'text', 'label' => 'Facebook page URL', 'max' => 255, 'rules' => ['nullable', 'url', 'max:255']],
                             'instagram_url' => ['input' => 'text', 'label' => 'Instagram URL', 'max' => 255, 'rules' => ['nullable', 'url', 'max:255']],

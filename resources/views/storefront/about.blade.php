@@ -2,6 +2,7 @@
 
 @section('title', 'About Kingway Store — Home Appliance Dealer in Lahore')
 @section('meta_description', 'Who we are: a Lahore appliance and electronics dealer stocking genuine branded coolers, geysers, fans, washing machines and solar. Warranty backed, COD.')
+@section('og_image', asset('images/meta/og-about.png'))
 
 @php
     $store = setting('general', 'app_name', config('app.name'));

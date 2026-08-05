@@ -6,6 +6,7 @@
     ? $activeFilter['label'] . ' — Kingway Blog'
     : 'Appliance Buying Guides & Prices in Lahore — Kingway Blog')
 @section('meta_description', 'Buying guides, honest reviews and maintenance tips for coolers, geysers, fans, washing machines and solar — written for Lahore homes and Pakistani prices.')
+@section('og_image', asset('images/meta/og-blog.png'))
 @if (! empty($activeCategory))
     @section('canonical', route('blog', ['category' => $activeCategory]))
 @endif
