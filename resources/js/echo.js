@@ -34,6 +34,10 @@ function createEcho() {
 Object.defineProperty(window, 'Echo', {
     configurable: true,
     get() {
+        // No Reverb key baked into this build → no realtime. Return null so
+        // call sites' `if (!window.Echo)` guards kick in and features fall
+        // back to polling, instead of retrying a socket that can never open.
+        if (!import.meta.env.VITE_REVERB_APP_KEY) return null;
         return (instance ??= createEcho());
     },
 });
