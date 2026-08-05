@@ -36,7 +36,7 @@ class UserController extends Controller implements HasMiddleware
                     ->orWhere('phone', 'like', $term));
             })
             ->when($request->filled('role'), fn ($q) => $q->role($request->string('role')->toString()))
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'))
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'))
             ->latest('id')
             ->paginate(per_page())
             ->withQueryString();

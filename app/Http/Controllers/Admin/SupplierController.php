@@ -43,7 +43,7 @@ class SupplierController extends Controller implements HasMiddleware
                     ->orWhere('phone', 'like', $term)
                     ->orWhere('email', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
 
         $this->applyTableSort($suppliers, $request, [
             'name' => 'name',

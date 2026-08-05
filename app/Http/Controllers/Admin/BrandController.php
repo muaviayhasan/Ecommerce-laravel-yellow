@@ -37,7 +37,7 @@ class BrandController extends Controller implements HasMiddleware
                 $term = '%' . $request->string('search') . '%';
                 $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('slug', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
 
         $this->applyTableSort($brands, $request, [
             'name' => 'name',

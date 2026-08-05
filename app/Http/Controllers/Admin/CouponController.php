@@ -35,7 +35,7 @@ class CouponController extends Controller implements HasMiddleware
                 $term = '%' . $request->string('search') . '%';
                 $query->where(fn ($q) => $q->where('code', 'like', $term)->orWhere('description', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
 
         $this->applyTableSort($coupons, $request, [
             'code' => 'code',

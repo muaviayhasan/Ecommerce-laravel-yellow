@@ -39,7 +39,7 @@ class BomController extends Controller implements HasMiddleware
                 $term = '%' . $request->string('search') . '%';
                 $q->where('name', 'like', $term)->orWhereHas('product', fn ($p) => $p->where('name', 'like', $term));
             })
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
 
         $this->applyTableSort($boms, $request, [
             'product' => fn ($q, $d) => $q->orderBy(Product::select('name')->whereColumn('products.id', 'boms.product_id'), $d),

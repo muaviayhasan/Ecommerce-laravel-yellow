@@ -37,7 +37,7 @@ class CategoryController extends Controller implements HasMiddleware
                 $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('slug', 'like', $term));
             })
             ->when($request->filled('parent'), fn ($q) => $q->where('parent_id', $request->integer('parent')))
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
 
         $this->applyTableSort($categories, $request, [
             'name' => 'name',

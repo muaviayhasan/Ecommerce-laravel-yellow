@@ -38,7 +38,7 @@ class CustomerController extends Controller implements HasMiddleware
                     ->orWhere('phone', 'like', $term));
             })
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')))
-            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status') === 'active'));
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'));
 
         $this->applyTableSort($customers, $request, [
             'name' => 'name',
