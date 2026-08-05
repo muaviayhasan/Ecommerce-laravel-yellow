@@ -40,7 +40,7 @@ class ProductVariantTest extends TestCase
         $res = $this->get('/shop?q=' . urlencode('Multi Variant Gizmo'))->assertOk();
 
         // Three variants → three cards → three results.
-        $res->assertSee('of 3 results');
+        $res->assertSee('3 products');
         foreach ($product->variants as $variant) {
             $res->assertSee('variant=' . $variant->id, false);
         }
@@ -61,6 +61,6 @@ class ProductVariantTest extends TestCase
     {
         $product = $this->variableProduct('Solo Item', 1);
 
-        $this->get('/shop?q=' . urlencode('Solo Item'))->assertOk()->assertSee('of 1 results');
+        $this->get('/shop?q=' . urlencode('Solo Item'))->assertOk()->assertSee('1 product');
     }
 }

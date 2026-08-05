@@ -274,7 +274,10 @@ class Storefront
 
     public static function placeholder(): string
     {
-        return 'https://placehold.co/400x400/f1f5f9/94a3b8?text=No+Image';
+        // Local, brand-shaped (faint crown), and wordless — a missing photo is a
+        // quiet gap, not a "No Image" announcement. Also keeps the storefront free
+        // of third-party requests (placehold.co used to serve this).
+        return '/images/placeholder-product.svg';
     }
 
     /**

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- Product-photo placeholder: quiet surface with a faint brand crown, no words. -->
+  <rect width="400" height="400" fill="#f5f4f1"/>
+  <g fill="#e3e1da">
+    <path d="M124 236 L146 172 L184 216 L200 152 L216 216 L254 172 L276 236 Z"/>
+    <rect x="124" y="246" width="152" height="16" rx="4"/>
+  </g>
+</svg>

@@ -40,7 +40,7 @@ class ShopTest extends TestCase
         $this->webProduct($name);
 
         $this->get('/shop?q=' . urlencode($name))
-            ->assertOk()->assertSee($name)->assertSee('of 1 results');
+            ->assertOk()->assertSee($name)->assertSee('1 product');
     }
 
     public function test_category_filter_scopes_results(): void
@@ -49,7 +49,7 @@ class ShopTest extends TestCase
         $this->webProduct('Zoned Product', ['category_id' => $category->id]);
 
         $this->get('/shop?category=' . $category->slug)
-            ->assertOk()->assertSee('Zoned Product')->assertSee('of 1 results');
+            ->assertOk()->assertSee('Zoned Product')->assertSee('1 product');
     }
 
     public function test_price_minimum_excludes_cheaper_products(): void
@@ -61,7 +61,7 @@ class ShopTest extends TestCase
         // price filter alone — not other catalogue products, and not the recommendation
         // rails, which render regardless of the price filter.
         $this->get('/shop?q=' . urlencode($name) . '&min=99000')
-            ->assertOk()->assertSee('of 1 results');
+            ->assertOk()->assertSee('1 product');
         $this->get('/shop?q=' . urlencode($name) . '&max=10')
             ->assertOk()->assertSee('No products found');
     }

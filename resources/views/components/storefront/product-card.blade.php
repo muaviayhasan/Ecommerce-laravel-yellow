@@ -14,24 +14,26 @@
     // TODO: swap "Rs " formatting for format_money() once the Settings helpers land.
 @endphp
 
-<div {{ $attributes->class('product-card group relative flex flex-col bg-white pt-5 px-6 pb-4 border-r border-outline-variant last:border-r-0 transition-all duration-200 hover:border-transparent hover:shadow-[0_0_6px_0_rgba(1,1,1,0.3)] hover:z-20') }}>
-    <p class="text-label-sm text-secondary mb-1 line-clamp-1 min-h-4">{{ $category }}</p>
+{{-- On phones the photo leads (shoppers scan pictures first) via CSS order;
+     from sm up the theme's text-first card stays as designed. --}}
+<div {{ $attributes->class('product-card group relative flex flex-col bg-white pt-5 px-4 sm:px-6 pb-4 border-r border-outline-variant last:border-r-0 transition-all duration-200 hover:border-transparent hover:shadow-[0_0_6px_0_rgba(1,1,1,0.3)] hover:z-20') }}>
+    <p class="max-sm:order-2 text-label-sm text-secondary mb-1 line-clamp-1 min-h-4">{{ $category }}</p>
 
-    <h4 class="text-product-title text-on-surface mb-1 line-clamp-2 min-h-9">
+    <h4 class="max-sm:order-3 text-product-title text-on-surface mb-1 line-clamp-2 min-h-9">
         <a href="{{ $url }}" class="hover:underline">{{ $name }}</a>
     </h4>
     @if ($variantLabel = data_get($product, 'variant_label'))
-        <p class="text-label-sm text-on-surface-variant mb-3 line-clamp-1">{{ $variantLabel }}</p>
+        <p class="max-sm:order-4 text-label-sm text-on-surface-variant mb-3 line-clamp-1">{{ $variantLabel }}</p>
     @else
-        <div class="mb-3"></div>
+        <div class="max-sm:order-4 mb-3"></div>
     @endif
 
-    <a href="{{ $url }}" class="block aspect-square mb-4">
+    <a href="{{ $url }}" class="max-sm:order-1 block aspect-square mb-4 max-sm:mb-3">
         <img src="{{ $image }}" alt="{{ $name }}" loading="lazy" width="400" height="400" decoding="async"
             class="w-full h-full object-contain transition-transform group-hover:scale-105">
     </a>
 
-    <div class="mt-auto flex items-center justify-between">
+    <div class="max-sm:order-5 mt-auto flex items-center justify-between">
         <div>
             @if ($onSale)
                 <p class="text-price-lg text-error">Rs {{ number_format($price) }}</p>

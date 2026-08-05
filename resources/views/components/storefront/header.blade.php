@@ -207,22 +207,17 @@
                         x-text="n"></span>
                 </button>
 
-                {{-- Mobile: login (guest) / logout (signed in) — replaces the cart on small screens --}}
-                <div class="md:hidden">
-                    @auth
-                        <button type="button" @click="logoutConfirm = true" aria-label="Log out"
-                            class="flex items-center gap-1.5 text-on-surface hover:text-primary transition-colors">
-                            <span aria-hidden="true" class="material-symbols-outlined text-[28px]">logout</span>
-                            <span class="text-sm font-semibold">Logout</span>
-                        </button>
-                    @else
-                        <a href="{{ route('login') }}" aria-label="Login"
-                            class="flex items-center gap-1.5 text-on-surface hover:text-primary transition-colors">
-                            <span aria-hidden="true" class="material-symbols-outlined text-[28px]">person</span>
-                            <span class="text-sm font-semibold">Login</span>
-                        </a>
-                    @endauth
-                </div>
+                {{-- Mobile: guests get a clear Login pill (mirrors the search bar's
+                     yellow ring). Signed-in users manage their account — and log
+                     out — from the bottom-nav Account tab and the drawer; a
+                     destructive control has no place in the always-visible header. --}}
+                @guest
+                    <a href="{{ route('login') }}"
+                        class="md:hidden flex items-center gap-1.5 border-2 border-primary-container rounded-full pl-3 pr-4 py-1.5 text-sm font-bold text-on-surface active:scale-95 transition-all">
+                        <span aria-hidden="true" class="material-symbols-outlined text-[20px]">person</span>
+                        Login
+                    </a>
+                @endguest
             </div>
         </div>
 
@@ -321,18 +316,50 @@
                     </button>
                 </li>
             </ul>
-            <div class="p-4 border-t border-outline-variant flex flex-col gap-2">
+            {{-- Account block: who you are and where your account lives. Guests get
+                 one strong sign-in action; the destructive Logout sits last, styled
+                 in the same red treatment as the account page so it can't be
+                 mistaken for navigation. --}}
+            <div class="p-4 border-t border-outline-variant flex flex-col gap-1">
                 @auth
+                    <a href="{{ route('account') }}"
+                        class="flex items-center gap-3 p-2.5 -m-1 mb-1 rounded-xl hover:bg-surface-container transition-colors">
+                        @if (auth()->user()->avatar_url)
+                            <img src="{{ auth()->user()->avatar_url }}" alt=""
+                                class="w-10 h-10 rounded-full object-cover border-2 border-primary-container shrink-0">
+                        @else
+                            <span class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container grid place-items-center font-bold shrink-0">
+                                {{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}
+                            </span>
+                        @endif
+                        <span class="min-w-0 flex-1">
+                            <span class="block font-bold text-on-surface truncate leading-tight">{{ auth()->user()->name }}</span>
+                            <span class="block text-label-sm text-on-surface-variant truncate">View my account</span>
+                        </span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-outline">chevron_right</span>
+                    </a>
                     @if (auth()->user()->isStaff())
-                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2 px-4 py-2 text-primary font-medium"><span aria-hidden="true" class="material-symbols-outlined">admin_panel_settings</span> Admin panel</a>
+                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-primary font-medium hover:bg-surface-container transition-colors">
+                            <span aria-hidden="true" class="material-symbols-outlined text-[20px]">admin_panel_settings</span> Admin panel
+                        </a>
                     @endif
-                    <a href="{{ route('account') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span aria-hidden="true" class="material-symbols-outlined">person</span> My Account</a>
                 @else
-                    <a href="{{ route('login') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span aria-hidden="true" class="material-symbols-outlined">person</span> Login</a>
+                    <a href="{{ route('login') }}"
+                        class="flex items-center justify-center gap-2 bg-primary-container text-on-primary-container rounded-full py-3 font-bold active:scale-[0.98] transition-all mb-1">
+                        <span aria-hidden="true" class="material-symbols-outlined text-[20px]">person</span>
+                        Login or create account
+                    </a>
                 @endauth
-                <a href="{{ route('wishlist') }}" class="flex items-center gap-2 px-4 py-2 hover:text-primary"><span aria-hidden="true" class="material-symbols-outlined">favorite</span> Wishlist ({{ $wishlistCount }})</a>
+                <a href="{{ route('wishlist') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-container transition-colors">
+                    <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-primary">favorite</span> Wishlist ({{ $wishlistCount }})
+                </a>
                 @auth
-                    <button type="button" @click="mobileMenu = false; logoutConfirm = true" class="flex items-center gap-2 px-4 py-2 hover:text-primary w-full text-left"><span aria-hidden="true" class="material-symbols-outlined">logout</span> Logout</button>
+                    <div class="mt-1 pt-2 border-t border-outline-variant/60">
+                        <button type="button" @click="mobileMenu = false; logoutConfirm = true"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-colors text-left">
+                            <span aria-hidden="true" class="material-symbols-outlined text-[20px]">logout</span> Logout
+                        </button>
+                    </div>
                 @endauth
             </div>
         </div>

@@ -80,7 +80,7 @@
                  browsing, so a three-level taxonomy (Electronics › Coolers › Air Cooler)
                  was invisible to both readers and crawlers. Now it follows the active
                  category up through its parent, and emits BreadcrumbList to match. --}}
-            <nav class="text-label-sm text-on-surface-variant mb-6 flex flex-wrap items-center gap-2" aria-label="Breadcrumb">
+            <nav class="text-label-sm text-on-surface-variant mb-4 flex flex-wrap items-center gap-2" aria-label="Breadcrumb">
                 @foreach ($crumbs as $i => $crumb)
                     @if ($i > 0)<span aria-hidden="true">&rsaquo;</span>@endif
                     @if ($loop->last)
@@ -91,13 +91,6 @@
                 @endforeach
             </nav>
 
-
-            {{-- Mobile: open the filters modal --}}
-            <button type="button" @click="filtersOpen = true"
-                class="lg:hidden mb-4 w-full flex items-center justify-center gap-2 bg-surface-container-low border border-outline rounded-full py-3 font-bold hover:bg-surface-container transition-colors">
-                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">tune</span>
-                Categories &amp; Filters
-            </button>
 
             <div class="flex flex-col lg:flex-row lg:gap-8">
                 {{-- ===================== Sidebar (desktop only) ===================== --}}
@@ -120,26 +113,36 @@
 
                 {{-- ============================ Main ============================ --}}
                 <section class="flex-1 min-w-0" x-data="{ view: 'grid' }">
-                    <div class="flex flex-wrap justify-between items-end gap-4 mb-6">
+                    {{-- The page says what it is before offering tools to change it:
+                         title + count, then one tools row, then products. --}}
+                    <div class="flex flex-wrap justify-between items-baseline gap-x-4 gap-y-1 mb-4">
                         <h1 class="text-3xl sm:text-4xl font-light">{{ $filters['q'] ?? '' ? 'Results for “' . $filters['q'] . '”' : 'All Products' }}</h1>
                         <span class="text-body-base text-on-surface-variant">
-                            @if ($products->total())Showing {{ $products->firstItem() }}&ndash;{{ $products->lastItem() }} of {{ $products->total() }} results @else No products found @endif
+                            @if ($products->total()){{ number_format($products->total()) }} {{ Str::plural('product', $products->total()) }} @else No products found @endif
                         </span>
                     </div>
 
-                    {{-- Control bar --}}
-                    <div class="bg-surface-container-low p-2 flex flex-wrap gap-3 justify-between items-center mb-8 rounded">
-                        <div class="flex items-center gap-1 ml-2">
-                            <button type="button" @click="view = 'grid'" aria-label="Grid view"
-                                class="p-1.5 rounded hover:text-on-surface transition-colors"
-                                :class="view === 'grid' ? 'text-on-surface' : 'text-on-surface-variant'">
-                                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">grid_view</span>
+                    {{-- Control bar — every tool for this list in one row; on mobile the
+                         filters live here too instead of a separate full-width band. --}}
+                    <div class="bg-surface-container-low p-2 flex flex-wrap gap-3 justify-between items-center mb-6 rounded">
+                        <div class="flex items-center gap-2">
+                            <button type="button" @click="filtersOpen = true"
+                                class="lg:hidden flex items-center gap-1.5 bg-white border border-outline rounded-full pl-3 pr-4 py-1.5 text-sm font-bold active:scale-95 transition-all">
+                                <span aria-hidden="true" class="material-symbols-outlined text-[18px]">tune</span>
+                                Filters
                             </button>
-                            <button type="button" @click="view = 'list'" aria-label="List view"
-                                class="p-1.5 rounded hover:text-on-surface transition-colors"
-                                :class="view === 'list' ? 'text-on-surface' : 'text-on-surface-variant'">
-                                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">view_list</span>
-                            </button>
+                            <div class="flex items-center gap-1 ml-1">
+                                <button type="button" @click="view = 'grid'" aria-label="Grid view"
+                                    class="p-1.5 rounded hover:text-on-surface transition-colors"
+                                    :class="view === 'grid' ? 'text-on-surface' : 'text-on-surface-variant'">
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">grid_view</span>
+                                </button>
+                                <button type="button" @click="view = 'list'" aria-label="List view"
+                                    class="p-1.5 rounded hover:text-on-surface transition-colors"
+                                    :class="view === 'list' ? 'text-on-surface' : 'text-on-surface-variant'">
+                                    <span aria-hidden="true" class="material-symbols-outlined text-[20px]">view_list</span>
+                                </button>
+                            </div>
                         </div>
                         <form method="GET" action="{{ route('shop') }}" class="flex items-center gap-4">
                             @foreach (['q', 'min', 'max'] as $k)
