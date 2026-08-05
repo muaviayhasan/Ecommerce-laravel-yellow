@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LedgerEntry;
+use App\Services\ImportExport\Exporters\LedgerExporter;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -14,7 +16,20 @@ class LedgerController extends Controller implements HasMiddleware
 {
     public static function middleware(): array
     {
-        return [new Middleware('can:ledger.view')];
+        return [
+            new Middleware('can:ledger.view', only: ['index']),
+            new Middleware('can:ledger.export', only: ['export']),
+        ];
+    }
+
+    public function export(Request $request, LedgerExporter $exporter): \Symfony\Component\HttpFoundation\Response|RedirectResponse
+    {
+        if ($request->string('format')->toString() === 'pdf') {
+            return $exporter->pdf($request)
+                ?? back()->with('error', 'PDF export is capped at ' . number_format(LedgerExporter::PDF_ROW_CAP) . ' rows — use the Excel export instead.');
+        }
+
+        return $exporter->xlsx($request);
     }
 
     public function index(Request $request): View

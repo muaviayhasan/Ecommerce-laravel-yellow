@@ -5,13 +5,18 @@
 @php $cell = 'w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-sm text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary outline-none'; @endphp
 
 @section('content')
-    <div class="mb-2">
-        <div class="flex items-center gap-2 text-label-sm mb-1">
-            <a href="{{ route('admin.blog.posts.index') }}" class="text-primary font-semibold hover:underline">Blog</a>
-            <span class="material-symbols-outlined text-outline text-[16px]">chevron_right</span>
-            <span class="text-on-surface-variant font-semibold">Categories</span>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-2">
+        <div>
+            <div class="flex items-center gap-2 text-label-sm mb-1">
+                <a href="{{ route('admin.blog.posts.index') }}" class="text-primary font-semibold hover:underline">Blog</a>
+                <span class="material-symbols-outlined text-outline text-[16px]">chevron_right</span>
+                <span class="text-on-surface-variant font-semibold">Categories</span>
+            </div>
+            <h2 class="text-2xl font-bold text-on-surface">Blog categories</h2>
         </div>
-        <h2 class="text-2xl font-bold text-on-surface">Blog categories</h2>
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-admin.export-buttons route="admin.blog.categories.export" permission="blog-categories.export" />
+        </div>
     </div>
 
     <div class="grid grid-cols-12 gap-6 items-start">

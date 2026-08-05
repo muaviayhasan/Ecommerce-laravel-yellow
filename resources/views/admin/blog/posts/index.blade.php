@@ -12,12 +12,15 @@
             </div>
             <h2 class="text-2xl font-bold text-on-surface">Blog posts</h2>
         </div>
-        @can('blog-posts.create')
-            <a href="{{ route('admin.blog.posts.create') }}"
-                class="px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
-                <span class="material-symbols-outlined text-[20px]">add</span> New post
-            </a>
-        @endcan
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-admin.export-buttons route="admin.blog.posts.export" permission="blog-posts.export" />
+            @can('blog-posts.create')
+                <a href="{{ route('admin.blog.posts.create') }}"
+                    class="px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">add</span> New post
+                </a>
+            @endcan
+        </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">

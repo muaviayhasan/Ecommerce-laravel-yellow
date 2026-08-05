@@ -18,6 +18,9 @@
             <h2 class="text-2xl font-bold text-on-surface">Ledger</h2>
             <p class="text-sm text-on-surface-variant mt-1">The source of truth — every purchase, production run and stock adjustment posts here.</p>
         </div>
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-admin.export-buttons route="admin.ledger.export" permission="ledger.export" />
+        </div>
     </div>
 
     {{-- Position --}}

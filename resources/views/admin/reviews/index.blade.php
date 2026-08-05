@@ -3,13 +3,18 @@
 @section('title', 'Reviews')
 
 @section('content')
-    <div class="mb-2">
-        <div class="flex items-center gap-2 text-label-sm mb-1">
-            <a href="{{ route('admin.dashboard') }}" class="text-primary font-semibold hover:underline">Dashboard</a>
-            <span class="material-symbols-outlined text-outline text-[16px]">chevron_right</span>
-            <span class="text-on-surface-variant font-semibold">Reviews</span>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-2">
+        <div>
+            <div class="flex items-center gap-2 text-label-sm mb-1">
+                <a href="{{ route('admin.dashboard') }}" class="text-primary font-semibold hover:underline">Dashboard</a>
+                <span class="material-symbols-outlined text-outline text-[16px]">chevron_right</span>
+                <span class="text-on-surface-variant font-semibold">Reviews</span>
+            </div>
+            <h2 class="text-2xl font-bold text-on-surface">Product reviews</h2>
         </div>
-        <h2 class="text-2xl font-bold text-on-surface">Product reviews</h2>
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-admin.export-buttons route="admin.reviews.export" permission="reviews.export" />
+        </div>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">

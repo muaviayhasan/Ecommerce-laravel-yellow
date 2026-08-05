@@ -37,12 +37,12 @@ class RolePermissionSeeder extends Seeder
         'stock' => ['view', 'adjust', 'transfer'],
         // Sales
         'customers' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
-        'quotations' => ['view', 'create', 'edit', 'delete', 'convert'],
+        'quotations' => ['view', 'create', 'edit', 'delete', 'convert', 'export'],
         'pos' => ['access', 'sell', 'refund'],
-        'orders' => ['view', 'create', 'edit', 'refund', 'fulfil'],
+        'orders' => ['view', 'create', 'edit', 'refund', 'fulfil', 'export'],
         'coupons' => ['view', 'create', 'edit', 'delete'],
         'deals' => ['view', 'create', 'edit', 'delete'],
-        'reviews' => ['view', 'moderate'],
+        'reviews' => ['view', 'moderate', 'export'],
         'wishlists' => ['view'],
         'support' => ['view', 'reply', 'delete'],
         // Marketing
@@ -50,12 +50,12 @@ class RolePermissionSeeder extends Seeder
         'campaigns' => ['view', 'create', 'edit', 'delete', 'send'],
         'abandoned-carts' => ['view', 'delete'],
         // Content
-        'blog-posts' => ['view', 'create', 'edit', 'delete'],
-        'blog-categories' => ['view', 'create', 'edit', 'delete'],
+        'blog-posts' => ['view', 'create', 'edit', 'delete', 'export'],
+        'blog-categories' => ['view', 'create', 'edit', 'delete', 'export'],
         'blog-tags' => ['view', 'create', 'edit', 'delete'],
         'blog-comments' => ['view', 'moderate', 'reply', 'delete'],
         // Finance & system
-        'ledger' => ['view'],
+        'ledger' => ['view', 'export'],
         'reports' => ['view', 'export'],
         'audit' => ['view'],
         'error-logs' => ['view', 'resolve', 'delete'],

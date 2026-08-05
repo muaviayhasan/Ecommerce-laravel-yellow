@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BlogCategoryRequest;
 use App\Models\BlogCategory;
+use App\Services\ImportExport\Exporters\BlogCategoryExporter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,18 @@ class BlogCategoryController extends Controller implements HasMiddleware
             new Middleware('can:blog-categories.create', only: ['store']),
             new Middleware('can:blog-categories.edit', only: ['edit', 'update', 'reorder']),
             new Middleware('can:blog-categories.delete', only: ['destroy']),
+            new Middleware('can:blog-categories.export', only: ['export']),
         ];
+    }
+
+    public function export(Request $request, BlogCategoryExporter $exporter): \Symfony\Component\HttpFoundation\Response|RedirectResponse
+    {
+        if ($request->string('format')->toString() === 'pdf') {
+            return $exporter->pdf($request)
+                ?? back()->with('error', 'PDF export is capped at ' . number_format(BlogCategoryExporter::PDF_ROW_CAP) . ' rows — use the Excel export instead.');
+        }
+
+        return $exporter->xlsx($request);
     }
 
     public function index(): View

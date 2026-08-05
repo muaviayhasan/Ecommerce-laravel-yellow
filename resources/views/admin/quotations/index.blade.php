@@ -23,12 +23,15 @@
             </div>
             <h2 class="text-2xl font-bold text-on-surface">Quotations</h2>
         </div>
-        @can('quotations.create')
-            <a href="{{ route('admin.quotations.create') }}"
-                class="px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
-                <span class="material-symbols-outlined text-[20px]">add</span> New quotation
-            </a>
-        @endcan
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-admin.export-buttons route="admin.quotations.export" permission="quotations.export" />
+            @can('quotations.create')
+                <a href="{{ route('admin.quotations.create') }}"
+                    class="px-4 py-2.5 bg-primary text-on-primary font-semibold text-sm rounded-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">add</span> New quotation
+                </a>
+            @endcan
+        </div>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">

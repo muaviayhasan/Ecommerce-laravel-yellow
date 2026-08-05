@@ -23,12 +23,9 @@
             <h2 class="text-2xl font-bold text-on-surface">Reports</h2>
             <p class="text-sm text-on-surface-variant mt-1">Last 12 months · live from your orders &amp; customers.</p>
         </div>
-        @can('reports.export')
-            <a href="{{ route('admin.reports.export') }}"
-                class="flex items-center gap-2 px-4 py-2.5 border border-outline-variant text-on-surface font-semibold text-sm rounded-lg hover:bg-surface-container transition-colors">
-                <span class="material-symbols-outlined text-[18px]">download</span> Export CSV
-            </a>
-        @endcan
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-admin.export-buttons route="admin.reports.export" permission="reports.export" />
+        </div>
     </div>
 
     {{-- KPI cards --}}

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\ImportExport\Exporters\OrderExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -24,7 +25,18 @@ class OrderController extends Controller implements HasMiddleware
         return [
             new Middleware('can:orders.view', only: ['index', 'show', 'print']),
             new Middleware('can:orders.edit', only: ['updateStatus', 'updateDelivery', 'recordPayment']),
+            new Middleware('can:orders.export', only: ['export']),
         ];
+    }
+
+    public function export(Request $request, OrderExporter $exporter): \Symfony\Component\HttpFoundation\Response|RedirectResponse
+    {
+        if ($request->string('format')->toString() === 'pdf') {
+            return $exporter->pdf($request)
+                ?? back()->with('error', 'PDF export is capped at ' . number_format(OrderExporter::PDF_ROW_CAP) . ' rows — use the Excel export instead.');
+        }
+
+        return $exporter->xlsx($request);
     }
 
     public function index(Request $request): View

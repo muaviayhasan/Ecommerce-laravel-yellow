@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\ImportExport\Exporters\ReportExporter;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class ReportsController extends Controller implements HasMiddleware
 {
@@ -101,30 +104,14 @@ class ReportsController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function export(): StreamedResponse
+    public function export(Request $request, ReportExporter $exporter): Response|RedirectResponse
     {
-        $filename = 'orders-report-' . now()->format('Y-m-d') . '.csv';
+        if ($request->string('format')->toString() === 'pdf') {
+            return $exporter->pdf($request)
+                ?? back()->with('error', 'PDF export is capped at ' . number_format(ReportExporter::PDF_ROW_CAP) . ' rows — use the Excel export instead.');
+        }
 
-        return response()->streamDownload(function () {
-            $out = fopen('php://output', 'w');
-            fputcsv($out, ['Order #', 'Date', 'Customer', 'Status', 'Payment', 'Total', 'Paid']);
-
-            Order::with('customer:id,name')->latest('id')->chunk(200, function ($orders) use ($out) {
-                foreach ($orders as $o) {
-                    fputcsv($out, [
-                        $o->order_number,
-                        ($o->placed_at ?? $o->created_at)?->format('Y-m-d'),
-                        $o->customer?->name ?? 'Guest',
-                        $o->status,
-                        $o->payment_status,
-                        $o->grand_total,
-                        $o->paid_total,
-                    ]);
-                }
-            });
-
-            fclose($out);
-        }, $filename, ['Content-Type' => 'text/csv']);
+        return $exporter->xlsx($request);
     }
 
     // Helpers ------------------------------------------------------------------

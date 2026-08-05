@@ -9,6 +9,7 @@ use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\BlogTag;
 use App\Models\Media;
+use App\Services\ImportExport\Exporters\BlogPostExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -27,7 +28,18 @@ class BlogPostController extends Controller implements HasMiddleware
             new Middleware('can:blog-posts.create', only: ['create', 'store']),
             new Middleware('can:blog-posts.edit', only: ['edit', 'update']),
             new Middleware('can:blog-posts.delete', only: ['destroy']),
+            new Middleware('can:blog-posts.export', only: ['export']),
         ];
+    }
+
+    public function export(Request $request, BlogPostExporter $exporter): \Symfony\Component\HttpFoundation\Response|RedirectResponse
+    {
+        if ($request->string('format')->toString() === 'pdf') {
+            return $exporter->pdf($request)
+                ?? back()->with('error', 'PDF export is capped at ' . number_format(BlogPostExporter::PDF_ROW_CAP) . ' rows — use the Excel export instead.');
+        }
+
+        return $exporter->xlsx($request);
     }
 
     public function index(Request $request): View

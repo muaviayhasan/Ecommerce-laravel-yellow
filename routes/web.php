@@ -288,11 +288,14 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Reviews — customer review moderation queue (view + approve/unapprove/delete).
     Route::get('reviews', [ReviewController::class, 'index'])->name('reviews.index');
+    Route::get('reviews/export', [ReviewController::class, 'export'])->name('reviews.export');
     Route::patch('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
     Route::patch('reviews/{review}/unapprove', [ReviewController::class, 'unapprove'])->name('reviews.unapprove');
     Route::delete('reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
     // Quotations — draft sales; "convert" turns an accepted quote into a credit order.
+    // Export first — 'export' must not be captured as a {quotation} param.
+    Route::get('quotations/export', [QuotationController::class, 'export'])->name('quotations.export');
     Route::post('quotations/{quotation}/status', [QuotationController::class, 'status'])->name('quotations.status');
     Route::post('quotations/{quotation}/convert', [QuotationController::class, 'convert'])->name('quotations.convert');
     Route::get('quotations/{quotation}/print', [QuotationController::class, 'print'])->name('quotations.print');
@@ -305,6 +308,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Orders — view + detail + status update (no create/delete; orders come from checkout/POS).
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+    // Before the orders/{order} catch-all further down.
+    Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
     Route::get('orders/{order}/print', [OrderController::class, 'print'])->name('orders.print');
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::patch('orders/{order}/delivery', [OrderController::class, 'updateDelivery'])->name('orders.delivery');
@@ -349,8 +354,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Blog — posts (+ many-to-many categories/tags) and the taxonomies they draw from.
     Route::prefix('blog')->name('blog.')->group(function () {
+        Route::get('posts/export', [BlogPostController::class, 'export'])->name('posts.export');
         Route::resource('posts', BlogPostController::class)->except('show');
         Route::post('categories/reorder', [BlogCategoryController::class, 'reorder'])->name('categories.reorder');
+        Route::get('categories/export', [BlogCategoryController::class, 'export'])->name('categories.export');
         Route::resource('categories', BlogCategoryController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
         Route::resource('tags', BlogTagController::class)->only(['index', 'store', 'edit', 'update', 'destroy']);
 
@@ -363,6 +370,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     // Ledger — the financial source of truth (read-only): position, trial balance, entries.
     Route::get('ledger', [LedgerController::class, 'index'])->name('ledger.index');
+    Route::get('ledger/export', [LedgerController::class, 'export'])->name('ledger.export');
 
     // Activity log — read-only audit trail of admin mutations (§23).
     Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');

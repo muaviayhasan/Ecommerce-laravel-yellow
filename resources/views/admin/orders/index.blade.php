@@ -12,6 +12,9 @@
             </div>
             <h2 class="text-2xl font-bold text-on-surface">Orders</h2>
         </div>
+        <div class="flex items-center gap-3 flex-wrap">
+            <x-admin.export-buttons route="admin.orders.export" permission="orders.export" />
+        </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">

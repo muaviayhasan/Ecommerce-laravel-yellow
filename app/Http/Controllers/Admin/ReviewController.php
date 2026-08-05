@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Concerns\HandlesTableSort;
 use App\Http\Controllers\Controller;
 use App\Models\Review;
+use App\Services\ImportExport\Exporters\ReviewExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -20,7 +21,18 @@ class ReviewController extends Controller implements HasMiddleware
         return [
             new Middleware('can:reviews.view', only: ['index']),
             new Middleware('can:reviews.moderate', only: ['approve', 'unapprove', 'destroy']),
+            new Middleware('can:reviews.export', only: ['export']),
         ];
+    }
+
+    public function export(Request $request, ReviewExporter $exporter): \Symfony\Component\HttpFoundation\Response|RedirectResponse
+    {
+        if ($request->string('format')->toString() === 'pdf') {
+            return $exporter->pdf($request)
+                ?? back()->with('error', 'PDF export is capped at ' . number_format(ReviewExporter::PDF_ROW_CAP) . ' rows — use the Excel export instead.');
+        }
+
+        return $exporter->xlsx($request);
     }
 
     public function index(Request $request): View

@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\QuotationRequest;
 use App\Models\Customer;
 use App\Models\ProductVariant;
 use App\Models\Quotation;
+use App\Services\ImportExport\Exporters\QuotationExporter;
 use App\Services\QuotationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,18 @@ class QuotationController extends Controller implements HasMiddleware
             new Middleware('can:quotations.edit', only: ['edit', 'update', 'status']),
             new Middleware('can:quotations.delete', only: ['destroy']),
             new Middleware('can:quotations.convert', only: ['convert']),
+            new Middleware('can:quotations.export', only: ['export']),
         ];
+    }
+
+    public function export(Request $request, QuotationExporter $exporter): \Symfony\Component\HttpFoundation\Response|RedirectResponse
+    {
+        if ($request->string('format')->toString() === 'pdf') {
+            return $exporter->pdf($request)
+                ?? back()->with('error', 'PDF export is capped at ' . number_format(QuotationExporter::PDF_ROW_CAP) . ' rows — use the Excel export instead.');
+        }
+
+        return $exporter->xlsx($request);
     }
 
     public function index(Request $request): View
