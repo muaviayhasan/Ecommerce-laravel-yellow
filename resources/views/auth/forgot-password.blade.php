@@ -33,6 +33,8 @@
                     @enderror
                 </div>
 
+                <x-recaptcha action="password_forgot" />
+
                 <button type="submit"
                     class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:bg-primary-fixed-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                     <span aria-hidden="true" class="material-symbols-outlined text-[20px]">send</span> Email reset link

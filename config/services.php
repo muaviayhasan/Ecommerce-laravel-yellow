@@ -58,6 +58,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Google reCAPTCHA v3
+    |--------------------------------------------------------------------------
+    |
+    | Invisible, score-based bot protection on the public storefront forms
+    | (contact, quote request, register, password flows, newsletter). Leave the
+    | keys empty to disable entirely — the <x-recaptcha> component renders
+    | nothing and App\Rules\Recaptcha skips validation, so local/staging work
+    | without keys. min_score: 1.0 = certainly human, 0.0 = certainly a bot.
+    |
+    */
+
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret' => env('RECAPTCHA_SECRET_KEY'),
+        'min_score' => (float) env('RECAPTCHA_MIN_SCORE', 0.5),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | IndexNow
     |--------------------------------------------------------------------------
     |

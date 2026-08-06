@@ -129,7 +129,10 @@ Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('c
 
 // Authentication (login + register are functional)
 Route::get('/login', [AuthController::class, 'create'])->name('login');
-Route::post('/login', [AuthController::class, 'store']);
+// IP-wide backstop on top of the per-identifier+IP lockout inside
+// AuthController::store — that limiter is blind to credential stuffing that
+// rotates the identifier every attempt; this caps total tries per IP.
+Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:10,1');
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
 Route::post('/register', [RegisterController::class, 'store']);
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');

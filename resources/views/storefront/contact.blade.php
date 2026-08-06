@@ -137,6 +137,8 @@
                         @error('message')<p class="text-error text-label-sm">{{ $message }}</p>@enderror
                     </div>
 
+                    <x-recaptcha action="contact" />
+
                     <button type="submit"
                         class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                         <span aria-hidden="true" class="material-symbols-outlined text-[20px]">send</span> Send message

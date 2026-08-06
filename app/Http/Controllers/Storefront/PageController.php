@@ -7,6 +7,7 @@ use App\Mail\Admin\ContactMessageMail;
 use App\Models\Brand;
 use App\Models\Order;
 use App\Models\Product;
+use App\Rules\Recaptcha;
 use App\Support\Mail\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,6 +47,7 @@ class PageController extends Controller
             'phone' => ['nullable', self::PHONE_RULE],
             'subject' => ['required', 'string', 'max:200'],
             'message' => ['required', 'string', 'max:2000'],
+            'recaptcha_token' => Recaptcha::rules('contact'),
         ], [
             'phone.regex' => 'Enter a valid mobile number like 0300-0000000.',
         ]);

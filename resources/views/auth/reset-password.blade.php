@@ -55,6 +55,8 @@
                         class="w-full h-12 px-4 rounded border bg-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-body-base border-outline-variant">
                 </div>
 
+                <x-recaptcha action="password_reset" />
+
                 <button type="submit"
                     class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:bg-primary-fixed-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                     <span aria-hidden="true" class="material-symbols-outlined text-[20px]">lock_reset</span> Reset password

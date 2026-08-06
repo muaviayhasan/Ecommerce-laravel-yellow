@@ -16,6 +16,10 @@
             @endif
             <form action="{{ route('newsletter.subscribe') }}" method="POST" class="flex bg-white rounded-full overflow-hidden shadow-sm">
                 @csrf
+                {{-- No 'bag' prop on purpose: this form's errors live in the
+                     'newsletter' bag and are rendered below the form, where the
+                     paragraph won't break this flex row. --}}
+                <x-recaptcha action="newsletter" :attribution="false" />
                 <input name="email" type="email" required placeholder="Enter your email address" value="{{ old('email') }}"
                     aria-label="Email address" class="flex-1 px-8 py-3 border-none outline-none text-body-base min-w-0">
                 <button type="submit"
@@ -26,9 +30,16 @@
             {{-- isset guard: the 404 page renders this layout without the web
                  middleware, so $errors is never shared there — a bare @error
                  would turn every 404 into a 500. --}}
-            @if (isset($errors) && $errors->getBag('newsletter')->has('email'))
+            @if (isset($errors) && $errors->getBag('newsletter')->any())
                 <p class="mt-2 text-label-sm text-error flex items-center gap-1">
-                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $errors->getBag('newsletter')->first('email') }}
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]">error</span>{{ $errors->getBag('newsletter')->first() }}
+                </p>
+            @endif
+            @if (\App\Rules\Recaptcha::enabled())
+                <p class="mt-2 text-label-sm opacity-70">
+                    Protected by reCAPTCHA — the Google
+                    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="underline">Privacy Policy</a> and
+                    <a href="https://policies.google.com/terms" target="_blank" rel="noopener" class="underline">Terms of Service</a> apply.
                 </p>
             @endif
         </div>

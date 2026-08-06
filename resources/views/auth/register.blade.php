@@ -68,6 +68,8 @@
                         @enderror
                     </div>
 
+                    <x-recaptcha action="register" />
+
                     {{-- Submit --}}
                     <button type="submit"
                         class="w-full h-12 bg-primary-container text-on-primary-container font-bold rounded-lg hover:brightness-95 active:scale-[0.98] transition-all flex items-center justify-center gap-2">

@@ -125,6 +125,8 @@
                     @error('message')<p class="text-error text-label-sm">{{ $message }}</p>@enderror
                 </div>
 
+                <x-recaptcha action="quote_request" />
+
                 <button type="submit"
                     class="w-full h-12 bg-primary-container text-on-surface font-bold rounded shadow-sm hover:bg-primary-fixed-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                     <span aria-hidden="true" class="material-symbols-outlined text-[20px]">request_quote</span> Send request

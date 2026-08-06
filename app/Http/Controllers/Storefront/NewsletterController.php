@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Mail\Admin\NewSubscriberMail;
 use App\Models\NewsletterSubscriber;
+use App\Rules\Recaptcha;
 use App\Support\Mail\Notifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class NewsletterController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'email', 'max:255'],
             'name' => ['nullable', 'string', 'max:255'],
+            'recaptcha_token' => Recaptcha::rules('newsletter'),
         ]);
 
         if ($validator->fails()) {

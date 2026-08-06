@@ -7,6 +7,7 @@ use App\Mail\Admin\NewQuoteRequestMail;
 use App\Models\Customer;
 use App\Models\ProductVariant;
 use App\Models\Quotation;
+use App\Rules\Recaptcha;
 use App\Support\Mail\Notifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -102,6 +103,7 @@ class QuoteRequestController extends Controller
             'items' => ['nullable', 'array', 'max:50'],
             'items.*.product_variant_id' => ['required_with:items', 'integer', Rule::exists('product_variants', 'id')->where('is_active', true)],
             'items.*.quantity' => ['required_with:items', 'numeric', 'gt:0', 'max:9999999'],
+            'recaptcha_token' => Recaptcha::rules('quote_request'),
         ], [
             'phone.regex' => 'Enter a valid mobile number like 0300-0000000.',
         ]);
